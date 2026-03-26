@@ -1,0 +1,23 @@
+import { assertEquals } from "jsr:@std/assert@1";
+import { selectTracksDeterministic } from "../../../lib/selectTracks.ts";
+import type { SelectableTrack } from "../../../lib/selectTracks.ts";
+
+const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, i) => ({
+  id: `t${i}`,
+  title: `Title ${i}`,
+  audioUrl: `a${i}`,
+  difficulty: i % 2 === 0 ? "easy" : "hard",
+}));
+
+Deno.test("selectTracksDeterministic returns 20 tracks in stable order for same seed", () => {
+  const a = selectTracksDeterministic(pool, "mixed", "seed1", 20);
+  const b = selectTracksDeterministic(pool, "mixed", "seed1", 20);
+  assertEquals(a.length, 20);
+  assertEquals(a.map((t) => t.id), b.map((t) => t.id));
+});
+
+Deno.test("selectTracksDeterministic filters by difficulty", () => {
+  const easy = selectTracksDeterministic(pool, "easy", "s2", 20);
+  assertEquals(easy.length, 20);
+  assertEquals(easy.every((t) => t.difficulty === "easy"), true);
+});

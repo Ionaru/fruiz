@@ -1,12 +1,36 @@
+import { join } from "node:path";
+
+import { eq } from "drizzle-orm";
+
 import { db } from "../../../db/db.ts";
+import { tracks } from "../../../db/schema.ts";
 import { define } from "../../../utils.ts";
 
-const getMusicFile = async (id: string) => {
-  const track = await db.query.tracks.findFirst({
-    where: { id },
-  });
-  return track?.fileName;
-};
+function resolveAudioFilePath(audioUrl: string): string {
+  const s = audioUrl.trim();
+  if (/^https?:\/\//i.test(s)) {
+    throw new Deno.errors.NotFound();
+  }
+  const rel = s.replace(/^\/+/, "");
+  if (!rel || rel.split(/[/\\]/).includes("..")) {
+    throw new Deno.errors.NotFound();
+  }
+  return join(Deno.cwd(), ...rel.split("/"));
+}
+
+async function getAudioPathForTrack(id: string): Promise<string | undefined> {
+  const [row] = await db
+    .select({ audioUrl: tracks.audioUrl })
+    .from(tracks)
+    .where(eq(tracks.id, id))
+    .limit(1);
+  if (!row) return undefined;
+  try {
+    return resolveAudioFilePath(row.audioUrl);
+  } catch {
+    return undefined;
+  }
+}
 
 function parseRange(
   range: string | null,
@@ -40,11 +64,11 @@ export const handler = define.handlers({
   async GET(ctx) {
     let file: Deno.FsFile | undefined;
     try {
-      const fileName = await getMusicFile(ctx.params.id);
-      if (!fileName) {
+      const path = await getAudioPathForTrack(ctx.params.id);
+      if (!path) {
         return new Response("Not found", { status: 404 });
       }
-      file = await Deno.open(fileName, { read: true });
+      file = await Deno.open(path, { read: true });
     } catch (e) {
       if (e instanceof Deno.errors.NotFound) {
         return new Response("Not found", { status: 404 });

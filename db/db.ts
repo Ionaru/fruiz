@@ -2,4 +2,7 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 import { dbName } from "./config.ts";
 import { relations } from "./relations.ts";
 
-export const db = drizzle(dbName, { logger: true, relations: relations });
+export const db = drizzle(dbName, {
+  logger: true,
+  relations,
+});

@@ -1,12 +1,26 @@
 @import "tailwindcss";
-@source "tailwindcss-neumorphism-ui";
 @import "tailwindcss-neumorphism-ui";
 
 @source inline("shadow-none");
 
+@theme {
+  --color-base-50: theme(colors.zinc.50);
+  --color-base-100: theme(colors.zinc.100);
+  --color-base-200: theme(colors.zinc.200);
+  --color-base-300: theme(colors.zinc.300);
+  --color-base-400: theme(colors.zinc.400);
+  --color-base-500: theme(colors.zinc.500);
+  --color-base-600: theme(colors.zinc.600);
+  --color-base-700: theme(colors.zinc.700);
+  --color-base-800: theme(colors.zinc.800);
+  --color-base-900: theme(colors.zinc.900);
+  --color-base-950: theme(colors.zinc.950);
+}
+
 @layer components {
   .plateau {
-    @apply nm-protrude transition-all duration-200 ease-out bg-linear-to-br from-stone-100 to-stone-200;
+    @apply nm-protrude transition-all duration-200 ease-out bg-linear-to-br
+      from-base-100 to-base-200;
 
     &.success {
       @apply to-green-200 dark:from-green-900;
@@ -25,7 +39,8 @@
     }
 
     @variant dark {
-      @apply text-white nm-highlight-stone-700/50! nm-shadow-stone-950/70! from-stone-700 to-stone-900;
+      @apply text-white nm-highlight-base-700/50! nm-shadow-base-950/70!
+        from-base-700 to-base-900;
     }
   }
 

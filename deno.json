@@ -2,6 +2,8 @@
   "nodeModulesDir": "manual",
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
+    "fix": "deno fmt . && deno lint --fix .",
+    "test": "deno test -A tests/",
     "dev": "vite",
     "build": "vite build",
     "start": "deno serve -A _fresh/server.js",
@@ -21,6 +23,8 @@
   ],
   "imports": {
     "@/": "./",
+    "@simplewebauthn/browser": "jsr:@simplewebauthn/browser@^13.3.0",
+    "@simplewebauthn/server": "jsr:@simplewebauthn/server@^13.3.0",
     "drizzle-kit": "npm:drizzle-kit@1.0.0-beta.19",
     "drizzle-orm": "npm:drizzle-orm@1.0.0-beta.19",
     "fresh": "jsr:@fresh/core@^2.2.0",
