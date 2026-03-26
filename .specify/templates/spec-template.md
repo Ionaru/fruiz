@@ -156,7 +156,8 @@ _Example of marking unclear requirements:_
   payload sent to the browser.]
 - **Components Versus Islands**: [State what ships as SSR-only `components/` (or
   non-island route UI) versus what lives in `islands/` for client JavaScript.
-  Confirm no prohibited client patterns in `components/`.]
+  Confirm no prohibited client patterns in `components/`. Confirm island code
+  uses `@preact/signals` only—no `preact/hooks` or hook APIs.]
 
 ### Mobile & Accessibility Validation
 

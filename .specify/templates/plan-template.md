@@ -48,7 +48,8 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 - **Components Versus Islands**: Confirm new UI keeps SSR-only markup and logic
   in `components/` (and non-island `routes/` UI) and places all client-side
   JavaScript—interactivity, effects, browser APIs, client state—in `islands/`
-  only, per Principle VII.
+  only, per Principle VII. Confirm island code uses `@preact/signals` only and
+  does not import `preact/hooks` or use hook APIs (`useState`, `useEffect`, etc.).
 - **Mobile-First Playability**: Describe the phone-sized interaction model,
   touch targets, keyboard/accessibility considerations, and any audio gesture
   constraints that apply.

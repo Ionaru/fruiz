@@ -81,7 +81,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T009 Setup environment configuration management
 - [ ] T010 Confirm server/client boundary for affected routes, islands, and data
       flows; SSR-only `components/` and non-island routes with client behavior
-      confined to `islands/`
+      confined to `islands/`; island UI uses `@preact/signals` only (no
+      `preact/hooks`)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in
 parallel
@@ -292,7 +293,8 @@ With multiple developers:
 - Each user story should be independently completable and testable
 - Include constitution-driven verification and mobile validation tasks
 - Place SSR-only UI in `components/`; client-side JavaScript belongs in
-  `islands/` only
+  `islands/` only; use `@preact/signals` for island reactivity, not
+  `preact/hooks`
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break

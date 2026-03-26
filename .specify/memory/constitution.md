@@ -1,14 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.2.0 → 1.2.1
+- Version change: 1.2.1 → 1.2.2
 - Modified principles:
-  - VII: Clarifying example (replay-limit gate / URL + localStorage prep) MUST be islands.
+  - VII: Island client code MUST use @preact/signals only; preact/hooks forbidden.
 - Added sections:
   - None
 - Removed sections:
   - None
 - Templates requiring updates:
-  - None (patch clarification only)
+  - .specify/templates/plan-template.md ✅ updated
+  - .specify/templates/spec-template.md ✅ updated
+  - .specify/templates/tasks-template.md ✅ updated
 - Follow-up TODOs:
   - None
 -->
@@ -105,6 +107,12 @@ similar). Non-island UI in `routes/` MUST follow the same restriction. Only
 `islands/` modules (and Fresh-designated island entrypoints) MAY contain code
 intended to execute in the browser with those capabilities.
 
+**Signals, not hooks.** Island code MUST use `@preact/signals` for client
+reactivity (state, derived values, and effects the framework documents for
+signals). Code MUST NOT import `preact/hooks` or use hook APIs such as
+`useState`, `useEffect`, `useRef`, `useCallback`, or `useMemo`. This project
+does not use the Preact hooks programming model in application code.
+
 Rationale: Fresh relies on islands for client bundles and interactivity.
 Smuggling client behavior into `components/` obscures boundaries, inflates or
 misplaces hydration, and weakens the server-first model this app depends on. For
@@ -114,10 +122,11 @@ example, UI that updates URL query state or reads `localStorage` before gameplay
 ## Technical Guardrails
 
 The canonical implementation stack is Deno, Fresh 2.x, TypeScript, Preact
-islands, `@preact/signals`, Tailwind CSS 4, and Drizzle ORM. Architectural
-changes that replace or substantially bypass this stack MUST be justified in the
-implementation plan. The `components/` versus `islands/` split in Principle VII
-is mandatory for all UI work.
+islands, `@preact/signals`, Tailwind CSS 4, and Drizzle ORM. Client islands MUST
+use `@preact/signals` exclusively for reactive UI; `preact/hooks` MUST NOT be
+used. Architectural changes that replace or substantially bypass this stack
+MUST be justified in the implementation plan. The `components/` versus
+`islands/` split in Principle VII is mandatory for all UI work.
 
 `deno check` MUST pass for the workspace before changes are merged or released.
 Formatting MUST match the project’s Deno formatter configuration; verify with
@@ -150,8 +159,10 @@ confirms: deterministic quiz identity is preserved, server-only boundaries are
 maintained, mobile-first constraints are addressed, admin security implications
 are covered, verification work is scheduled, the components/islands boundary
 (SSR-only `components/` and non-island route UI; client behavior only in
-`islands/`) is respected, and code-quality rules (naming, Clean Code / SOLID /
-DRY, `deno check` and `deno fmt --check`) are satisfied for delivered changes.
+`islands/`) is respected, island code uses `@preact/signals` only (no
+`preact/hooks` or hook APIs), and code-quality rules (naming, Clean Code /
+SOLID / DRY, `deno check` and `deno fmt --check`) are satisfied for delivered
+changes.
 Any exception MUST be logged in a complexity or risk section with justification.
 
 Contributors MUST run `deno check` and `deno fmt --check` on affected code
@@ -180,9 +191,10 @@ version bump.
 Compliance review is mandatory at two points: when a plan is drafted and before
 implementation is considered complete. Reviewers MUST verify that quiz identity
 semantics, server/client boundaries, the components/islands client-JavaScript
-rule, mobile-first UX requirements, admin authentication guarantees, required
-verification evidence, and code-quality gates (`deno check`, `deno fmt --check`,
-no disallowed single-letter identifiers, adherence to Clean Code / SOLID / DRY
-for the change) are all satisfied or explicitly waived with justification.
+rule, `@preact/signals`-only client reactivity (no `preact/hooks`), mobile-first
+UX requirements, admin authentication guarantees, required verification evidence,
+and code-quality gates (`deno check`, `deno fmt --check`, no disallowed
+single-letter identifiers, adherence to Clean Code / SOLID / DRY for the change)
+are all satisfied or explicitly waived with justification.
 
-**Version**: 1.2.1 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-26
+**Version**: 1.2.2 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-26
