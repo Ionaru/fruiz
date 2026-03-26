@@ -3,6 +3,8 @@ interface AnswerInputProps {
   suggestions: string[];
   value: string;
   disabled?: boolean;
+  /** Optional id of helper text for screen readers (e.g. submit gating hint). */
+  ariaDescribedBy?: string;
   onValue: (value: string) => void;
 }
 
@@ -21,6 +23,7 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
         value={props.value}
         disabled={props.disabled}
         autocomplete="off"
+        aria-describedby={props.ariaDescribedBy}
         onInput={(event) =>
           props.onValue((event.currentTarget as HTMLInputElement).value)}
       />

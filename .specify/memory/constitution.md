@@ -124,9 +124,9 @@ example, UI that updates URL query state or reads `localStorage` before gameplay
 The canonical implementation stack is Deno, Fresh 2.x, TypeScript, Preact
 islands, `@preact/signals`, Tailwind CSS 4, and Drizzle ORM. Client islands MUST
 use `@preact/signals` exclusively for reactive UI; `preact/hooks` MUST NOT be
-used. Architectural changes that replace or substantially bypass this stack
-MUST be justified in the implementation plan. The `components/` versus
-`islands/` split in Principle VII is mandatory for all UI work.
+used. Architectural changes that replace or substantially bypass this stack MUST
+be justified in the implementation plan. The `components/` versus `islands/`
+split in Principle VII is mandatory for all UI work.
 
 `deno check` MUST pass for the workspace before changes are merged or released.
 Formatting MUST match the project’s Deno formatter configuration; verify with
@@ -160,9 +160,8 @@ maintained, mobile-first constraints are addressed, admin security implications
 are covered, verification work is scheduled, the components/islands boundary
 (SSR-only `components/` and non-island route UI; client behavior only in
 `islands/`) is respected, island code uses `@preact/signals` only (no
-`preact/hooks` or hook APIs), and code-quality rules (naming, Clean Code /
-SOLID / DRY, `deno check` and `deno fmt --check`) are satisfied for delivered
-changes.
+`preact/hooks` or hook APIs), and code-quality rules (naming, Clean Code / SOLID
+/ DRY, `deno check` and `deno fmt --check`) are satisfied for delivered changes.
 Any exception MUST be logged in a complexity or risk section with justification.
 
 Contributors MUST run `deno check` and `deno fmt --check` on affected code
@@ -192,9 +191,9 @@ Compliance review is mandatory at two points: when a plan is drafted and before
 implementation is considered complete. Reviewers MUST verify that quiz identity
 semantics, server/client boundaries, the components/islands client-JavaScript
 rule, `@preact/signals`-only client reactivity (no `preact/hooks`), mobile-first
-UX requirements, admin authentication guarantees, required verification evidence,
-and code-quality gates (`deno check`, `deno fmt --check`, no disallowed
-single-letter identifiers, adherence to Clean Code / SOLID / DRY for the change)
-are all satisfied or explicitly waived with justification.
+UX requirements, admin authentication guarantees, required verification
+evidence, and code-quality gates (`deno check`, `deno fmt --check`, no
+disallowed single-letter identifiers, adherence to Clean Code / SOLID / DRY for
+the change) are all satisfied or explicitly waived with justification.
 
 **Version**: 1.2.2 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-26

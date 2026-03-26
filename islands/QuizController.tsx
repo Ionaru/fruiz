@@ -1,7 +1,7 @@
-import { useEffect } from "preact/hooks";
-import { useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
+import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
 import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
 import type {
@@ -41,6 +41,32 @@ function scoreFromProgress(progress: QuizProgress): number {
   return progress.tracks.filter((entry) => entry.status === "correct").length;
 }
 
+/** Returns merged progress from `localStorage`, or `null` if missing or invalid. */
+function tryMergeStoredProgress(
+  raw: string | null,
+  quizPath: string,
+  tracks: QuizTrackPayload[],
+): QuizProgress | null {
+  if (!raw) return null;
+  let parsed: QuizProgress;
+  try {
+    parsed = JSON.parse(raw) as QuizProgress;
+  } catch {
+    return null;
+  }
+  if (parsed.quizPath !== quizPath || !Array.isArray(parsed.tracks)) {
+    return null;
+  }
+  const validIds = new Set(tracks.map((track) => track.id));
+  if (
+    parsed.tracks.length !== tracks.length ||
+    !parsed.tracks.every((row) => validIds.has(row.trackId))
+  ) {
+    return null;
+  }
+  return { ...parsed, score: scoreFromProgress(parsed) };
+}
+
 interface Props {
   identity: QuizIdentity;
   initialReplayLimit: number | null;
@@ -60,33 +86,26 @@ export default function QuizController(props: Readonly<Props>) {
     buildDefaultProgress(props.tracks, props.quizPath),
   );
   const showResults = useSignal(false);
+  const didHydrateStorage = useSignal(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_PREFIX + props.quizPath);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as QuizProgress;
-      if (parsed.quizPath !== props.quizPath) return;
-      if (!Array.isArray(parsed.tracks)) return;
-      const validIds = new Set(props.tracks.map((track) => track.id));
-      if (parsed.tracks.length !== props.tracks.length) return;
-      if (
-        !parsed.tracks.every((progressRow) => validIds.has(progressRow.trackId))
-      ) {
-        return;
+  useSignalEffect(() => {
+    if (!didHydrateStorage.value) {
+      try {
+        const merged = tryMergeStoredProgress(
+          localStorage.getItem(STORAGE_KEY_PREFIX + props.quizPath),
+          props.quizPath,
+          props.tracks,
+        );
+        if (merged) {
+          progress.value = merged;
+          if (isComplete(merged)) showResults.value = true;
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        didHydrateStorage.value = true;
       }
-      const merged: QuizProgress = {
-        ...parsed,
-        score: scoreFromProgress(parsed),
-      };
-      progress.value = merged;
-      if (isComplete(merged)) showResults.value = true;
-    } catch {
-      /* ignore */
     }
-  }, []);
-
-  useEffect(() => {
     try {
       localStorage.setItem(
         STORAGE_KEY_PREFIX + props.quizPath,
@@ -95,7 +114,7 @@ export default function QuizController(props: Readonly<Props>) {
     } catch {
       /* ignore */
     }
-  }, [progress.value]);
+  });
 
   const confirmSettings = () => {
     const replayLimitValue = Math.max(
@@ -166,6 +185,12 @@ export default function QuizController(props: Readonly<Props>) {
     if (
       !progressRow || progressRow.status === "correct" ||
       progressRow.status === "incorrect"
+    ) {
+      return;
+    }
+
+    if (
+      !guessMatchesSuggestionPool(answerDraft.value, props.titleSuggestions)
     ) {
       return;
     }
@@ -285,6 +310,21 @@ export default function QuizController(props: Readonly<Props>) {
     ? props.tracks.findIndex((track) => track.id === currentTrack.id) + 1
     : 0;
 
+  const canSubmitGuess = guessMatchesSuggestionPool(
+    answerDraft.value,
+    props.titleSuggestions,
+  );
+  const suggestionPoolHintId = `answer-pool-hint-${activeId.value ?? "none"}`;
+  const showPoolHint = !answerLocked && answerDraft.value.trim() !== "" &&
+    !canSubmitGuess;
+
+  let submitTitle: string | undefined;
+  if (!answerLocked && !canSubmitGuess) {
+    submitTitle = answerDraft.value.trim() === ""
+      ? "Type a title that matches the suggestions list."
+      : "Adjust your answer to match a suggested title (same spelling rules as scoring).";
+  }
+
   return (
     <div class="space-y-6">
       <div class="grid grid-cols-4 sm:grid-cols-5 gap-2">
@@ -327,15 +367,25 @@ export default function QuizController(props: Readonly<Props>) {
             suggestions={props.titleSuggestions}
             value={answerDraft.value}
             disabled={answerLocked}
+            ariaDescribedBy={showPoolHint ? suggestionPoolHintId : undefined}
             onValue={(nextValue) => {
               answerDraft.value = nextValue;
             }}
           />
+          {showPoolHint && (
+            <output
+              id={suggestionPoolHintId}
+              class="text-xs opacity-80 block"
+            >
+              Match a suggested title to enable Submit.
+            </output>
+          )}
           <div class="flex flex-wrap gap-3">
             <Button
               variant="success"
               class="px-6"
-              disabled={answerLocked || answerDraft.value.trim() === ""}
+              title={submitTitle}
+              disabled={answerLocked || !canSubmitGuess}
               onClick={onSubmit}
             >
               Submit
