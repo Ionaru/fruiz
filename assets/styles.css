@@ -1,26 +1,42 @@
 @import "tailwindcss";
+@source "tailwindcss-neumorphism-ui";
+@import "tailwindcss-neumorphism-ui";
+
+@source inline("shadow-none");
 
 @layer components {
   .plateau {
-    @apply px-6 py-3 rounded-full
-      transition-all duration-150 ease-out
+    @apply nm-protrude transition-all duration-200 ease-out bg-linear-to-br from-stone-100 to-stone-200;
 
-      bg-gray-100 text-black
+    &.success {
+      @apply to-green-200 dark:from-green-900;
+    }
 
-      shadow-[-6px_-6px_12px_rgba(255,255,255,0.7),6px_6px_12px_rgba(0,0,0,0.08)]
+    &.danger {
+      @apply to-red-200 dark:from-red-900;
+    }
 
-      dark:bg-[#20232b] dark:text-white
-      dark:shadow-[-4px_-4px_10px_rgba(255,255,255,0.04),4px_4px_10px_rgba(0,0,0,0.5)];
+    &.warning {
+      @apply to-yellow-200 dark:from-yellow-900;
+    }
+
+    &.info {
+      @apply to-blue-200 dark:from-blue-900;
+    }
+
+    @variant dark {
+      @apply text-white nm-highlight-stone-700/50! nm-shadow-stone-950/70! from-stone-700 to-stone-900;
+    }
   }
 
-  .plateau-interactive {
+  button.plateau {
+    @apply cursor-pointer;
     @variant hover {
-      @apply bg-[#d9dbe1] dark:bg-[#1c1f26];
+      @apply nm-protrude-md;
     }
 
     @variant active {
-      @apply shadow-[inset_3px_3px_6px_rgba(0,0,0,0.08),inset_-3px_-3px_6px_rgba(255,255,255,0.6)]
-        dark:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.7),inset_-3px_-3px_6px_rgba(255,255,255,0.03)];
+      @apply nm-dent-sm;
     }
   }
 }

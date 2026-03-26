@@ -1,10 +1,12 @@
+import { db } from "../../../db/db.ts";
 import { define } from "../../../utils.ts";
 
 const getMusicFile = async (id: string) => {
-  const music = await Deno.readTextFile("data/music.json");
-  const musicData = JSON.parse(music);
-  return musicData[id].filename;
-}
+  const track = await db.query.tracks.findFirst({
+    where: { id },
+  });
+  return track?.fileName;
+};
 
 function parseRange(
   range: string | null,
@@ -38,8 +40,11 @@ export const handler = define.handlers({
   async GET(ctx) {
     let file: Deno.FsFile | undefined;
     try {
-      const filename = await getMusicFile(ctx.params.id);
-      file = await Deno.open(`data/${filename}`, { read: true });
+      const fileName = await getMusicFile(ctx.params.id);
+      if (!fileName) {
+        return new Response("Not found", { status: 404 });
+      }
+      file = await Deno.open(fileName, { read: true });
     } catch (e) {
       if (e instanceof Deno.errors.NotFound) {
         return new Response("Not found", { status: 404 });
@@ -76,7 +81,10 @@ export const handler = define.handlers({
       }
 
       base.set("Content-Length", String(offset));
-      base.set("Content-Range", `bytes ${start}-${start + offset - 1}/${fileSize}`);
+      base.set(
+        "Content-Range",
+        `bytes ${start}-${start + offset - 1}/${fileSize}`,
+      );
 
       return new Response(buf.subarray(0, offset), {
         status: 206,

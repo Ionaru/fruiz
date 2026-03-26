@@ -19,5 +19,14 @@
   },
   "[tailwindcss]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "sqltools.useNodeRuntime": true,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "database": "${workspaceFolder:fruiz}/quiz.db",
+      "name": "FruizDB"
+    }
+  ]
 }

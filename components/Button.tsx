@@ -1,16 +1,13 @@
-import type { ComponentChildren } from "preact";
+import type { ButtonHTMLAttributes } from "preact";
 
-export interface ButtonProps {
-  id?: string;
-  onClick?: () => void;
-  children?: ComponentChildren;
-  disabled?: boolean;
+export interface ButtonProps extends ButtonHTMLAttributes {
+  variant?:
+    | "success"
+    | "danger"
+    | "warning"
+    | "info"
 }
 
-export function Button(props: ButtonProps) {
-  return (
-    <button class="plateau plateau-interactive">
-      Button
-    </button>
-  );
+export function Button(props: Readonly<ButtonProps>) {
+  return <button {...props} class={`plateau rounded-full p-4 ${props.variant}`} />;
 }
