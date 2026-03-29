@@ -3,6 +3,7 @@ import { asc } from "drizzle-orm";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { PillLink } from "../../../components/ui/PillLink.tsx";
+import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { tracks } from "../../../db/schema.ts";
@@ -38,13 +39,18 @@ export default define.page<typeof handler>(({ data }) => (
     <ul class="flex flex-col gap-2">
       {data.tracks.map((t) => (
         <li key={t.id}>
-          <a
-            href={`/admin/tracks/${t.id}`}
-            class="plateau rounded-xl px-4 py-3 flex flex-wrap justify-between gap-2 no-underline"
-          >
-            <span class="font-medium">{t.title}</span>
-            <span class="text-sm opacity-80 capitalize">{t.difficulty}</span>
-          </a>
+          <div class="plateau rounded-xl px-4 py-3 flex flex-wrap items-center gap-3">
+            <div class="shrink-0">
+              <AudioPlayer audioId={t.id} compact />
+            </div>
+            <a
+              href={`/admin/tracks/${t.id}`}
+              class="flex flex-wrap flex-1 min-w-0 justify-between gap-2 no-underline"
+            >
+              <span class="font-medium">{t.title}</span>
+              <span class="text-sm opacity-80 capitalize">{t.difficulty}</span>
+            </a>
+          </div>
         </li>
       ))}
     </ul>

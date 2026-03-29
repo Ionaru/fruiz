@@ -1,6 +1,0 @@
-{
-  "$schema": "data/music-schema.json",
-  "1": {
-    "filename": "audio.mp3"
-  }
-}

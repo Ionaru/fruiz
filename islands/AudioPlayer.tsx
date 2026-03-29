@@ -1,4 +1,5 @@
-import { useSignal } from "@preact/signals";
+import { effect, signal, useSignal } from "@preact/signals";
+import { useSignalRef } from '@preact/signals/utils';
 import { Button } from "../components/Button.tsx";
 
 interface AudioPlayerProps {
@@ -7,45 +8,95 @@ interface AudioPlayerProps {
   disabled?: boolean;
   /** Called when audio actually starts (after user gesture). */
   onPlayStart?: () => void;
+  /** Smaller controls for dense layouts (e.g. admin lists). */
+  compact?: boolean;
+}
+
+export function createIsPlayingSignal(audio: HTMLAudioElement) {
+  const isPlaying = signal(false);
+
+  const update = () => {
+    isPlaying.value =
+      !audio.paused &&
+      !audio.ended &&
+      audio.readyState > 2;
+  };
+
+  // Core playback events
+  audio.addEventListener('play', update);
+  audio.addEventListener('pause', update);
+  audio.addEventListener('ended', update);
+
+  // More precise “actually playing” signals
+  audio.addEventListener('playing', update);
+  audio.addEventListener('waiting', update);
+  audio.addEventListener('seeking', update);
+
+  // Initial state sync
+  update();
+
+  // Optional cleanup
+  const dispose = () => {
+    audio.removeEventListener('play', update);
+    audio.removeEventListener('pause', update);
+    audio.removeEventListener('ended', update);
+    audio.removeEventListener('playing', update);
+    audio.removeEventListener('waiting', update);
+    audio.removeEventListener('seeking', update);
+  };
+
+  return { isPlaying, dispose };
 }
 
 export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
-  const audio = useSignal<HTMLAudioElement | null>(null);
+  const audioRef = useSignalRef<HTMLAudioElement | null>(null);
+  const audioPlaying = useSignal(false);
+
+  effect(() => {
+    if (!audioRef.value) return;
+    const { isPlaying, dispose } = createIsPlayingSignal(audioRef.value);
+    audioPlaying.value = isPlaying.value;
+    return dispose;
+  });
 
   const play = () => {
-    if (props.disabled) return;
-    if (audio.value) {
-      props.onPlayStart?.();
-      void audio.value.play();
-    } else {
-      audio.value = new Audio(`/api/listen/${props.audioId}`);
-      audio.value.addEventListener("play", () => props.onPlayStart?.(), {
-        once: true,
-      });
-      void audio.value.play();
-    }
+    audioRef.value?.play();
   };
 
   const stop = () => {
-    audio.value?.pause();
-    audio.value = null;
+    if (!audioRef.value) return;
+    audioRef.value.pause();
+    audioRef.value.currentTime = 0;
   };
 
+  const pad = props.compact ? "px-4 py-2" : "px-8";
   return (
-    <div class="flex flex-wrap gap-4 py-2 items-center">
-      {!audio.value && (
+    <div
+      class={
+        props.compact
+          ? "flex flex-wrap gap-2 items-center"
+          : "flex flex-wrap gap-4 py-2 items-center"
+      }
+    >
+      <audio ref={audioRef} src={`/api/listen/${props.audioId}`} preload="metadata" />
+      {!audioPlaying.value && (
         <Button
-          class="px-8"
+          class={pad}
           variant="success"
-          id="play"
+          id={`listen-play-${props.audioId}`}
           disabled={props.disabled}
           onClick={play}
         >
           Play
         </Button>
       )}
-      {audio.value && (
-        <Button class="px-8" variant="danger" id="stop" onClick={stop}>
+      {audioPlaying.value && (
+        <Button
+          class={pad}
+          variant="danger"
+          id={`listen-stop-${props.audioId}`}
+          onClick={stop}
+        >
           Stop
         </Button>
       )}
