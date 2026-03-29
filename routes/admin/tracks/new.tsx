@@ -56,7 +56,7 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell maxWidth="xl">
+  <AdminPageShell>
     <Head>
       <title>New track — admin</title>
     </Head>
@@ -64,10 +64,12 @@ export default define.page<typeof handler>(({ data }) => (
     <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
       New track
     </h1>
-    <TrackForm
-      action="/admin/tracks/new"
-      categories={data.categoryOptions}
-      submitLabel="Create track"
-    />
+    <div class="mx-auto w-full">
+      <TrackForm
+        action="/admin/tracks/new"
+        categories={data.categoryOptions}
+        submitLabel="Create track"
+      />
+    </div>
   </AdminPageShell>
 ));

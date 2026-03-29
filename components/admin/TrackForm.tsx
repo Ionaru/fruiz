@@ -1,7 +1,16 @@
+import TrackCategoriesPick from "../../islands/TrackCategoriesPick.tsx";
+import TrackDifficultyPick from "../../islands/TrackDifficultyPick.tsx";
 import { Button } from "../Button.tsx";
 import { FieldGroup } from "../ui/FieldGroup.tsx";
 import { TextInput } from "../ui/TextInput.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
+
+function resolvedDifficulty(
+  raw: string | undefined,
+): "easy" | "hard" {
+  const s = String(raw ?? "easy").trim().toLowerCase();
+  return s === "hard" ? "hard" : "easy";
+}
 
 export interface TrackFormProps {
   action: string;
@@ -15,12 +24,12 @@ export interface TrackFormProps {
 }
 
 export function TrackForm(props: Readonly<TrackFormProps>) {
-  const selected = new Set(props.selectedCategoryIds ?? []);
+  const initialDifficulty = resolvedDifficulty(props.defaultDifficulty);
   return (
     <form
       method={props.method ?? "post"}
       action={props.action}
-      class="plateau rounded-2xl p-5 space-y-4 max-w-lg"
+      class="plateau w-full rounded-2xl p-5 space-y-4"
     >
       <FieldGroup label="Title" htmlFor="tr-title">
         <TextInput
@@ -39,42 +48,11 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
           defaultValue={props.defaultAudioUrl ?? ""}
         />
       </FieldGroup>
-      <div class="space-y-1">
-        <span class="text-sm font-medium">Difficulty</span>
-        <div class="flex gap-3 pt-1">
-          {(["easy", "hard"] as const).map((difficulty) => (
-            <label
-              key={difficulty}
-              class="flex items-center gap-2 text-sm capitalize"
-            >
-              <input
-                type="radio"
-                name="difficulty"
-                value={difficulty}
-                defaultChecked={(props.defaultDifficulty ?? "easy") ===
-                  difficulty}
-              />
-              {difficulty}
-            </label>
-          ))}
-        </div>
-      </div>
-      <fieldset class="space-y-2">
-        <legend class="text-sm font-medium">Categories</legend>
-        <div class="flex flex-col gap-2">
-          {props.categories.map((c) => (
-            <label key={c.id} class="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="categoryIds"
-                value={c.id}
-                defaultChecked={selected.has(c.id)}
-              />
-              {c.name}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <TrackDifficultyPick initialDifficulty={initialDifficulty} />
+      <TrackCategoriesPick
+        categories={props.categories}
+        initialSelectedIds={props.selectedCategoryIds ?? []}
+      />
       <Button type="submit" variant="success" class="w-full">
         {props.submitLabel}
       </Button>

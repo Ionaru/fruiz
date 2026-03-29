@@ -16,7 +16,7 @@ export function DangerZoneDeleteForm(
     <form
       method="post"
       action={props.action}
-      class="plateau rounded-2xl p-5 space-y-3 border border-red-900/20"
+      class="plateau w-full rounded-2xl p-5 space-y-3 border border-red-900/20"
     >
       <input type="hidden" name="intent" value="delete" />
       <p class="text-sm font-medium text-red-900 dark:text-red-200">

@@ -94,7 +94,7 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell maxWidth="xl">
+  <AdminPageShell>
     <Head>
       <title>{data.track.title} — track</title>
     </Head>
@@ -107,19 +107,21 @@ export default define.page<typeof handler>(({ data }) => (
         Type DELETE to confirm removal.
       </InlineAlert>
     )}
-    <TrackForm
-      action={`/admin/tracks/${data.track.id}`}
-      categories={data.categoryOptions}
-      selectedCategoryIds={data.selectedCategoryIds}
-      defaultTitle={data.track.title}
-      defaultAudioUrl={data.track.audioUrl}
-      defaultDifficulty={data.track.difficulty}
-      submitLabel="Save changes"
-    />
-    <DangerZoneDeleteForm
-      action={`/admin/tracks/${data.track.id}`}
-      confirmInputId="confirm-del-track"
-      submitLabel="Delete track"
-    />
+    <div class="mx-auto flex w-full flex-col gap-6">
+      <TrackForm
+        action={`/admin/tracks/${data.track.id}`}
+        categories={data.categoryOptions}
+        selectedCategoryIds={data.selectedCategoryIds}
+        defaultTitle={data.track.title}
+        defaultAudioUrl={data.track.audioUrl}
+        defaultDifficulty={data.track.difficulty}
+        submitLabel="Save changes"
+      />
+      <DangerZoneDeleteForm
+        action={`/admin/tracks/${data.track.id}`}
+        confirmInputId="confirm-del-track"
+        submitLabel="Delete track"
+      />
+    </div>
   </AdminPageShell>
 ));
