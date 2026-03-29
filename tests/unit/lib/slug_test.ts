@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import { decodeSlug, encodeSlug } from "../../../lib/slug.ts";
 
 Deno.test("encodeSlug round-trips with decodeSlug", () => {

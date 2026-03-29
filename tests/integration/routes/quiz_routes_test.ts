@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import { decodeSlug } from "../../../lib/slug.ts";
 import { selectTracksDeterministic } from "../../../lib/selectTracks.ts";
 import type { SelectableTrack } from "../../../lib/selectTracks.ts";

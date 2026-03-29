@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "jsr:@std/assert@1";
+import { assert, assertEquals } from "@std/assert";
 import { requireAdminSessionOrRedirect } from "../lib/adminSession.ts";
 import type { State } from "../utils.ts";
 

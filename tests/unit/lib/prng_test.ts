@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import { mulberry32, seedStringToUint32 } from "../../../lib/prng.ts";
 
 Deno.test("mulberry32 is deterministic for the same seed", () => {

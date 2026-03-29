@@ -4,10 +4,7 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
-import {
-  decodeBase64Url,
-  encodeBase64Url,
-} from "jsr:@std/encoding@1/base64url";
+import { decodeBase64Url, encodeBase64Url } from "@std/encoding/base64url";
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/db.ts";

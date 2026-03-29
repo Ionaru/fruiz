@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 
 Deno.test("guessMatchesSuggestionPool: empty and whitespace-only are false", () => {

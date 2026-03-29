@@ -1,4 +1,4 @@
-import { assert } from "jsr:@std/assert@1";
+import { assert } from "@std/assert";
 import {
   appendClearSessionCookie,
   SESSION_COOKIE_NAME,
