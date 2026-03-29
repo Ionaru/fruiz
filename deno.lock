@@ -44,8 +44,8 @@
     "npm:@peculiar/asn1-schema@^2.6.0": "2.6.0",
     "npm:@peculiar/asn1-x509@^2.6.1": "2.6.1",
     "npm:@peculiar/x509@^1.14.3": "1.14.3",
-    "npm:@preact/signals@^2.2.1": "2.8.2_preact@10.29.0",
-    "npm:@preact/signals@^2.5.0": "2.8.2_preact@10.29.0",
+    "npm:@preact/signals@^2.2.1": "2.9.0_preact@10.29.0",
+    "npm:@preact/signals@^2.9.0": "2.9.0_preact@10.29.0",
     "npm:@prefresh/vite@^2.4.8": "2.4.12_preact@10.29.0_vite@7.3.1",
     "npm:@tailwindcss/vite@^4.1.12": "4.2.2_vite@7.3.1",
     "npm:drizzle-kit@1.0.0-beta.19": "1.0.0-beta.19",
@@ -1103,8 +1103,8 @@
     "@preact/signals-core@1.14.0": {
       "integrity": "sha512-AowtCcCU/33lFlh1zRFf/u+12rfrhtNakj7UpaGEsmMwUKpKWMVvcktOGcwBBNiB4lWrZWc01LhiyyzVklJyaQ=="
     },
-    "@preact/signals@2.8.2_preact@10.29.0": {
-      "integrity": "sha512-gym5yoa64c+0w2kL7zRAAjY548qzWXbbuOfjsK9F1nWrEqooDwyWnih5SNdonjhQSp27zUqYh7UrxIRnkCyFCA==",
+    "@preact/signals@2.9.0_preact@10.29.0": {
+      "integrity": "sha512-hYrY0KyUqkDgOl1qba/JGn6y81pXnurn21PMaxfcMwdncdZ3M/oVdmpTvEnsGjh48dIwDVc7bjWHqIsngSjYug==",
       "dependencies": [
         "@preact/signals-core",
         "preact"
@@ -2118,7 +2118,7 @@
       "jsr:@fresh/plugin-vite@^1.0.8",
       "jsr:@simplewebauthn/browser@^13.3.0",
       "jsr:@simplewebauthn/server@^13.3.0",
-      "npm:@preact/signals@^2.5.0",
+      "npm:@preact/signals@^2.9.0",
       "npm:@tailwindcss/vite@^4.1.12",
       "npm:drizzle-kit@1.0.0-beta.19",
       "npm:drizzle-orm@1.0.0-beta.19",
