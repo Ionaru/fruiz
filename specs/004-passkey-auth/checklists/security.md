@@ -27,25 +27,26 @@ passes penetration tests.\
 
 ## Authentication and WebAuthn requirements
 
-- [x] CHK006 Are **discoverable credential** expectations written so they
-      cannot be read as permitting a weaker login mode (e.g. username-based
-      allow-list) without an explicit non-goal? [Clarity, Spec FR-002]
+- [x] CHK006 Are **discoverable credential** expectations written so they cannot
+      be read as permitting a weaker login mode (e.g. username-based allow-list)
+      without an explicit non-goal? [Clarity, Spec FR-002]
 - [x] CHK007 Are **challenge / assertion** lifecycle requirements documented at
       the product level (TTL, one-time use, binding to user action), or is that
       intentionally deferred with a visible gap? [Gap, Plan research WebAuthn
       challenges]
 - [x] CHK008 Are requirements explicit about **what must never be sent to the
-      client** (private keys, raw session rows, other users’ data) beyond generic
-      constitution language? [Completeness, Spec Constitution Security, Gap]
+      client** (private keys, raw session rows, other users’ data) beyond
+      generic constitution language? [Completeness, Spec Constitution Security,
+      Gap]
 - [x] CHK009 Is **credential counter / replay** concern reflected in
       requirements quality (or accepted as implementation-only) with a stated
       assumption? [Assumption, Gap, Plan lib/auth patterns]
 
 ## Authorization and admin boundary
 
-- [x] CHK010 Are **admin-only resources** defined broadly enough that new `/admin`
-      routes cannot bypass requirements silently? [Completeness, Spec User Story
-      3, Constitution Passkey-Secured Administration]
+- [x] CHK010 Are **admin-only resources** defined broadly enough that new
+      `/admin` routes cannot bypass requirements silently? [Completeness, Spec
+      User Story 3, Constitution Passkey-Secured Administration]
 - [x] CHK011 Is the **two-step** model (authenticated **and** admin flag)
       unambiguous relative to “protected pages” in SC-006? [Consistency, Spec
       FR-006, SC-006]
@@ -65,8 +66,8 @@ passes penetration tests.\
 - [x] CHK015 Are **rate limiting / brute-force** expectations documented or
       explicitly excluded as non-goals for this feature? [Gap, NFR security]
 - [x] CHK016 Are **registration abuse** dimensions (mass signups, duplicate
-      usernames allowed) acknowledged for security-relevant ambiguity? [Assumption,
-      Spec FR-001, Assumptions uniqueness]
+      usernames allowed) acknowledged for security-relevant ambiguity?
+      [Assumption, Spec FR-001, Assumptions uniqueness]
 
 ## Data and persistence requirements
 
@@ -82,18 +83,18 @@ passes penetration tests.\
 
 ## Cross-document consistency
 
-- [x] CHK020 Do **constitution** admin passkey/session expectations conflict with
-      **FR-009** placement of logout (e.g. admin pages historically offering
-      logout) at the requirements level? [Conflict risk, Constitution IV, Spec
-      FR-009]
+- [x] CHK020 Do **constitution** admin passkey/session expectations conflict
+      with **FR-009** placement of logout (e.g. admin pages historically
+      offering logout) at the requirements level? [Conflict risk, Constitution
+      IV, Spec FR-009]
 - [x] CHK021 Are **contracts** security-relevant fields (Set-Cookie, error
       bodies) aligned with spec FR-004/FR-009 without inventing obligations not
       in the spec? [Consistency, contracts/README.md, Spec FR-004]
 
 ## Acceptance criteria (security angle)
 
-- [x] CHK022 Can **SC-003** be evaluated without a written definition of
-      “admin area” scope and “denial” semantics? [Measurability, Spec SC-003]
+- [x] CHK022 Can **SC-003** be evaluated without a written definition of “admin
+      area” scope and “denial” semantics? [Measurability, Spec SC-003]
 - [x] CHK023 Does **SC-006** avoid relying on undefined “protected pages” for
       security sign-off? [Measurability, Spec SC-006, Gap]
 
@@ -102,8 +103,9 @@ passes penetration tests.\
 - [x] CHK024 Is reliance on **RP ID / origin** configuration documented as a
       security assumption in requirements, or only in engineering docs?
       [Dependency, Gap, Plan quickstart env]
-- [x] CHK025 Is **TLS in production** assumed implicitly by Secure cookies without
-      a requirement tying deployment to HTTPS? [Assumption, Spec FR-004, Gap]
+- [x] CHK025 Is **TLS in production** assumed implicitly by Secure cookies
+      without a requirement tying deployment to HTTPS? [Assumption, Spec FR-004,
+      Gap]
 
 ## Ambiguities and conflicts
 
@@ -117,6 +119,6 @@ passes penetration tests.\
 
 ## Notes
 
-- Items address **requirement text quality**; failing items → edit **spec/plan**,
-  not code first
+- Items address **requirement text quality**; failing items → edit
+  **spec/plan**, not code first
 - Mark done with `[x]` when reviewed

@@ -1,10 +1,13 @@
 import { define } from "../../../utils.ts";
 import {
   beginAuthentication,
-  createAdminSessionValue,
   finishAuthentication,
-  sessionCookieHeader,
 } from "../../../lib/auth.ts";
+import {
+  appendSessionCookie,
+  createDbSession,
+  deleteDbSession,
+} from "../../../lib/session.ts";
 
 export const handler = define.handlers({
   async GET(_ctx) {
@@ -38,28 +41,33 @@ export const handler = define.handlers({
     const origin = ctx.req.headers.get("origin") ??
       new URL(ctx.req.url).origin;
     try {
-      const adminUser = await finishAuthentication(
+      const user = await finishAuthentication(
         body.challengeId,
         body.credential,
         origin,
       );
-      const token = await createAdminSessionValue(
-        adminUser.userId,
-        adminUser.username,
-      );
+
+      const priorSessionId = ctx.state.session.id;
+      if (priorSessionId) {
+        await deleteDbSession(priorSessionId).catch(() => {});
+      }
+
+      const sessionId = await createDbSession(user.userId);
+      const headers = new Headers();
+      appendSessionCookie(headers, sessionId);
+
       return Response.json(
         {
           ok: true,
-          adminUser: {
-            id: adminUser.userId,
-            username: adminUser.username,
+          user: {
+            id: user.userId,
+            username: user.username,
+            admin: user.admin,
           },
         },
         {
           status: 200,
-          headers: {
-            "Set-Cookie": sessionCookieHeader(token, 60 * 60 * 24),
-          },
+          headers,
         },
       );
     } catch (e) {

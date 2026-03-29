@@ -21,7 +21,7 @@ export function SettingsGate(props: Readonly<SettingsGateProps>) {
         id="replay-limit"
         type="number"
         min={0}
-        class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent"
+        class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
         value={String(props.draftLimit)}
         onInput={(event) =>
           props.onDraftLimitInput(

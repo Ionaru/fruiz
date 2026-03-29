@@ -9,7 +9,7 @@ import { Button } from "../../../components/Button.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const id = ctx.params.id;
     const [track] = await db.select().from(tracks).where(eq(tracks.id, id))
@@ -43,7 +43,7 @@ export const handler = define.handlers({
   },
 
   async POST(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const id = ctx.params.id;
     const form = await ctx.req.formData();
@@ -132,7 +132,7 @@ export default define.page<typeof handler>(({ data }) => (
         <input
           id="confirm-del-track"
           name="confirm"
-          class="plateau rounded-xl px-3 py-2 w-full border-0 bg-transparent"
+          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           autocomplete="off"
         />
         <Button type="submit" variant="danger" class="w-full">

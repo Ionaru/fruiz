@@ -7,7 +7,7 @@ import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const rows = await db.select().from(tracks).orderBy(asc(tracks.title));
     return { data: { session: gate.session, tracks: rows } };

@@ -10,17 +10,17 @@
 Deliver **public passkey registration** (username 3–24 chars + first passkey),
 **discoverable passkey login** (no username), **DB-backed sessions** (UUID in
 **HttpOnly** cookie, **SameSite=Strict**, **Secure** when not dev), and
-**account management** from the home page (add passkeys without limit, **log out**
-only here). **Admin** uses the same session: `users.admin === true` gates
+**account management** from the home page (add passkeys without limit, **log
+out** only here). **Admin** uses the same session: `users.admin === true` gates
 `/admin/*`; the app **never** assigns admin in code.
 
-**Technical approach**: Migrate `admin_users` + `passkeys` to a unified
-`users` model, add a `sessions` table, replace the current HMAC cookie
-(`lib/auth.ts`) with server-stored sessions, implement **first** Fresh
-middleware (`main.ts`) to hydrate/persist `ctx.state`, extend **@simplewebauthn**
-flows for resident/discoverable credentials, and add islands + routes for
-registration, login, and account UI. Use **`@std/http`** cookie helpers for
-cookie parse/serialize per spec.
+**Technical approach**: Migrate `admin_users` + `passkeys` to a unified `users`
+model, add a `sessions` table, replace the current HMAC cookie (`lib/auth.ts`)
+with server-stored sessions, implement **first** Fresh middleware (`main.ts`) to
+hydrate/persist `ctx.state`, extend **@simplewebauthn** flows for
+resident/discoverable credentials, and add islands + routes for registration,
+login, and account UI. Use **`@std/http`** cookie helpers for cookie
+parse/serialize per spec.
 
 ## Technical Context
 
@@ -36,10 +36,10 @@ proportionally for auth/session paths per constitution\
 `components/`, `lib/`)\
 **Performance Goals**: Standard single-instance quiz app; session lookup by
 primary key (UUID); no new hard latency targets\
-**Constraints**: Spec FR-004/FR-008/FR-009; constitution server-first, signals-only
-islands, no passwords; quiz identity unchanged (FR-000)\
-**Scale/Scope**: Single-node acceptable for WebAuthn **challenge store** (current
-in-memory `Map` in `lib/auth.ts`); document limitation in `research.md`
+**Constraints**: Spec FR-004/FR-008/FR-009; constitution server-first,
+signals-only islands, no passwords; quiz identity unchanged (FR-000)\
+**Scale/Scope**: Single-node acceptable for WebAuthn **challenge store**
+(current in-memory `Map` in `lib/auth.ts`); document limitation in `research.md`
 
 ## Constitution Check
 
@@ -50,9 +50,9 @@ _GATE: Passed for planning. Re-checked after Phase 1 design below._
 - **Server-First Boundaries**: All verification, session persistence, and user
   lookup remain server-side. Islands only run WebAuthn client calls and minimal
   UI; handlers return only non-secret JSON (challenge handles, options).
-- **Components Versus Islands**: New interactive auth/account UI in **`islands/`**
-  with **`@preact/signals` only**—no `preact/hooks`. Layout/links on **`routes/`**
-  / **`components/`** stay SSR-only.
+- **Components Versus Islands**: New interactive auth/account UI in
+  **`islands/`** with **`@preact/signals` only**—no `preact/hooks`. Layout/links
+  on **`routes/`** / **`components/`** stay SSR-only.
 - **Mobile-First Playability**: Registration, login, and account pages use
   full-width touch-friendly controls; passkey flows rely on OS sheets; no
   hover-only affordances.
@@ -103,9 +103,9 @@ islands/                 # NEW or extended: AccountAuth island(s), signals-only
 components/              # SSR buttons/layout only
 ```
 
-**Structure Decision**: Single Fresh app as today. Feature adds `routes/account/`,
-new `lib/session.ts`, schema migration, and refactors `lib/auth.ts` away from
-HMAC cookies toward DB sessions + `@std/http` cookies.
+**Structure Decision**: Single Fresh app as today. Feature adds
+`routes/account/`, new `lib/session.ts`, schema migration, and refactors
+`lib/auth.ts` away from HMAC cookies toward DB sessions + `@std/http` cookies.
 
 **Middleware ordering**: Keep `staticFiles()` first if present for cheap asset
 serving; register the **session** middleware **immediately after** it so session

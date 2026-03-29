@@ -6,7 +6,7 @@ import { categories } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 export const handler = define.handlers({
   async GET(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const rows = await db.select().from(categories).orderBy(
       asc(categories.name),

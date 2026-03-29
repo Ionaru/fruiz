@@ -17,7 +17,7 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
       </label>
       <input
         id={`answer-${props.instanceId}`}
-        class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent"
+        class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
         type="text"
         list={listId}
         value={props.value}

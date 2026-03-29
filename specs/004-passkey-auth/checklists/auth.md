@@ -1,7 +1,8 @@
 # Auth requirements quality checklist: Passkey registration and login
 
-**Purpose**: Unit-test the **written requirements** (spec/plan) for completeness,
-clarity, consistency, and measurability—not implementation behavior.\
+**Purpose**: Unit-test the **written requirements** (spec/plan) for
+completeness, clarity, consistency, and measurability—not implementation
+behavior.\
 **Created**: 2026-03-29\
 **Feature**: [spec.md](../spec.md) · [plan.md](../plan.md)\
 **Context**: `tasks.md` is present under this feature folder; plan and contracts
@@ -27,9 +28,10 @@ inform gaps.
 
 ## Requirement clarity
 
-- [x] CHK006 Is **“discoverable passkeys”** tied to objective acceptance language
-      (e.g. no username field on login) so the requirement is not confused with
-      allow-list authentication? [Clarity, Spec FR-002, User Story 2]
+- [x] CHK006 Is **“discoverable passkeys”** tied to objective acceptance
+      language (e.g. no username field on login) so the requirement is not
+      confused with allow-list authentication? [Clarity, Spec FR-002, User Story
+      2]
 - [x] CHK007 Is **“clear feedback”** on invalid username length defined in
       measurable terms (e.g. blocking submit vs inline message) or left
       intentionally open—and is that openness acceptable? [Clarity, Spec User
@@ -52,9 +54,9 @@ inform gaps.
 - [x] CHK012 Are **FR-006** (read-only admin flag) and **Non-Goals** (no admin
       assignment logic) free of wording that could imply a hidden bootstrap
       story? [Consistency, Spec FR-006, Non-Goals]
-- [x] CHK013 Are **session lifecycle** expectations consistent between Edge Cases
-      (expired cookie, unknown id) and Success Criteria SC-006? [Consistency,
-      Spec Edge Cases, SC-006]
+- [x] CHK013 Are **session lifecycle** expectations consistent between Edge
+      Cases (expired cookie, unknown id) and Success Criteria SC-006?
+      [Consistency, Spec Edge Cases, SC-006]
 - [x] CHK014 Does **Constitution Alignment** contradict or duplicate **FR-008**
       in a way that could confuse “first middleware” vs generic “before
       handlers” wording? [Consistency, Spec FR-008, Constitution Security]

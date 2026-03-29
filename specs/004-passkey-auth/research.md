@@ -5,10 +5,11 @@
 ## 1. Discoverable passkey login (no username)
 
 **Decision**: Use `generateAuthenticationOptions` with **no** `allowCredentials`
-(or an empty list), `userVerification: "preferred"` (or `"required"` if stricter UX
-is desired), so the browser can surface **resident** / **discoverable**
+(or an empty list), `userVerification: "preferred"` (or `"required"` if stricter
+UX is desired), so the browser can surface **resident** / **discoverable**
 credentials. Registration MUST use `residentKey: "required"` and
-`userVerification: "preferred"` (or `"required"`) so credentials are discoverable.
+`userVerification: "preferred"` (or `"required"`) so credentials are
+discoverable.
 
 **Rationale**: Matches FR-002 and product clarification; avoids username entry.
 
@@ -49,9 +50,9 @@ rotation/clearing.
 
 ## 4. Unified users and admin flag
 
-**Decision**: Introduce **`users`** (or rename from `admin_users`) with
-`admin` boolean. **`passkeys.userId`** references **`users.id`**. Existing
-`admin_users` rows migrate to `users` with `admin = true`.
+**Decision**: Introduce **`users`** (or rename from `admin_users`) with `admin`
+boolean. **`passkeys.userId`** references **`users.id`**. Existing `admin_users`
+rows migrate to `users` with `admin = true`.
 
 **Rationale**: FR-006 and spec clarifications; one account type.
 
@@ -62,8 +63,8 @@ rotation/clearing.
 
 ## 5. WebAuthn challenge storage
 
-**Decision**: **Retain in-memory `Map`** for challenge IDs in v1 (same pattern as
-current `lib/auth.ts`), with a short TTL.
+**Decision**: **Retain in-memory `Map`** for challenge IDs in v1 (same pattern
+as current `lib/auth.ts`), with a short TTL.
 
 **Rationale**: Constitution allows proportional complexity; app is single-node
 today; fastest path.
@@ -92,10 +93,10 @@ the session cookie (aligned with updated `spec.md` Constitution wording).
 
 **Decision**: **`/admin/*`** requires authenticated session **and**
 `user.admin`. Unauthenticated users redirect to **public login** (e.g.
-`/account` or dedicated `/login`) rather than legacy `/admin/login` that
-assumes admin-only passkey list—**or** keep `/admin/login` as thin redirect to
-global login. Remove “register passkey by raw admin user id” from primary UX;
-account management covers passkey add.
+`/account` or dedicated `/login`) rather than legacy `/admin/login` that assumes
+admin-only passkey list—**or** keep `/admin/login` as thin redirect to global
+login. Remove “register passkey by raw admin user id” from primary UX; account
+management covers passkey add.
 
 **Rationale**: Spec says admin assignment is out of app; public registration is
 for everyone.

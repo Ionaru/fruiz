@@ -1,20 +1,21 @@
 # Specification Quality Checklist: Passkey registration and login
 
-**Purpose**: Validate specification completeness and quality before proceeding to
-planning\
+**Purpose**: Validate specification completeness and quality before proceeding
+to planning\
 **Created**: 2026-03-29\
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
 
 - [x] No implementation details (languages, frameworks, APIs) — _See Notes:
-  Constitution and Assumptions document mandated stack (`Fresh`, `@std/http`)
-  per product input; Functional Requirements stay outcome-oriented except
-  product-named `sessions` table and cookie attributes._
+      Constitution and Assumptions document mandated stack (`Fresh`,
+      `@std/http`) per product input; Functional Requirements stay
+      outcome-oriented except product-named `sessions` table and cookie
+      attributes._
 - [x] Focused on user value and business needs
 - [x] Written for non-technical stakeholders — _Core journeys and Success
-  Criteria are stakeholder-friendly; **Constitution Alignment** is technical by
-  repository template._
+      Criteria are stakeholder-friendly; **Constitution Alignment** is technical
+      by repository template._
 - [x] All mandatory sections completed
 
 ## Requirement Completeness

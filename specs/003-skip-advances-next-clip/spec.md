@@ -29,26 +29,27 @@ manually picking the next square.
 flow and matches clip numbering (1 → 2 → …).
 
 **Independent Test**: With at least two clips remaining incomplete, activate a
-clip that has a successor in list order, press Skip, and confirm the active
-clip index increases by one and the audio player targets the new clip.
+clip that has a successor in list order, press Skip, and confirm the active clip
+index increases by one and the audio player targets the new clip.
 
 **Acceptance Scenarios**:
 
 1. **Given** the active track is not the last in quiz order and its progress is
-   not `correct` or `incorrect`, **When** the player activates Skip, **Then** the
-   current track is recorded as `skipped` and the active track becomes the next
-   track in quiz order.
+   not `correct` or `incorrect`, **When** the player activates Skip, **Then**
+   the current track is recorded as `skipped` and the active track becomes the
+   next track in quiz order.
 2. **Given** the scenario in (1), **When** Skip completes, **Then** the answer
    draft for the new active track matches that track’s stored `selectedTitle`,
-   or is empty if none (same behavior as selecting a track in the overview grid).
+   or is empty if none (same behavior as selecting a track in the overview
+   grid).
 
 ---
 
 ### User Story 2 - Skip on last clip still finds work left (Priority: P2)
 
 As a player, when I skip the **last** clip in order but other clips still need
-attention (`unanswered` or `skipped`), I want focus to jump to the **first** such
-clip in list order so I am not stuck on the last tile only.
+attention (`unanswered` or `skipped`), I want focus to jump to the **first**
+such clip in list order so I am not stuck on the last tile only.
 
 **Why this priority**: Finishing the quiz still requires resolving every track;
 moving to an earlier incomplete clip reduces friction.

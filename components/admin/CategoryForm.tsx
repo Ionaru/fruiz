@@ -21,7 +21,7 @@ export function CategoryForm(props: Readonly<CategoryFormProps>) {
           id="cat-name"
           name="name"
           required
-          class="plateau rounded-xl px-3 py-2 w-full border-0 bg-transparent"
+          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultName ?? ""}
         />
       </div>
@@ -33,7 +33,7 @@ export function CategoryForm(props: Readonly<CategoryFormProps>) {
           required
           pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
           title="Lowercase letters, numbers, and hyphens"
-          class="plateau rounded-xl px-3 py-2 w-full border-0 bg-transparent"
+          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultSlug ?? ""}
         />
       </div>

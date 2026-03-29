@@ -8,7 +8,7 @@ import { TrackForm } from "../../../components/admin/TrackForm.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const categoryOptions = await db
       .select({
@@ -22,7 +22,7 @@ export const handler = define.handlers({
   },
 
   async POST(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const form = await ctx.req.formData();
     const title = String(form.get("title") ?? "").trim();

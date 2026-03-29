@@ -17,16 +17,26 @@ export const relations = defineRelations(schema, (relations) => ({
       to: relations.tracks.id.through(relations.trackCategories.trackId),
     }),
   },
-  adminUsers: {
+  users: {
     passkeys: relations.many.passkeys({
-      from: relations.adminUsers.id,
-      to: relations.passkeys.adminUserId,
+      from: relations.users.id,
+      to: relations.passkeys.userId,
+    }),
+    sessions: relations.many.sessions({
+      from: relations.users.id,
+      to: relations.sessions.userId,
     }),
   },
   passkeys: {
-    adminUser: relations.one.adminUsers({
-      from: relations.passkeys.adminUserId,
-      to: relations.adminUsers.id,
+    user: relations.one.users({
+      from: relations.passkeys.userId,
+      to: relations.users.id,
+    }),
+  },
+  sessions: {
+    user: relations.one.users({
+      from: relations.sessions.userId,
+      to: relations.users.id,
     }),
   },
 }));

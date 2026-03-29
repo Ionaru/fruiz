@@ -7,14 +7,14 @@ import { formatSlugFromName } from "../../../lib/formatSlug.ts";
 import { CategoryForm } from "../../../components/admin/CategoryForm.tsx";
 
 export const handler = define.handlers({
-  async GET(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+  GET(ctx) {
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const slugError = new URL(ctx.req.url).searchParams.get("err") === "slug";
     return { data: { session: gate.session, slugError } };
   },
   async POST(ctx) {
-    const gate = await requireAdminSessionOrRedirect(ctx.req);
+    const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const form = await ctx.req.formData();
     const name = String(form.get("name") ?? "").trim();

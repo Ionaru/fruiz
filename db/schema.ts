@@ -29,15 +29,29 @@ export const trackCategories = sqliteTable(
   ],
 );
 
-export const adminUsers = sqliteTable("admin_users", {
+export const users = sqliteTable("users", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  username: text("username").notNull().unique(),
+  username: text("username").notNull(),
+  admin: integer("admin", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull().references(() => users.id, {
+    onDelete: "cascade",
+  }),
+  data: text("data"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
 
 export const passkeys = sqliteTable("passkeys", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  adminUserId: text("admin_user_id").notNull().references(() => adminUsers.id),
+  userId: text("user_id").notNull().references(() => users.id, {
+    onDelete: "cascade",
+  }),
   credentialId: text("credential_id").notNull().unique(),
   publicKey: text("public_key").notNull(),
   counter: integer("counter").notNull().default(0),

@@ -26,7 +26,7 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
           id="tr-title"
           name="title"
           required
-          class="plateau rounded-xl px-3 py-2 w-full border-0 bg-transparent"
+          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultTitle ?? ""}
         />
       </div>
@@ -39,7 +39,7 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
           name="audioUrl"
           required
           placeholder="static/audio/example.mp3"
-          class="plateau rounded-xl px-3 py-2 w-full border-0 bg-transparent"
+          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultAudioUrl ?? ""}
         />
       </div>

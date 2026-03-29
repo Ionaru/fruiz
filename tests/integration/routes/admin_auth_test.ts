@@ -1,6 +1,6 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { ADMIN_SESSION_COOKIE } from "../../../lib/auth.ts";
+import { SESSION_COOKIE_NAME } from "../../../lib/session.ts";
 
-Deno.test("admin session cookie name is stable", () => {
-  assertEquals(ADMIN_SESSION_COOKIE, "fruiz_admin");
+Deno.test("session cookie name is stable", () => {
+  assertEquals(SESSION_COOKIE_NAME, "fruiz_session");
 });
