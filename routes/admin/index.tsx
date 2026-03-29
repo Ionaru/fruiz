@@ -39,9 +39,14 @@ export default define.page<typeof handler>(({ data }) => (
           {data.session.username}
         </p>
       </div>
-      <PillLink href="/account" class="text-base-900 dark:text-base-100">
-        Account
-      </PillLink>
+      <div class="flex flex-wrap gap-2">
+        <PillLink href="/" class="text-base-900 dark:text-base-100">
+          Home
+        </PillLink>
+        <PillLink href="/account" class="text-base-900 dark:text-base-100">
+          Account
+        </PillLink>
+      </div>
     </header>
     <section class="plateau rounded-2xl p-5 space-y-3">
       <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
