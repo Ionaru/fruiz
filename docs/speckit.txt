@@ -1,0 +1,7 @@
+/speckit.specify
+/speckit.clarify
+/speckit.plan
+/speckit.checklist
+/speckit.tasks
+/speckit.analyze
+/speckit.implement

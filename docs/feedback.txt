@@ -1,0 +1,8 @@
+- No submit without dataset match
+- Skip button should proceed to next clip
+- Volume controls
+- Emergency "kill all sound" button
+- Play/stop buttons respond to clip end. When the clip ends, play button should be visible again.
+- Replace the guess box with a correct/incorrect display. Clip should be playable after guessing, regardless of replay setting. The correct name of the clip should be shown. Add a 'continue' button to proceed to the next clip.
+- The results screen should allow the user to play clips.
+- Better UI: Front & center play controls & guess box. Next & previous clip buttons, no need to show all clips all the time. Navigation should still be easy.

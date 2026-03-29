@@ -13,24 +13,30 @@
     "jsr:@std/assert@*": "1.0.19",
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
+    "jsr:@std/cli@^1.0.28": "1.0.28",
     "jsr:@std/dotenv@~0.225.5": "0.225.6",
     "jsr:@std/encoding@*": "1.0.10",
     "jsr:@std/encoding@1": "1.0.10",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.7": "1.0.9",
     "jsr:@std/fmt@^1.0.8": "1.0.9",
+    "jsr:@std/fmt@^1.0.9": "1.0.9",
     "jsr:@std/fs@^1.0.19": "1.0.23",
+    "jsr:@std/fs@^1.0.23": "1.0.23",
     "jsr:@std/html@^1.0.5": "1.0.5",
     "jsr:@std/http@^1.0.21": "1.0.25",
+    "jsr:@std/http@^1.0.25": "1.0.25",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/json@^1.0.2": "1.0.3",
     "jsr:@std/jsonc@^1.0.2": "1.0.2",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
+    "jsr:@std/net@^1.0.6": "1.0.6",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.1": "1.1.4",
     "jsr:@std/path@^1.1.2": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/semver@^1.0.6": "1.0.8",
+    "jsr:@std/streams@^1.0.17": "1.0.17",
     "jsr:@std/uuid@^1.0.9": "1.1.0",
     "npm:@babel/core@^7.28.0": "7.29.0",
     "npm:@babel/preset-react@^7.27.1": "7.28.5_@babel+core@7.29.0",
@@ -87,9 +93,9 @@
         "jsr:@fresh/build-id",
         "jsr:@std/encoding@^1.0.10",
         "jsr:@std/fmt@^1.0.8",
-        "jsr:@std/fs",
+        "jsr:@std/fs@^1.0.19",
         "jsr:@std/html",
-        "jsr:@std/http",
+        "jsr:@std/http@^1.0.21",
         "jsr:@std/jsonc",
         "jsr:@std/media-types",
         "jsr:@std/path@^1.1.2",
@@ -146,6 +152,9 @@
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
     },
+    "@std/cli@1.0.28": {
+      "integrity": "74ef9b976db59ca6b23a5283469c9072be6276853807a83ec6c7ce412135c70a"
+    },
     "@std/dotenv@0.225.6": {
       "integrity": "1d6f9db72f565bd26790fa034c26e45ecb260b5245417be76c2279e5734c421b"
     },
@@ -167,7 +176,15 @@
     "@std/http@1.0.25": {
       "integrity": "577b4252290af1097132812b339fffdd55fb0f4aeb98ff11bdbf67998aa17193",
       "dependencies": [
-        "jsr:@std/encoding@^1.0.10"
+        "jsr:@std/cli",
+        "jsr:@std/encoding@^1.0.10",
+        "jsr:@std/fmt@^1.0.9",
+        "jsr:@std/fs@^1.0.23",
+        "jsr:@std/html",
+        "jsr:@std/media-types",
+        "jsr:@std/net",
+        "jsr:@std/path@^1.1.4",
+        "jsr:@std/streams"
       ]
     },
     "@std/internal@1.0.12": {
@@ -185,6 +202,9 @@
     "@std/media-types@1.1.0": {
       "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
     },
+    "@std/net@1.0.6": {
+      "integrity": "110735f93e95bb9feb95790a8b1d1bf69ec0dc74f3f97a00a76ea5efea25500c"
+    },
     "@std/path@1.1.4": {
       "integrity": "1d2d43f39efb1b42f0b1882a25486647cb851481862dc7313390b2bb044314b5",
       "dependencies": [
@@ -193,6 +213,9 @@
     },
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
+    },
+    "@std/streams@1.0.17": {
+      "integrity": "7859f3d9deed83cf4b41f19223d4a67661b3d3819e9fc117698f493bf5992140"
     },
     "@std/uuid@1.1.0": {
       "integrity": "6268db2ccf172849c9be80763354ca305d49ef4af41fe995623d44fcc3f7457c",
@@ -2118,6 +2141,7 @@
       "jsr:@fresh/plugin-vite@^1.0.8",
       "jsr:@simplewebauthn/browser@^13.3.0",
       "jsr:@simplewebauthn/server@^13.3.0",
+      "jsr:@std/http@^1.0.25",
       "npm:@preact/signals@^2.9.0",
       "npm:@tailwindcss/vite@^4.1.12",
       "npm:drizzle-kit@1.0.0-beta.19",
