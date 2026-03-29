@@ -1,5 +1,7 @@
 import { Head } from "fresh/runtime";
 import { asc } from "drizzle-orm";
+import { AdminPageShell } from "../../components/admin/AdminPageShell.tsx";
+import { PillLink } from "../../components/ui/PillLink.tsx";
 import { define } from "../../utils.ts";
 import { db } from "../../db/db.ts";
 import { categories, tracks } from "../../db/schema.ts";
@@ -24,49 +26,41 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="2xl">
     <Head>
       <title>Admin — fruiz</title>
     </Head>
-    <div class="max-w-2xl mx-auto flex flex-col gap-6">
-      <header class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p class="text-sm opacity-80 text-base-800 dark:text-base-100">
-            Signed in as
-          </p>
-          <p class="text-lg font-semibold text-base-900 dark:text-base-100">
-            {data.session.username}
-          </p>
-        </div>
-        <a
-          href="/account"
-          class="plateau rounded-full px-4 py-2 text-sm no-underline text-base-900 dark:text-base-100"
-        >
-          Account
-        </a>
-      </header>
-      <section class="plateau rounded-2xl p-5 space-y-3">
-        <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
-          Library
-        </h2>
-        <p class="text-sm opacity-90 text-base-800 dark:text-base-100">
-          {data.categories.length} categories · {data.tracks.length} tracks
+    <header class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="text-sm opacity-80 text-base-800 dark:text-base-100">
+          Signed in as
         </p>
-        <div class="flex flex-wrap gap-2">
-          <a
-            href="/admin/categories"
-            class="plateau rounded-full px-4 py-2 text-sm no-underline text-base-900 dark:text-base-100"
-          >
-            Manage categories
-          </a>
-          <a
-            href="/admin/tracks"
-            class="plateau rounded-full px-4 py-2 text-sm no-underline text-base-900 dark:text-base-100"
-          >
-            Manage tracks
-          </a>
-        </div>
-      </section>
-    </div>
-  </div>
+        <p class="text-lg font-semibold text-base-900 dark:text-base-100">
+          {data.session.username}
+        </p>
+      </div>
+      <PillLink href="/account" class="text-base-900 dark:text-base-100">
+        Account
+      </PillLink>
+    </header>
+    <section class="plateau rounded-2xl p-5 space-y-3">
+      <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
+        Library
+      </h2>
+      <p class="text-sm opacity-90 text-base-800 dark:text-base-100">
+        {data.categories.length} categories · {data.tracks.length} tracks
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <PillLink
+          href="/admin/categories"
+          class="text-base-900 dark:text-base-100"
+        >
+          Manage categories
+        </PillLink>
+        <PillLink href="/admin/tracks" class="text-base-900 dark:text-base-100">
+          Manage tracks
+        </PillLink>
+      </div>
+    </section>
+  </AdminPageShell>
 ));

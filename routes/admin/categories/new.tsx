@@ -4,7 +4,10 @@ import { db } from "../../../db/db.ts";
 import { categories } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { formatSlugFromName } from "../../../lib/formatSlug.ts";
+import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
+import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { CategoryForm } from "../../../components/admin/CategoryForm.tsx";
+import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -42,29 +45,24 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="xl">
     <Head>
       <title>New category — admin</title>
     </Head>
-    <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <div class="flex flex-wrap gap-2">
-        <a
-          href="/admin/categories"
-          class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit"
-        >
-          Back
-        </a>
-      </div>
-      <h1 class="text-2xl font-semibold">New category</h1>
-      {data.slugError && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="alert">
-          That slug is already taken. Choose another.
-        </p>
-      )}
-      <CategoryForm
-        action="/admin/categories/new"
-        submitLabel="Create category"
-      />
+    <div class="flex flex-wrap gap-2">
+      <AdminBackLink href="/admin/categories" />
     </div>
-  </div>
+    <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
+      New category
+    </h1>
+    {data.slugError && (
+      <InlineAlert variant="error" role="alert">
+        That slug is already taken. Choose another.
+      </InlineAlert>
+    )}
+    <CategoryForm
+      action="/admin/categories/new"
+      submitLabel="Create category"
+    />
+  </AdminPageShell>
 ));

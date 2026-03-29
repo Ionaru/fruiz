@@ -1,5 +1,8 @@
 import { Head } from "fresh/runtime";
 import { asc } from "drizzle-orm";
+import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
+import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
+import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { categories } from "../../../db/schema.ts";
@@ -16,44 +19,38 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="2xl">
     <Head>
       <title>Categories — admin</title>
     </Head>
-    <div class="max-w-2xl mx-auto flex flex-col gap-6">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-2xl font-semibold">Categories</h1>
-        <div class="flex flex-wrap gap-2">
-          <a
-            href="/admin"
-            class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit"
-          >
+    <AdminListHeader
+      title="Categories"
+      actions={
+        <>
+          <PillLink href="/admin">
             Dashboard
-          </a>
-          <a
-            href="/admin/categories/new"
-            class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit"
-          >
+          </PillLink>
+          <PillLink href="/admin/categories/new">
             New category
+          </PillLink>
+        </>
+      }
+    />
+    <ul class="flex flex-col gap-2">
+      {data.categories.map((c) => (
+        <li key={c.id}>
+          <a
+            href={`/admin/categories/${c.id}`}
+            class="plateau rounded-xl px-4 py-3 flex justify-between gap-2 no-underline"
+          >
+            <span class="font-medium">{c.name}</span>
+            <span class="text-sm opacity-80">{c.slug}</span>
           </a>
-        </div>
-      </div>
-      <ul class="flex flex-col gap-2">
-        {data.categories.map((c) => (
-          <li key={c.id}>
-            <a
-              href={`/admin/categories/${c.id}`}
-              class="plateau rounded-xl px-4 py-3 flex justify-between gap-2 no-underline text-inherit"
-            >
-              <span class="font-medium">{c.name}</span>
-              <span class="text-sm opacity-80">{c.slug}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-      {data.categories.length === 0 && (
-        <p class="text-sm opacity-80">No categories yet.</p>
-      )}
-    </div>
-  </div>
+        </li>
+      ))}
+    </ul>
+    {data.categories.length === 0 && (
+      <p class="text-sm opacity-80">No categories yet.</p>
+    )}
+  </AdminPageShell>
 ));

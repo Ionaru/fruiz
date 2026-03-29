@@ -4,8 +4,11 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { categories, trackCategories } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
+import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { CategoryForm } from "../../../components/admin/CategoryForm.tsx";
-import { Button } from "../../../components/Button.tsx";
+import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
+import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -95,69 +98,43 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="xl">
     <Head>
       <title>{data.category.name} — category</title>
     </Head>
-    <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <a
-        href="/admin/categories"
-        class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit w-fit"
-      >
-        Back
-      </a>
-      <h1 class="text-2xl font-semibold">Edit category</h1>
-      {data.queryError === "slug" && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="alert">
-          That slug is already taken.
-        </p>
-      )}
-      {data.queryError === "assigned" && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="alert">
-          Remove track assignments before deleting this category.
-        </p>
-      )}
-      {data.queryError === "confirm" && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="alert">
-          Type DELETE to confirm removal.
-        </p>
-      )}
-      <p class="text-sm opacity-80">
-        {data.assignmentCount} track assignment(s)
-      </p>
-      <CategoryForm
-        action={`/admin/categories/${data.category.id}`}
-        defaultName={data.category.name}
-        defaultSlug={data.category.slug}
-        submitLabel="Save changes"
-      />
-      <form
-        method="post"
-        action={`/admin/categories/${data.category.id}`}
-        class="plateau rounded-2xl p-5 space-y-3 border border-red-900/20"
-      >
-        <input type="hidden" name="intent" value="delete" />
-        <p class="text-sm font-medium text-red-900 dark:text-red-200">
-          Danger zone
-        </p>
-        <label class="block text-sm" for="confirm-del">
-          Type <code>DELETE</code> to confirm
-        </label>
-        <input
-          id="confirm-del"
-          name="confirm"
-          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
-          autocomplete="off"
-        />
-        <Button
-          type="submit"
-          variant="danger"
-          class="w-full"
-          disabled={data.assignmentCount > 0}
-        >
-          Delete category
-        </Button>
-      </form>
-    </div>
-  </div>
+    <AdminBackLink href="/admin/categories" />
+    <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
+      Edit category
+    </h1>
+    {data.queryError === "slug" && (
+      <InlineAlert variant="error" role="alert">
+        That slug is already taken.
+      </InlineAlert>
+    )}
+    {data.queryError === "assigned" && (
+      <InlineAlert variant="error" role="alert">
+        Remove track assignments before deleting this category.
+      </InlineAlert>
+    )}
+    {data.queryError === "confirm" && (
+      <InlineAlert variant="error" role="alert">
+        Type DELETE to confirm removal.
+      </InlineAlert>
+    )}
+    <p class="text-sm opacity-80 text-base-800 dark:text-base-100">
+      {data.assignmentCount} track assignment(s)
+    </p>
+    <CategoryForm
+      action={`/admin/categories/${data.category.id}`}
+      defaultName={data.category.name}
+      defaultSlug={data.category.slug}
+      submitLabel="Save changes"
+    />
+    <DangerZoneDeleteForm
+      action={`/admin/categories/${data.category.id}`}
+      confirmInputId="confirm-del"
+      submitLabel="Delete category"
+      disabled={data.assignmentCount > 0}
+    />
+  </AdminPageShell>
 ));

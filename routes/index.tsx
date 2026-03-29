@@ -9,6 +9,8 @@ import {
 import type { DifficultyMode } from "../lib/types.ts";
 import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
 import { Button } from "../components/Button.tsx";
+import { PageShell } from "../components/layout/PageShell.tsx";
+import { PillLink } from "../components/ui/PillLink.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -42,7 +44,7 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <PageShell>
     <Head>
       <title>fruiz - musical quiz</title>
     </Head>
@@ -52,22 +54,16 @@ export default define.page<typeof handler>(({ data }) => (
           Musical quiz
         </h1>
         <nav
-          class="flex flex-wrap gap-2 text-sm"
+          class="flex flex-wrap gap-2"
           aria-label="Account and administration"
         >
-          <a
-            href="/account"
-            class="plateau rounded-full px-4 py-2 no-underline text-base-900 dark:text-base-100"
-          >
+          <PillLink href="/account" class="text-base-900 dark:text-base-100">
             Account
-          </a>
+          </PillLink>
           {data.showAdminLink && (
-            <a
-              href="/admin"
-              class="plateau rounded-full px-4 py-2 no-underline text-base-900 dark:text-base-100"
-            >
+            <PillLink href="/admin" class="text-base-900 dark:text-base-100">
               Admin
-            </a>
+            </PillLink>
           )}
         </nav>
       </div>
@@ -120,5 +116,5 @@ export default define.page<typeof handler>(({ data }) => (
           </div>
         )}
     </div>
-  </div>
+  </PageShell>
 ));

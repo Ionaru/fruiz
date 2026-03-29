@@ -4,6 +4,8 @@ import {
 } from "@simplewebauthn/browser";
 import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
+import { InlineAlert } from "../components/ui/InlineAlert.tsx";
+import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 
 type Props = { username: string; isAdmin?: boolean };
 
@@ -68,7 +70,7 @@ export default function AccountManage({ username, isAdmin }: Props) {
   };
 
   return (
-    <div class="plateau rounded-2xl p-6 space-y-6 max-w-md mx-auto">
+    <PlateauCard class="space-y-6 max-w-md mx-auto">
       <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
         Account
       </h1>
@@ -105,10 +107,10 @@ export default function AccountManage({ username, isAdmin }: Props) {
         </Button>
       </div>
       {status.value && (
-        <p class="text-sm text-base-800 dark:text-base-100" role="status">
+        <InlineAlert variant="neutral" role="status">
           {status.value}
-        </p>
+        </InlineAlert>
       )}
-    </div>
+    </PlateauCard>
   );
 }

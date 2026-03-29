@@ -4,6 +4,10 @@ import {
 } from "@simplewebauthn/browser";
 import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
+import { FieldGroup } from "../components/ui/FieldGroup.tsx";
+import { InlineAlert } from "../components/ui/InlineAlert.tsx";
+import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import { TextInput } from "../components/ui/TextInput.tsx";
 
 export default function AccountRegistration() {
   const username = useSignal("");
@@ -56,7 +60,7 @@ export default function AccountRegistration() {
   };
 
   return (
-    <div class="plateau rounded-2xl p-6 space-y-6 max-w-md mx-auto">
+    <PlateauCard class="space-y-6 max-w-md mx-auto">
       <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
         Create account
       </h1>
@@ -64,19 +68,16 @@ export default function AccountRegistration() {
         Choose a username (3–24 characters) and register a passkey on this
         device.
       </p>
-      <div class="space-y-2">
-        <label class="text-sm font-medium" for="reg-username">
-          Username
-        </label>
-        <input
+      <FieldGroup label="Username" htmlFor="reg-username">
+        <TextInput
           id="reg-username"
-          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base min-h-11 text-base-900 dark:text-base-100"
+          class="text-base min-h-11"
           value={username.value}
           onInput={(event) =>
             username.value = (event.currentTarget as HTMLInputElement).value}
           autocomplete="username"
         />
-      </div>
+      </FieldGroup>
       <Button
         type="button"
         variant="success"
@@ -86,10 +87,10 @@ export default function AccountRegistration() {
         Continue with passkey
       </Button>
       {status.value && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="status">
+        <InlineAlert variant="error" role="status">
           {status.value}
-        </p>
+        </InlineAlert>
       )}
-    </div>
+    </PlateauCard>
   );
 }

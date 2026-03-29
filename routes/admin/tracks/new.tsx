@@ -4,6 +4,8 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { categories, trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
+import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { TrackForm } from "../../../components/admin/TrackForm.tsx";
 
 export const handler = define.handlers({
@@ -54,23 +56,18 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="xl">
     <Head>
       <title>New track — admin</title>
     </Head>
-    <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <a
-        href="/admin/tracks"
-        class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit w-fit"
-      >
-        Back
-      </a>
-      <h1 class="text-2xl font-semibold">New track</h1>
-      <TrackForm
-        action="/admin/tracks/new"
-        categories={data.categoryOptions}
-        submitLabel="Create track"
-      />
-    </div>
-  </div>
+    <AdminBackLink href="/admin/tracks" />
+    <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
+      New track
+    </h1>
+    <TrackForm
+      action="/admin/tracks/new"
+      categories={data.categoryOptions}
+      submitLabel="Create track"
+    />
+  </AdminPageShell>
 ));

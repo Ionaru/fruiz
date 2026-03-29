@@ -4,8 +4,11 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { categories, trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
+import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
+import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
 import { TrackForm } from "../../../components/admin/TrackForm.tsx";
-import { Button } from "../../../components/Button.tsx";
+import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -91,54 +94,32 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <div class="min-h-screen bg-base-200 dark:bg-base-800 px-4 py-8">
+  <AdminPageShell maxWidth="xl">
     <Head>
       <title>{data.track.title} — track</title>
     </Head>
-    <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <a
-        href="/admin/tracks"
-        class="plateau rounded-full px-4 py-2 text-sm no-underline text-inherit w-fit"
-      >
-        Back
-      </a>
-      <h1 class="text-2xl font-semibold">Edit track</h1>
-      {data.queryError === "confirm" && (
-        <p class="text-sm text-red-800 dark:text-red-200" role="alert">
-          Type DELETE to confirm removal.
-        </p>
-      )}
-      <TrackForm
-        action={`/admin/tracks/${data.track.id}`}
-        categories={data.categoryOptions}
-        selectedCategoryIds={data.selectedCategoryIds}
-        defaultTitle={data.track.title}
-        defaultAudioUrl={data.track.audioUrl}
-        defaultDifficulty={data.track.difficulty}
-        submitLabel="Save changes"
-      />
-      <form
-        method="post"
-        action={`/admin/tracks/${data.track.id}`}
-        class="plateau rounded-2xl p-5 space-y-3 border border-red-900/20"
-      >
-        <input type="hidden" name="intent" value="delete" />
-        <p class="text-sm font-medium text-red-900 dark:text-red-200">
-          Danger zone
-        </p>
-        <label class="block text-sm" for="confirm-del-track">
-          Type <code>DELETE</code> to confirm
-        </label>
-        <input
-          id="confirm-del-track"
-          name="confirm"
-          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
-          autocomplete="off"
-        />
-        <Button type="submit" variant="danger" class="w-full">
-          Delete track
-        </Button>
-      </form>
-    </div>
-  </div>
+    <AdminBackLink href="/admin/tracks" />
+    <h1 class="text-2xl font-semibold text-base-900 dark:text-base-100">
+      Edit track
+    </h1>
+    {data.queryError === "confirm" && (
+      <InlineAlert variant="error" role="alert">
+        Type DELETE to confirm removal.
+      </InlineAlert>
+    )}
+    <TrackForm
+      action={`/admin/tracks/${data.track.id}`}
+      categories={data.categoryOptions}
+      selectedCategoryIds={data.selectedCategoryIds}
+      defaultTitle={data.track.title}
+      defaultAudioUrl={data.track.audioUrl}
+      defaultDifficulty={data.track.difficulty}
+      submitLabel="Save changes"
+    />
+    <DangerZoneDeleteForm
+      action={`/admin/tracks/${data.track.id}`}
+      confirmInputId="confirm-del-track"
+      submitLabel="Delete track"
+    />
+  </AdminPageShell>
 ));

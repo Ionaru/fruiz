@@ -1,4 +1,6 @@
 import { Button } from "../Button.tsx";
+import { FieldGroup } from "../ui/FieldGroup.tsx";
+import { TextInput } from "../ui/TextInput.tsx";
 
 export interface CategoryFormProps {
   action: string;
@@ -15,28 +17,24 @@ export function CategoryForm(props: Readonly<CategoryFormProps>) {
       action={props.action}
       class="plateau rounded-2xl p-5 space-y-4 max-w-md"
     >
-      <div class="space-y-1">
-        <label class="text-sm font-medium" for="cat-name">Name</label>
-        <input
+      <FieldGroup label="Name" htmlFor="cat-name">
+        <TextInput
           id="cat-name"
           name="name"
           required
-          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultName ?? ""}
         />
-      </div>
-      <div class="space-y-1">
-        <label class="text-sm font-medium" for="cat-slug">Slug</label>
-        <input
+      </FieldGroup>
+      <FieldGroup label="Slug" htmlFor="cat-slug">
+        <TextInput
           id="cat-slug"
           name="slug"
           required
           pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
           title="Lowercase letters, numbers, and hyphens"
-          class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
           defaultValue={props.defaultSlug ?? ""}
         />
-      </div>
+      </FieldGroup>
       <Button type="submit" variant="success" class="w-full">
         {props.submitLabel}
       </Button>

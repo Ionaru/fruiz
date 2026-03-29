@@ -1,4 +1,6 @@
 import { Button } from "../components/Button.tsx";
+import { FieldGroup } from "../components/ui/FieldGroup.tsx";
+import { TextInput } from "../components/ui/TextInput.tsx";
 
 export interface SettingsGateProps {
   draftLimit: number;
@@ -14,20 +16,18 @@ export function SettingsGate(props: Readonly<SettingsGateProps>) {
       <p class="text-sm opacity-90">
         Choose how many times you can replay each clip (0 = unlimited).
       </p>
-      <label class="block text-sm font-medium" for="replay-limit">
-        Replay limit
-      </label>
-      <input
-        id="replay-limit"
-        type="number"
-        min={0}
-        class="plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100"
-        value={String(props.draftLimit)}
-        onInput={(event) =>
-          props.onDraftLimitInput(
-            Number((event.currentTarget as HTMLInputElement).value),
-          )}
-      />
+      <FieldGroup label="Replay limit" htmlFor="replay-limit">
+        <TextInput
+          id="replay-limit"
+          type="number"
+          min={0}
+          value={String(props.draftLimit)}
+          onInput={(event) =>
+            props.onDraftLimitInput(
+              Number((event.currentTarget as HTMLInputElement).value),
+            )}
+        />
+      </FieldGroup>
       <Button class="w-full" variant="success" onClick={props.onContinue}>
         Continue
       </Button>
