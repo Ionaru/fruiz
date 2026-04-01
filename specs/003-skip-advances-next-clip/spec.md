@@ -2,6 +2,7 @@
 
 **Feature Branch**: `003-skip-advances-next-clip`\
 **Created**: 2026-03-29\
+**Updated**: 2026-04-01\
 **Status**: Implemented\
 **Input**: Product feedback: skip should move the player to the next clip after
 marking the current track skipped.
@@ -14,30 +15,38 @@ rules below, so the player is not left on the same track in the main player
 panel. Track order is the ordered list of tracks in the current quiz instance
 (the same order used for clip numbering in the UI).
 
+Navigation after skip uses a **circular** scan starting at the track **after**
+the current index (wrapping to the start after the last track). While **any**
+track in the quiz remains `unanswered`, the active track becomes the **first**
+`unanswered` track hit by that scan. If **no** track is `unanswered`, the
+active track becomes the **first** `skipped` track hit by the same scan (so
+previously skipped clips are only auto-selected when nothing is still
+never-skipped).
+
 **Implementation reference**: client logic lives in
-[`islands/QuizController.tsx`](../../islands/QuizController.tsx) (`onSkip`).
+[`islands/QuizController.tsx`](../../islands/QuizController.tsx) (`onSkip`,
+`findNextTrackAfterSkip`).
 
 ## User Scenarios & Testing _(mandatory)_
 
-### User Story 1 - Skip moves forward in sequence (Priority: P1)
+### User Story 1 - Skip moves to next unanswered in order (Priority: P1)
 
-As a player, when I skip a clip that is not the last in the quiz order, I want
-the app to show the **next** clip in that order so I can continue without
-manually picking the next square.
+As a player, when I skip a clip and other clips are still `unanswered`, I want
+the app to focus the **next** such clip in list order (wrapping past the end),
+so I continue with fresh clips before revisiting ones I already skipped.
 
-**Why this priority**: This is the default expectation for “skip” in a linear
-flow and matches clip numbering (1 → 2 → …).
+**Why this priority**: Avoids bouncing back into skipped tiles while untouched
+work remains.
 
-**Independent Test**: With at least two clips remaining incomplete, activate a
-clip that has a successor in list order, press Skip, and confirm the active clip
-index increases by one and the audio player targets the new clip.
+**Independent Test**: Order A `unanswered`, B `skipped`, C `unanswered`. Active
+C, Skip — confirm active becomes A (wrap), not B.
 
 **Acceptance Scenarios**:
 
-1. **Given** the active track is not the last in quiz order and its progress is
-   not `correct` or `incorrect`, **When** the player activates Skip, **Then**
-   the current track is recorded as `skipped` and the active track becomes the
-   next track in quiz order.
+1. **Given** at least one track is `unanswered` after the skip update, **When**
+   the player activates Skip from a non-finalized track, **Then** the current
+   track is `skipped` and the active track is the first `unanswered` track in
+   circular order starting after the current index.
 2. **Given** the scenario in (1), **When** Skip completes, **Then** the answer
    draft for the new active track matches that track’s stored `selectedTitle`,
    or is empty if none (same behavior as selecting a track in the overview
@@ -45,27 +54,42 @@ index increases by one and the audio player targets the new clip.
 
 ---
 
-### User Story 2 - Skip on last clip still finds work left (Priority: P2)
+### User Story 2 - Skip wraps and prefers earlier unanswered work (Priority: P2)
 
-As a player, when I skip the **last** clip in order but other clips still need
-attention (`unanswered` or `skipped`), I want focus to jump to the **first**
-such clip in list order so I am not stuck on the last tile only.
+As a player, when I skip the **last** clip in order but an earlier clip is still
+`unanswered`, I want focus to wrap to that clip rather than stay on the last
+tile.
 
 **Why this priority**: Finishing the quiz still requires resolving every track;
-moving to an earlier incomplete clip reduces friction.
+wrapping removes friction at list boundaries.
 
-**Independent Test**: Leave an earlier clip incomplete, move to the last clip,
-skip it, and confirm the active clip is the first incomplete in order (not the
-last, when another incomplete exists).
+**Independent Test**: Leave track 1 `unanswered`, go to last track, Skip — confirm
+active is track 1 (or the first `unanswered` encountered after wrapping).
 
 **Acceptance Scenarios**:
 
-1. **Given** the active track is the last in quiz order and at least one other
-   track is `unanswered` or `skipped`, **When** the player activates Skip,
-   **Then** after marking the current track skipped, the active track becomes
-   the first track in quiz order whose status is `unanswered` or `skipped`,
-   **provided** that track is not the same as the track that was active before
-   the skip (see Edge Cases when it is the same).
+1. **Given** the active track is last in quiz order and at least one other track
+   is `unanswered`, **When** the player activates Skip, **Then** after marking
+   the current track skipped, the active track is the first `unanswered` in the
+   circular scan (typically an earlier index), not necessarily index + 1.
+
+---
+
+### User Story 3 - Skip falls back to skipped when no unanswered left (Priority: P2)
+
+As a player, when every remaining incomplete track is already `skipped`, I want
+Skip to move to the **next** `skipped` track in the same circular order so I can
+work through the backlog.
+
+**Independent Test**: All incomplete tracks `skipped`, active on one of them,
+Skip — confirm active advances to another `skipped` in circular order, or stays
+if it is the sole incomplete.
+
+**Acceptance Scenarios**:
+
+1. **Given** no track has status `unanswered` after the skip update, **When**
+   the player activates Skip, **Then** the active track is the first `skipped`
+   track in the circular scan (including wrapping).
 
 ---
 
@@ -75,13 +99,11 @@ last, when another incomplete exists).
   or active track. (The Skip control is expected to be disabled in this state;
   the handler still guards defensively.)
 - **No active track**: If there is no active track id, Skip does nothing.
-- **Last clip, sole incomplete**: If the only tracks still `unanswered` or
-  `skipped` are exactly the one just skipped (i.e. first incomplete in order is
-  still that same clip), the active track MUST remain that clip so the player
-  can answer or skip again only as allowed by other rules.
+- **Sole incomplete**: If the only `unanswered` / `skipped` track is the one
+  that was active, the circular scan only matches at full wrap — the active track
+  stays the same so the player can answer or skip again per other rules.
 - **Repeat Skip on an already skipped clip**: Marking skipped again is
-  idempotent; navigation rules still apply (e.g. advance to next in order if
-  present).
+  idempotent; navigation rules still apply.
 - **Audio**: Switching the active track MUST cause the visible audio player to
   correspond to the new clip (e.g. via a stable remount key per track id).
 
@@ -92,15 +114,16 @@ last, when another incomplete exists).
 - **FR-001**: On Skip, the system MUST set the current track’s progress to
   `skipped` with no selected title when the track was not already `correct` or
   `incorrect`, consistent with existing quiz progress persistence.
-- **FR-002**: After FR-001, if there is a next track in quiz list order, the
-  system MUST set the active track to that next track and sync the answer draft
-  from that track’s progress (`selectedTitle` or empty).
-- **FR-003**: After FR-001, if there is no next track in quiz list order, the
-  system MUST set the active track to the first track in quiz list order whose
-  status is `unanswered` or `skipped`, **unless** the only such track is the
-  track that was active for this skip action—in which case the active track MUST
-  remain unchanged.
-- **FR-004**: If the active track was already `correct` or `incorrect` before
+- **FR-002**: After FR-001, the system MUST set the active track by scanning
+  indices `(currentIndex + 1) % n` … through `n` steps in quiz list order (`n` =
+  track count). If any track in the quiz has status `unanswered`, the active
+  track MUST be the first whose status is `unanswered` in that scan.
+- **FR-003**: After FR-001, if no track has status `unanswered`, the active track
+  MUST be the first whose status is `skipped` in the same circular scan. If no
+  matching track exists (defensive), the active track ID MUST remain unchanged.
+- **FR-004**: After FR-002/FR-003, the answer draft MUST match the new active
+  track’s `selectedTitle` or be empty if none.
+- **FR-005**: If the active track was already `correct` or `incorrect` before
   handling Skip, the system MUST NOT update progress or active track for that
   action.
 

@@ -42,6 +42,37 @@ function scoreFromProgress(progress: QuizProgress): number {
   return progress.tracks.filter((entry) => entry.status === "correct").length;
 }
 
+/**
+ * After the current track is marked skipped, pick where focus should go:
+ * circular scan from the next list index, preferring `unanswered` while any
+ * exist globally; otherwise the first `skipped` track in that scan.
+ */
+function findNextTrackAfterSkip(
+  trackList: QuizTrackPayload[],
+  progressAfterSkip: QuizProgress,
+  currentTrackId: string,
+): string {
+  const n = trackList.length;
+  if (n === 0) return currentTrackId;
+  const currentIndex = trackList.findIndex((t) => t.id === currentTrackId);
+  if (currentIndex < 0) return currentTrackId;
+
+  const hasAnyUnanswered = progressAfterSkip.tracks.some(
+    (row) => row.status === "unanswered",
+  );
+  const targetStatus: "unanswered" | "skipped" = hasAnyUnanswered
+    ? "unanswered"
+    : "skipped";
+
+  for (let offset = 1; offset <= n; offset++) {
+    const id = trackList[(currentIndex + offset) % n].id;
+    const status = progressAfterSkip.tracks.find((row) => row.trackId === id)
+      ?.status;
+    if (status === targetStatus) return id;
+  }
+  return currentTrackId;
+}
+
 /** Returns merged progress from `localStorage`, or `null` if missing or invalid. */
 function tryMergeStoredProgress(
   raw: string | null,
@@ -169,10 +200,36 @@ export default function QuizController(props: Readonly<Props>) {
   const onSkip = () => {
     const activeTrackId = activeId.value;
     if (!activeTrackId) return;
-    updateTrack(activeTrackId, (row) => {
-      if (row.status === "correct" || row.status === "incorrect") return row;
-      return { ...row, status: "skipped", selectedTitle: null };
-    });
+    const progressRow = progress.value.tracks.find(
+      (entry) => entry.trackId === activeTrackId,
+    );
+    if (
+      !progressRow || progressRow.status === "correct" ||
+      progressRow.status === "incorrect"
+    ) {
+      return;
+    }
+    const nextProgress: QuizProgress = {
+      ...progress.value,
+      tracks: progress.value.tracks.map((row) =>
+        row.trackId === activeTrackId
+          ? { ...row, status: "skipped" as const, selectedTitle: null }
+          : row
+      ),
+    };
+    nextProgress.score = scoreFromProgress(nextProgress);
+    const nextId = findNextTrackAfterSkip(
+      props.tracks,
+      nextProgress,
+      activeTrackId,
+    );
+    progress.value = nextProgress;
+    if (isComplete(nextProgress)) showResults.value = true;
+    activeId.value = nextId;
+    const nextRow = nextProgress.tracks.find(
+      (entry) => entry.trackId === nextId,
+    );
+    answerDraft.value = nextRow?.selectedTitle ?? "";
   };
 
   const onSubmit = () => {
