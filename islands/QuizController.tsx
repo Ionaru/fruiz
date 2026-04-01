@@ -38,6 +38,12 @@ function isComplete(progress: QuizProgress): boolean {
   );
 }
 
+function canEndQuizWithSkippedRemaining(progress: QuizProgress): boolean {
+  const hasUnanswered = progress.tracks.some((t) => t.status === "unanswered");
+  const hasSkipped = progress.tracks.some((t) => t.status === "skipped");
+  return !hasUnanswered && hasSkipped;
+}
+
 function scoreFromProgress(progress: QuizProgress): number {
   return progress.tracks.filter((entry) => entry.status === "correct").length;
 }
@@ -264,6 +270,21 @@ export default function QuizController(props: Readonly<Props>) {
     answerDraft.value = "";
   };
 
+  const onEndQuizMarkSkippedIncorrect = () => {
+    if (!canEndQuizWithSkippedRemaining(progress.value)) return;
+    const next: QuizProgress = {
+      ...progress.value,
+      tracks: progress.value.tracks.map((row) =>
+        row.status === "skipped"
+          ? { ...row, status: "incorrect" as const, selectedTitle: null }
+          : row
+      ),
+    };
+    next.score = scoreFromProgress(next);
+    progress.value = next;
+    showResults.value = true;
+  };
+
   const copyBarePath = async () => {
     try {
       await navigator.clipboard.writeText(props.quizPath);
@@ -365,6 +386,8 @@ export default function QuizController(props: Readonly<Props>) {
       : "Adjust your answer to match a suggested title (same spelling rules as scoring).";
   }
 
+  const showEndQuiz = canEndQuizWithSkippedRemaining(progress.value);
+
   return (
     <div class="space-y-6">
       <QuizTrackNav
@@ -394,6 +417,12 @@ export default function QuizController(props: Readonly<Props>) {
               answerDraft.value = nextValue;
             }}
           />
+          {showEndQuiz && (
+            <p class="text-sm opacity-80">
+              No clips left to discover—only skipped ones remain. End the quiz
+              to count them as incorrect, or answer a skipped clip above.
+            </p>
+          )}
           <div class="flex flex-wrap gap-3">
             <Button
               variant="success"
@@ -412,6 +441,16 @@ export default function QuizController(props: Readonly<Props>) {
             >
               Skip
             </Button>
+            {showEndQuiz && (
+              <Button
+                variant="danger"
+                class="px-6"
+                title="Skipped clips will be marked incorrect."
+                onClick={onEndQuizMarkSkippedIncorrect}
+              >
+                End quiz
+              </Button>
+            )}
           </div>
         </AudioTrackPlayer>
       )}
