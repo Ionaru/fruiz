@@ -24,7 +24,6 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
           value={props.value}
           disabled={props.disabled}
           autocomplete="off"
-          aria-describedby={props.ariaDescribedBy}
           onInput={(event) =>
             props.onValue((event.currentTarget as HTMLInputElement).value)}
         />

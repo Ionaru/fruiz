@@ -11,7 +11,6 @@ export interface AudioTrackPlayerProps {
 export function AudioTrackPlayer(props: Readonly<AudioTrackPlayerProps>) {
   return (
     <div class="plateau rounded-2xl p-4 space-y-3">
-      <p class="text-sm opacity-80">Now playing</p>
       <h3 class="text-lg font-semibold">
         Clip {props.clipNumber} of {props.clipTotal}
       </h3>

@@ -55,7 +55,6 @@ export default define.page<typeof handler>(({ data }) => (
         </h1>
         <nav
           class="flex flex-wrap gap-2"
-          aria-label="Account and administration"
         >
           <PillLink href="/account" class="text-base-900 dark:text-base-100">
             Account

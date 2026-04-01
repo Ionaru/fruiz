@@ -11,6 +11,7 @@ import type {
 } from "../lib/types.ts";
 import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
+import QuizTrackNav from "./QuizTrackNav.tsx";
 import { SettingsGate } from "./SettingsGate.tsx";
 
 const STORAGE_KEY_PREFIX = "fruiz-quiz:";
@@ -206,21 +207,6 @@ export default function QuizController(props: Readonly<Props>) {
     answerDraft.value = "";
   };
 
-  const variantForStatus = (
-    status: QuizProgress["tracks"][0]["status"],
-  ): "success" | "danger" | "warning" | undefined => {
-    switch (status) {
-      case "correct":
-        return "success";
-      case "incorrect":
-        return "danger";
-      case "skipped":
-        return "warning";
-      default:
-        return undefined;
-    }
-  };
-
   const copyBarePath = async () => {
     try {
       await navigator.clipboard.writeText(props.quizPath);
@@ -327,29 +313,12 @@ export default function QuizController(props: Readonly<Props>) {
 
   return (
     <div class="space-y-6">
-      <div class="grid grid-cols-4 sm:grid-cols-5 gap-2">
-        {props.tracks.map((track, trackIndex) => {
-          const progressRow = progress.value.tracks.find(
-            (entry) => entry.trackId === track.id,
-          )!;
-          const isActiveTrack = activeId.value === track.id;
-          return (
-            <Button
-              key={track.id}
-              class={`min-w-0 aspect-square p-2 text-sm font-medium rounded-xl! ${
-                isActiveTrack ? "ring-2 ring-base-500 dark:ring-base-300" : ""
-              }`}
-              variant={variantForStatus(progressRow.status)}
-              onClick={() => {
-                activeId.value = track.id;
-                answerDraft.value = progressRow.selectedTitle ?? "";
-              }}
-            >
-              {trackIndex + 1}
-            </Button>
-          );
-        })}
-      </div>
+      <QuizTrackNav
+        tracks={props.tracks}
+        activeId={activeId}
+        answerDraft={answerDraft}
+        progress={progress}
+      />
 
       {currentTrack && currentRow && (
         <AudioTrackPlayer
