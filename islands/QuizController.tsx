@@ -357,9 +357,6 @@ export default function QuizController(props: Readonly<Props>) {
     answerDraft.value,
     props.titleSuggestions,
   );
-  const suggestionPoolHintId = `answer-pool-hint-${activeId.value ?? "none"}`;
-  const showPoolHint = !answerLocked && answerDraft.value.trim() !== "" &&
-    !canSubmitGuess;
 
   let submitTitle: string | undefined;
   if (!answerLocked && !canSubmitGuess) {
@@ -393,19 +390,10 @@ export default function QuizController(props: Readonly<Props>) {
             suggestions={props.titleSuggestions}
             value={answerDraft.value}
             disabled={answerLocked}
-            ariaDescribedBy={showPoolHint ? suggestionPoolHintId : undefined}
             onValue={(nextValue) => {
               answerDraft.value = nextValue;
             }}
           />
-          {showPoolHint && (
-            <output
-              id={suggestionPoolHintId}
-              class="text-xs opacity-80 block"
-            >
-              Match a suggested title to enable Submit.
-            </output>
-          )}
           <div class="flex flex-wrap gap-3">
             <Button
               variant="success"
