@@ -93,16 +93,15 @@ export default function QuizTrackNav(props: Readonly<Props>) {
         )
         : (
           <>
-            <div class="flex items-center gap-2">
+            <div class="grid grid-cols-[auto_1fr_auto] items-center gap-2">
               <Button
                 disabled={prevDisabled}
                 onClick={goPrev}
               >
                 Previous
               </Button>
-              <div class="flex-1 min-w-0">
                 <div
-                  class="grid grid-cols-20 py-1"
+                  class="flex-1 grid grid-cols-20 py-1"
                 >
                   {props.tracks.map((track) => {
                     const progressRow = props.progress.value.tracks.find(
@@ -129,7 +128,6 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                     );
                   })}
                 </div>
-              </div>
               <Button
                 disabled={nextDisabled}
                 onClick={goNext}
