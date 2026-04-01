@@ -1,5 +1,6 @@
 import type { Signal } from "@preact/signals";
 import { useSignal } from "@preact/signals";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Button } from "../components/Button.tsx";
 import { variantForStatus } from "../lib/quiz_ui.ts";
 import type { QuizProgress, QuizTrackPayload } from "../lib/types.ts";
@@ -98,7 +99,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                 disabled={prevDisabled}
                 onClick={goPrev}
               >
-                Previous
+                <FaArrowLeft />
               </Button>
                 <div
                   class="flex-1 grid grid-cols-20 py-1"
@@ -132,7 +133,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                 disabled={nextDisabled}
                 onClick={goNext}
               >
-                Next
+                <FaArrowRight />
               </Button>
             </div>
             <Button
