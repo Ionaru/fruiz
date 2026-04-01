@@ -3,6 +3,7 @@ import { Button } from "../components/Button.tsx";
 import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
+import { variantForStatus } from "../lib/quiz_ui.ts";
 import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
 import type {
   QuizIdentity,
@@ -286,8 +287,12 @@ export default function QuizController(props: Readonly<Props>) {
   };
 
   const copyBarePath = async () => {
+    const url = new URL(globalThis.location.href);
+    url.searchParams.keys().forEach((key) => {
+      url.searchParams.delete(key);
+    });
     try {
-      await navigator.clipboard.writeText(props.quizPath);
+      await navigator.clipboard.writeText(url.toString());
     } catch {
       /* ignore */
     }
@@ -321,30 +326,6 @@ export default function QuizController(props: Readonly<Props>) {
     const correct = scoreFromProgress(progress.value);
     return (
       <div class="space-y-6">
-        <div class="plateau rounded-2xl p-6 space-y-2 text-center">
-          <p class="text-sm opacity-80">Results</p>
-          <p class="text-4xl font-bold tabular-nums">
-            {correct} / {total}
-          </p>
-        </div>
-        <ul class="space-y-2">
-          {props.tracks.map((track) => {
-            const progressRow = progress.value.tracks.find(
-              (entry) => entry.trackId === track.id,
-            )!;
-            return (
-              <li
-                key={track.id}
-                class="plateau rounded-xl px-4 py-3 flex justify-between gap-2 text-sm"
-              >
-                <span class="font-medium truncate">{track.title}</span>
-                <span class="shrink-0 capitalize opacity-90">
-                  {progressRow.status}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
         <div class="flex flex-col sm:flex-row gap-3">
           <Button
             class="flex-1"
@@ -357,6 +338,33 @@ export default function QuizController(props: Readonly<Props>) {
             Play again
           </Button>
         </div>
+        <div class="plateau rounded-2xl p-6 space-y-2 text-center">
+          <p class="text-sm opacity-80">Results</p>
+          <p class="text-4xl font-bold tabular-nums">
+            {correct} / {total}
+          </p>
+        </div>
+        <ul class="space-y-2">
+          {props.tracks.map((track, index) => {
+            const progressRow = progress.value.tracks.find(
+              (entry) => entry.trackId === track.id,
+            )!;
+            const rowVariant = variantForStatus(progressRow.status);
+            return (
+              <li
+                key={track.id}
+                class={`plateau rounded-xl px-4 py-3 flex justify-between gap-2 font-bold ${
+                  rowVariant ? ` ${rowVariant}` : ""
+                }`}
+              >
+                <span class="font-medium truncate">{index + 1}: {track.title}</span>
+                <span class="shrink-0 capitalize opacity-90">
+                  {progressRow.status}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     );
   }

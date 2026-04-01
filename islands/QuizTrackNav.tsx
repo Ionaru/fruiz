@@ -1,28 +1,14 @@
 import type { Signal } from "@preact/signals";
 import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
-import type { QuizProgress, QuizTrackPayload, TrackStatus } from "../lib/types.ts";
+import { variantForStatus } from "../lib/quiz_ui.ts";
+import type { QuizProgress, QuizTrackPayload } from "../lib/types.ts";
 
 interface Props {
   tracks: QuizTrackPayload[];
   activeId: Signal<string | null>;
   answerDraft: Signal<string>;
   progress: Signal<QuizProgress>;
-}
-
-function variantForStatus(
-  status: TrackStatus,
-): "success" | "danger" | "warning" | undefined {
-  switch (status) {
-    case "correct":
-      return "success";
-    case "incorrect":
-      return "danger";
-    case "skipped":
-      return "warning";
-    default:
-      return undefined;
-  }
 }
 
 export default function QuizTrackNav(props: Readonly<Props>) {
