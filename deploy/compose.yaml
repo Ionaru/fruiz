@@ -9,7 +9,7 @@ services:
     environment:
       - DENO_DEPLOYMENT_ID=${GIT_REVISION}
     volumes:
-      - ${FRUIZ_DATA_VOLUME}:/app/data
+      - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     post_start:
       - command: deno task db:sync
     restart: unless-stopped

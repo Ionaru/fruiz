@@ -45,7 +45,7 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell maxWidth="xl">
+  <AdminPageShell>
     <Head>
       <title>New category — admin</title>
     </Head>

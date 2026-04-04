@@ -1,7 +1,5 @@
 FROM denoland/deno:alpine-2.7.11
 
-RUN deno x --install-alias
-
 ARG GIT_REVISION
 ENV DENO_DEPLOYMENT_ID=${GIT_REVISION}
 

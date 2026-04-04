@@ -1,5 +1,5 @@
-import { db } from "../db/db.ts";
-import { seedTracksFromMusicDir } from "../lib/seedMusic.ts";
+import { db } from "../src/db/db.ts";
+import { seedTracksFromMusicDir } from "../src/lib/seedMusic.ts";
 
 const { inserted, skipped } = await seedTracksFromMusicDir(db, {
   categorySlug: "video-games", // created if missing; links new tracks

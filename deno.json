@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "deno serve -A _fresh/server.js",
-    "db:sync": "dx drizzle-kit push",
+    "db:sync": "deno x drizzle-kit push",
     "update": "deno run -A -r jsr:@fresh/update ."
   },
   "lint": {
