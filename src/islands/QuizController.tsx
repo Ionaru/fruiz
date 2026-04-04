@@ -357,7 +357,9 @@ export default function QuizController(props: Readonly<Props>) {
                   rowVariant ? ` ${rowVariant}` : ""
                 }`}
               >
-                <span class="font-medium truncate">{index + 1}: {track.title}</span>
+                <span class="font-medium truncate">
+                  {index + 1}: {track.title}
+                </span>
                 <span class="shrink-0 capitalize opacity-90">
                   {progressRow.status}
                 </span>

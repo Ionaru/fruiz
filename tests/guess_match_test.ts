@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
+import { guessMatchesSuggestionPool } from "../src/lib/guess_match.ts";
 
 Deno.test("guessMatchesSuggestionPool: empty and whitespace-only are false", () => {
   assertEquals(guessMatchesSuggestionPool("", ["Frozen"]), false);

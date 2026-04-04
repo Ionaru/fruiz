@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { decodeSlug, encodeSlug } from "../../../lib/slug.ts";
+import { decodeSlug, encodeSlug } from "../../../src/lib/slug.ts";
 
 Deno.test("encodeSlug round-trips with decodeSlug", () => {
   const seed = "abc12fg";

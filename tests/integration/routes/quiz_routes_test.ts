@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
-import { decodeSlug } from "../../../lib/slug.ts";
-import { selectTracksDeterministic } from "../../../lib/selectTracks.ts";
-import type { SelectableTrack } from "../../../lib/selectTracks.ts";
+import { decodeSlug } from "../../../src/lib/slug.ts";
+import { selectTracksDeterministic } from "../../../src/lib/selectTracks.ts";
+import type { SelectableTrack } from "../../../src/lib/selectTracks.ts";
 
 Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
   const decoded = decodeSlug("mabcdef1");

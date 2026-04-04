@@ -1,0 +1,15 @@
+services:
+  server:
+    image: ghcr.io/ionaru/fruiz/server:${GIT_REVISION}
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "${FRUIZ_PORT:=8000}:8000"
+    environment:
+      - DENO_DEPLOYMENT_ID=${GIT_REVISION}
+    volumes:
+        - ${FRUIZ_DATA_VOLUME}:/app/data
+    post_start:
+      - command: deno task db:sync
+    restart: unless-stopped

@@ -56,9 +56,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
       {trackNavExpanded.value
         ? (
           <>
-            <section
-              class="grid grid-cols-4 sm:grid-cols-5 gap-2"
-            >
+            <section class="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {props.tracks.map((track, trackIndex) => {
                 const progressRow = props.progress.value.tracks.find(
                   (entry) => entry.trackId === track.id,
@@ -101,34 +99,30 @@ export default function QuizTrackNav(props: Readonly<Props>) {
               >
                 <FaArrowLeft />
               </Button>
-                <div
-                  class="flex-1 grid grid-cols-20 py-1"
-                >
-                  {props.tracks.map((track) => {
-                    const progressRow = props.progress.value.tracks.find(
-                      (entry) => entry.trackId === track.id,
-                    )!;
-                    const isActiveTrack = props.activeId.value === track.id;
-                    const variant = variantForStatus(progressRow.status);
-                    const plateauVariant = variant ? ` ${variant}` : "";
-                    return (
-                      <Button
-                        key={track.id}
-                        type="button"
-                        class={`h-12 w-3 p-0! ${
-                          plateauVariant
-                        } ${
-                          isActiveTrack
-                            ? "ring-2 ring-base-500 dark:ring-base-300"
-                            : ""
-                        }`}
-                        onClick={() => {
-                          selectTrack(track.id);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
+              <div class="flex-1 grid grid-cols-20 py-1">
+                {props.tracks.map((track) => {
+                  const progressRow = props.progress.value.tracks.find(
+                    (entry) => entry.trackId === track.id,
+                  )!;
+                  const isActiveTrack = props.activeId.value === track.id;
+                  const variant = variantForStatus(progressRow.status);
+                  const plateauVariant = variant ? ` ${variant}` : "";
+                  return (
+                    <Button
+                      key={track.id}
+                      type="button"
+                      class={`h-12 w-3 p-0! ${plateauVariant} ${
+                        isActiveTrack
+                          ? "ring-2 ring-base-500 dark:ring-base-300"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        selectTrack(track.id);
+                      }}
+                    />
+                  );
+                })}
+              </div>
               <Button
                 disabled={nextDisabled}
                 onClick={goNext}

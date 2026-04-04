@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { selectTracksDeterministic } from "../../../lib/selectTracks.ts";
-import type { SelectableTrack } from "../../../lib/selectTracks.ts";
+import { selectTracksDeterministic } from "../../../src/lib/selectTracks.ts";
+import type { SelectableTrack } from "../../../src/lib/selectTracks.ts";
 
 const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, i) => ({
   id: `t${i}`,

@@ -18,10 +18,9 @@ panel. Track order is the ordered list of tracks in the current quiz instance
 Navigation after skip uses a **circular** scan starting at the track **after**
 the current index (wrapping to the start after the last track). While **any**
 track in the quiz remains `unanswered`, the active track becomes the **first**
-`unanswered` track hit by that scan. If **no** track is `unanswered`, the
-active track becomes the **first** `skipped` track hit by the same scan (so
-previously skipped clips are only auto-selected when nothing is still
-never-skipped).
+`unanswered` track hit by that scan. If **no** track is `unanswered`, the active
+track becomes the **first** `skipped` track hit by the same scan (so previously
+skipped clips are only auto-selected when nothing is still never-skipped).
 
 **Implementation reference**: client logic lives in
 [`islands/QuizController.tsx`](../../islands/QuizController.tsx) (`onSkip`,
@@ -63,8 +62,9 @@ tile.
 **Why this priority**: Finishing the quiz still requires resolving every track;
 wrapping removes friction at list boundaries.
 
-**Independent Test**: Leave track 1 `unanswered`, go to last track, Skip — confirm
-active is track 1 (or the first `unanswered` encountered after wrapping).
+**Independent Test**: Leave track 1 `unanswered`, go to last track, Skip —
+confirm active is track 1 (or the first `unanswered` encountered after
+wrapping).
 
 **Acceptance Scenarios**:
 
@@ -100,8 +100,8 @@ if it is the sole incomplete.
   the handler still guards defensively.)
 - **No active track**: If there is no active track id, Skip does nothing.
 - **Sole incomplete**: If the only `unanswered` / `skipped` track is the one
-  that was active, the circular scan only matches at full wrap — the active track
-  stays the same so the player can answer or skip again per other rules.
+  that was active, the circular scan only matches at full wrap — the active
+  track stays the same so the player can answer or skip again per other rules.
 - **Repeat Skip on an already skipped clip**: Marking skipped again is
   idempotent; navigation rules still apply.
 - **Audio**: Switching the active track MUST cause the visible audio player to
@@ -118,9 +118,10 @@ if it is the sole incomplete.
   indices `(currentIndex + 1) % n` … through `n` steps in quiz list order (`n` =
   track count). If any track in the quiz has status `unanswered`, the active
   track MUST be the first whose status is `unanswered` in that scan.
-- **FR-003**: After FR-001, if no track has status `unanswered`, the active track
-  MUST be the first whose status is `skipped` in the same circular scan. If no
-  matching track exists (defensive), the active track ID MUST remain unchanged.
+- **FR-003**: After FR-001, if no track has status `unanswered`, the active
+  track MUST be the first whose status is `skipped` in the same circular scan.
+  If no matching track exists (defensive), the active track ID MUST remain
+  unchanged.
 - **FR-004**: After FR-002/FR-003, the answer draft MUST match the new active
   track’s `selectedTitle` or be empty if none.
 - **FR-005**: If the active track was already `correct` or `incorrect` before

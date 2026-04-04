@@ -2,7 +2,7 @@ import { assert } from "@std/assert";
 import {
   appendClearSessionCookie,
   SESSION_COOKIE_NAME,
-} from "../lib/session.ts";
+} from "../src/lib/session.ts";
 
 Deno.test("appendClearSessionCookie sets clearing attributes for session name", () => {
   const headers = new Headers();

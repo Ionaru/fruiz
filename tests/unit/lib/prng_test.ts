@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { mulberry32, seedStringToUint32 } from "../../../lib/prng.ts";
+import { mulberry32, seedStringToUint32 } from "../../../src/lib/prng.ts";
 
 Deno.test("mulberry32 is deterministic for the same seed", () => {
   const genA = mulberry32(12345);

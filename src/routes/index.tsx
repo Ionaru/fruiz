@@ -53,9 +53,7 @@ export default define.page<typeof handler>(({ data }) => (
         <h1 class="text-3xl font-semibold text-base-900 dark:text-base-100">
           Musical quiz
         </h1>
-        <nav
-          class="flex flex-wrap gap-2"
-        >
+        <nav class="flex flex-wrap gap-2">
           <PillLink href="/account" class="text-base-900 dark:text-base-100">
             Account
           </PillLink>

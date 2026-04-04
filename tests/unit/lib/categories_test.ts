@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { parseReplayLimitFromUrl } from "../../../lib/categories.ts";
+import { parseReplayLimitFromUrl } from "../../../src/lib/categories.ts";
 
 Deno.test("parseReplayLimitFromUrl: missing → null", () => {
   assertEquals(parseReplayLimitFromUrl(new URLSearchParams()), null);

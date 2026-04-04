@@ -590,7 +590,8 @@ Requirements:
 Accessibility is addressed on a **best-effort basis**:
 
 - Semantic HTML elements for structure and navigation
-- As a rule, ARIA labels should not be used. Only when absolutely necessary is it okay to include them.
+- As a rule, ARIA labels should not be used. Only when absolutely necessary is
+  it okay to include them.
 - Keyboard navigability for all quiz interactions
 - Sufficient color contrast for track status indicators
 

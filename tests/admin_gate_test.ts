@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { requireAdminSessionOrRedirect } from "../lib/adminSession.ts";
-import type { State } from "../utils.ts";
+import { requireAdminSessionOrRedirect } from "../src/lib/adminSession.ts";
+import type { State } from "../src/utils.ts";
 
 function req(url: string) {
   return new Request(url);

@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { validateUsername } from "../../../lib/auth.ts";
+import { validateUsername } from "../../../src/lib/auth.ts";
 
 Deno.test("validateUsername rejects too short", () => {
   assertEquals(
