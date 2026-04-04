@@ -1,13 +1,11 @@
 services:
   server:
-    image: ghcr.io/ionaru/fruiz/server:${GIT_REVISION}
+    image: ghcr.io/ionaru/fruiz/server:${GIT_REVISION:-latest}
     build:
       context: ../
       dockerfile: deploy/Dockerfile
     ports:
       - "${FRUIZ_PORT:-8000}:8000"
-    environment:
-      - DENO_DEPLOYMENT_ID=${GIT_REVISION}
     volumes:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     post_start:
