@@ -1,6 +1,6 @@
 services:
   server:
-    image: ghcr.io/ionaru/fruiz/server:${GIT_REVISION:-latest}
+    image: ghcr.io/ionaru/fruiz/server:${FRUIZ_GIT_REVISION:-latest}
     build:
       context: ../
       dockerfile: deploy/Dockerfile

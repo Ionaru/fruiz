@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: docker compose -f deploy/compose.yaml build --build-arg GIT_REVISION=${{needs.get_sha.outputs.sha_short}}
+      - run: docker compose -f deploy/compose.yaml build --build-arg FRUIZ_GIT_REVISION=${{needs.get_sha.outputs.sha_short}}
       - run: docker save -o server-image.tar ghcr.io/ionaru/fruiz/server:latest
       - uses: actions/upload-artifact@v7
         with:
@@ -75,7 +75,7 @@ jobs:
           name: server-image
       - run: docker load -i server-image.tar
       - run: docker tag ghcr.io/ionaru/fruiz/server:latest ghcr.io/ionaru/fruiz/server:${{needs.get_sha.outputs.sha_short}}
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -101,5 +101,7 @@ jobs:
             git fetch -a
             git switch -d ${{needs.get_sha.outputs.sha_short}}
             docker system prune --all -f
-            GIT_REVISION=${{needs.get_sha.outputs.sha_short}} docker compose pull
-            GIT_REVISION=${{needs.get_sha.outputs.sha_short}} docker compose up --pull=never --no-build --wait --remove-orphans -d
+            $env:FRUIZ_GIT_REVISION = ${{needs.get_sha.outputs.sha_short}}
+            docker compose pull
+            docker compose up --pull=never --no-build --wait --remove-orphans -d
+            $env:FRUIZ_GIT_REVISION = $null
