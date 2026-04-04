@@ -8,9 +8,25 @@ services:
       - "${FRUIZ_PORT:-8000}:8000"
     volumes:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
-    post_start:
-      - command: deno task db:sync
     restart: unless-stopped
+
+  db_sync:
+    image: denoland/deno:alpine-2.7.11
+    working_dir: /app
+    command:
+      - /bin/sh
+      - -c
+      - |
+        deno cache --lock=deno.lock drizzle.config.ts
+        deno task db:sync
+    volumes:
+      - ../:/app
+      - ${FRUIZ_DATA_VOLUME:-data}:/app/data
+      - deno_cache:/deno-dir
+    environment:
+      - DENO_DIR=/deno-dir
+    restart: no
 
 volumes:
   data:
+  deno_cache:
