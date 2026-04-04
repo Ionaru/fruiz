@@ -67,7 +67,7 @@ jobs:
   push-image:
     name: Push image
     if: github.event_name == 'push'
-    needs: [lint, test, build-image]
+    needs: [get_sha, lint, test, build-image]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
