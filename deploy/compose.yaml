@@ -17,8 +17,8 @@ services:
       - /bin/sh
       - -c
       - |
-        deno cache --lock=deno.lock drizzle.config.ts
-        deno task db:sync
+          deno cache --lock=deno.lock drizzle.config.ts
+          deno task db:sync
     volumes:
       - ../:/app
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
