@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
       - run: deno install --frozen
-      - run: deno task check
+      - run: deno task test
 
   build-image:
     name: Build image
