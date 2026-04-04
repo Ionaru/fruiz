@@ -13,3 +13,6 @@ services:
     post_start:
       - command: deno task db:sync
     restart: unless-stopped
+
+volumes:
+  data:
