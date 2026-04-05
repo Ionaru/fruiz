@@ -81,7 +81,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push -a ghcr.io/ionaru/fruiz/server
-      - uses: PaulLesur/wait-docker-image-github-action@v1
+      - uses: PaulLesur/wait-docker-image-github-action@v1.0
         with:
           image: ghcr.io/ionaru/fruiz/server:${{needs.get_sha.outputs.sha_short}}
 
