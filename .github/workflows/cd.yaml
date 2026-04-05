@@ -81,6 +81,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push -a ghcr.io/ionaru/fruiz/server
+
+  deploy:
+    needs: [get_sha, push-image]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
       - name: Wait for image to be available in GHCR
         run: |
           IMAGE="ghcr.io/ionaru/fruiz/server:${{needs.get_sha.outputs.sha_short}}"
@@ -99,15 +108,6 @@ jobs:
 
           echo "Image not available after waiting"
           exit 1
-
-  deploy:
-    needs: [get_sha, push-image]
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    concurrency:
-      group: deploy
-      cancel-in-progress: false
-    steps:
       - uses: appleboy/ssh-action@v1.2.5
         with:
           command_timeout: 30m
