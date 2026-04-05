@@ -81,10 +81,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker push -a ghcr.io/ionaru/fruiz/server
-      - uses: PaulLesur/wait-docker-image-github-action@v1.0
-        with:
-          image: ghcr.io/ionaru/fruiz/server
-          tag: ${{needs.get_sha.outputs.sha_short}}
+      - name: Wait for image to be available in GHCR
+        run: |
+          IMAGE="ghcr.io/ionaru/fruiz/server:${{needs.get_sha.outputs.sha_short}}"
+          MAX_RETRIES=30
+          SLEEP_SECONDS=2
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+              echo "Image is available"
+              exit 0
+            fi
+
+            echo "Waiting for image... ($i/$MAX_RETRIES)"
+            sleep $SLEEP_SECONDS
+          done
+
+          echo "Image not available after waiting"
+          exit 1
 
   deploy:
     needs: [get_sha, push-image]
