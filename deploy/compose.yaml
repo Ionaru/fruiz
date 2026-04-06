@@ -7,6 +7,7 @@ services:
     environment:
       - FRUIZ_SECURE_COOKIES
       - FRUIZ_RP_ID
+      - FRUIZ_DEBUG
     ports:
       - "${FRUIZ_PORT:-8000}:8000"
     volumes:
