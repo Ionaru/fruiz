@@ -15,6 +15,9 @@ export const handler = define.handlers({
   async GET(ctx) {
     const categorySlug = ctx.params.category;
     const slugParam = ctx.params.slug;
+    if (!categorySlug || !slugParam) {
+      return Response.redirect(new URL("/", ctx.req.url).href, 302);
+    }
     const decoded = decodeSlug(slugParam);
     if (!decoded) {
       return Response.redirect(new URL("/", ctx.req.url).href, 302);

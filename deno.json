@@ -41,6 +41,8 @@
     "vite": "npm:vite@^7.3.2"
   },
   "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
     "lib": [
       "dom",
       "dom.asynciterable",

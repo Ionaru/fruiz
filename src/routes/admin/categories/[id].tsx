@@ -14,6 +14,12 @@ export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
+    if (!ctx.params.id) {
+      return Response.redirect(
+        new URL("/admin/categories", ctx.req.url).href,
+        302,
+      );
+    }
     const id = ctx.params.id;
     const row = await db.query.categories.findFirst({
       where: { id },
@@ -25,11 +31,11 @@ export const handler = define.handlers({
       );
     }
     // Relational query API is a poor fit for aggregates; keep explicit SQL.
-    const [{ c }] = await db
+    const countRows = await db
       .select({ c: sql<number>`count(*)` })
       .from(trackCategories)
       .where(eq(trackCategories.categoryId, id));
-    const assignmentCount = Number(c ?? 0);
+    const assignmentCount = Number(countRows[0]?.c ?? 0);
     const queryError = new URL(ctx.req.url).searchParams.get("err");
     return {
       data: {
@@ -44,6 +50,12 @@ export const handler = define.handlers({
   async POST(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
+    if (!ctx.params.id) {
+      return Response.redirect(
+        new URL("/admin/categories", ctx.req.url).href,
+        302,
+      );
+    }
     const id = ctx.params.id;
     const form = await ctx.req.formData();
     const intent = String(form.get("intent") ?? "");
@@ -57,11 +69,11 @@ export const handler = define.handlers({
         );
       }
       // Aggregate guard; see GET handler comment.
-      const [{ c }] = await db
+      const countRows = await db
         .select({ c: sql<number>`count(*)` })
         .from(trackCategories)
         .where(eq(trackCategories.categoryId, id));
-      if (Number(c ?? 0) > 0) {
+      if (Number(countRows[0]?.c ?? 0) > 0) {
         return Response.redirect(
           new URL(`/admin/categories/${id}?err=assigned`, ctx.req.url).href,
           302,

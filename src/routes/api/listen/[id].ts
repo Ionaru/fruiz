@@ -105,10 +105,14 @@ function parseRange(
 
 export const handler = define.handlers({
   async GET(ctx) {
+    const id = ctx.params.id;
+    if (!id) {
+      return new Response("Not found", { status: 404 });
+    }
     let file: Deno.FsFile | undefined;
     let resolvedPath: string | undefined;
     try {
-      resolvedPath = await getAudioPathForTrack(ctx.params.id);
+      resolvedPath = await getAudioPathForTrack(id);
       if (!resolvedPath) {
         return new Response("Not found", { status: 404 });
       }

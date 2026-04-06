@@ -74,7 +74,9 @@ function findNextTrackAfterSkip(
     : "skipped";
 
   for (let offset = 1; offset <= n; offset++) {
-    const id = trackList[(currentIndex + offset) % n].id;
+    const next = trackList[(currentIndex + offset) % n];
+    if (!next) break;
+    const id = next.id;
     const status = progressAfterSkip.tracks.find((row) => row.trackId === id)
       ?.status;
     if (status === targetStatus) return id;

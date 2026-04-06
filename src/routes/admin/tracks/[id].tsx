@@ -15,8 +15,11 @@ export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
-    const audioChoices = await listAudioFilesInMusicDir();
+    if (!ctx.params.id) {
+      return Response.redirect(new URL("/admin/tracks", ctx.req.url).href, 302);
+    }
     const id = ctx.params.id;
+    const audioChoices = await listAudioFilesInMusicDir();
     const trackWithCategories = await db.query.tracks.findFirst({
       where: { id },
       with: { categories: true },
@@ -46,6 +49,9 @@ export const handler = define.handlers({
   async POST(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
+    if (!ctx.params.id) {
+      return Response.redirect(new URL("/admin/tracks", ctx.req.url).href, 302);
+    }
     const id = ctx.params.id;
     const form = await ctx.req.formData();
     const intent = String(form.get("intent") ?? "");
