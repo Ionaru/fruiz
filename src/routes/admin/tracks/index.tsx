@@ -1,5 +1,5 @@
 import { Head } from "fresh/runtime";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
@@ -7,15 +7,32 @@ import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
-import { tracks } from "../../../db/schema.ts";
+import { categories, trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
-    const rows = await db.select().from(tracks).orderBy(asc(tracks.title));
-    return { data: { session: gate.session, tracks: rows } };
+    const trackRows = await db.select().from(tracks).orderBy(asc(tracks.title));
+    const categoryLinks = await db
+      .select({
+        trackId: trackCategories.trackId,
+        categoryName: categories.name,
+      })
+      .from(trackCategories)
+      .innerJoin(categories, eq(trackCategories.categoryId, categories.id));
+    const categoryNamesByTrackId = new Map<string, string[]>();
+    for (const categoryLink of categoryLinks) {
+      const names = categoryNamesByTrackId.get(categoryLink.trackId) ?? [];
+      names.push(categoryLink.categoryName);
+      categoryNamesByTrackId.set(categoryLink.trackId, names);
+    }
+    const tracksWithCategories = trackRows.map((trackRow) => ({
+      ...trackRow,
+      categoryNames: categoryNamesByTrackId.get(trackRow.id) ?? [],
+    }));
+    return { data: { session: gate.session, tracks: tracksWithCategories } };
   },
 });
 
@@ -38,21 +55,36 @@ export default define.page<typeof handler>(({ data }) => (
       }
     />
     <ul class="flex flex-col gap-2">
-      {data.tracks.map((t) => (
-        <li key={t.id}>
+      {data.tracks.map((track) => (
+        <li key={track.id}>
           <PlateauCard
             padding="none"
             class="rounded-xl px-4 py-3 flex flex-wrap items-center gap-3"
           >
             <div class="shrink-0">
-              <AudioPlayer audioId={t.id} compact />
+              <AudioPlayer audioId={track.id} compact />
             </div>
             <a
-              href={`/admin/tracks/${t.id}`}
-              class="flex flex-wrap flex-1 min-w-0 justify-between gap-2 no-underline"
+              href={`/admin/tracks/${track.id}`}
+              class="grid flex-1 min-w-0 items-center gap-2 no-underline grid-cols-[minmax(0,1fr)_5rem_8.5rem] md:grid-cols-[minmax(0,1fr)_6rem_12rem]"
             >
-              <span class="font-medium">{t.title}</span>
-              <span class="text-sm opacity-80 capitalize">{t.difficulty}</span>
+              <span class="font-medium min-w-0 truncate">{track.title}</span>
+              <span class="text-sm opacity-80 capitalize text-right">
+                {track.difficulty}
+              </span>
+              {track.categoryNames.length > 0 ? (
+                <div class="text-xs opacity-70 flex flex-col gap-1 items-end">
+                  {track.categoryNames.map((category) => (
+                    <span class="bg-blue-300 dark:bg-blue-900 px-1.5 py-0.5 rounded-md w-max">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span class="text-xs opacity-70 text-right truncate">
+                  <span class="bg-red-300 dark:bg-red-900 px-1.5 py-0.5 rounded-md">Uncategorized</span>
+                </span>
+              )}
             </a>
           </PlateauCard>
         </li>
