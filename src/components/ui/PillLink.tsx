@@ -1,6 +1,6 @@
-import type { JSX } from "preact";
+import type { AnchorHTMLAttributes } from "preact";
 
-export interface PillLinkProps extends JSX.HTMLAttributes<HTMLAnchorElement> {
+export interface PillLinkProps extends AnchorHTMLAttributes {
   href: string;
 }
 
