@@ -8,8 +8,8 @@ import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
-import { TrackForm } from "../../../components/admin/TrackForm.tsx";
 import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
+import TrackForm from "../../../islands/TrackForm.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {

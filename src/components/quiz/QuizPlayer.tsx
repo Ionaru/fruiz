@@ -1,21 +1,10 @@
 import { PageShell } from "../layout/PageShell.tsx";
-import QuizController from "../../islands/QuizController.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
-import type { QuizIdentity, QuizTrackPayload } from "../../lib/types.ts";
+import type { ComponentChildren } from "preact";
 
 export interface QuizPlayerProps {
   category: CategoryRow;
-  identity: QuizIdentity;
-  replayLimit: number | null;
-  tracks: QuizTrackPayload[];
-  titleSuggestions: string[];
-  quizPath: string;
-  /** Set by the quiz route for `<Head>` / OG tags; not passed to islands. */
-  shareMeta?: {
-    title: string;
-    description: string;
-    url: string;
-  };
+  children: ComponentChildren;
 }
 
 export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
@@ -26,13 +15,7 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
           <p class="text-sm opacity-80">Category</p>
           <h1 class="text-2xl font-semibold">{props.category.name}</h1>
         </header>
-        <QuizController
-          identity={props.identity}
-          initialReplayLimit={props.replayLimit}
-          tracks={props.tracks}
-          titleSuggestions={props.titleSuggestions}
-          quizPath={props.quizPath}
-        />
+        {props.children}
       </div>
     </PageShell>
   );

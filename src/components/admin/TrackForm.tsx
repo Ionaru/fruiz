@@ -1,22 +1,18 @@
-import TrackAudioPick from "../../islands/TrackAudioPick.tsx";
-import TrackCategoriesPick from "../../islands/TrackCategoriesPick.tsx";
-import TrackDifficultyPick from "../../islands/TrackDifficultyPick.tsx";
-import TrackTitleInput from "../../islands/TrackTitleInput.tsx";
 import { Button } from "../Button.tsx";
 import { FieldGroup } from "../ui/FieldGroup.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
 
-const inputLikeClass =
+export const trackInputLikeClass =
   "plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100";
 
-function resolvedDifficulty(
+export function resolvedDifficulty(
   raw: string | undefined,
 ): "easy" | "hard" {
   const s = String(raw ?? "easy").trim().toLowerCase();
   return s === "hard" ? "hard" : "easy";
 }
 
-function normalizedPath(s: string | undefined): string {
+export function normalizedPath(s: string | undefined): string {
   return String(s ?? "").trim().replaceAll("\\", "/");
 }
 
@@ -52,19 +48,30 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
       class="plateau w-full rounded-2xl p-5 space-y-4"
     >
       <FieldGroup label="Title" htmlFor="tr-title">
-        <TrackTitleInput
+        <input
           id="tr-title"
-          inputClass={inputLikeClass}
-          initialTitle={props.defaultTitle ?? ""}
+          name="title"
+          type="text"
+          required
+          class={trackInputLikeClass}
+          value={props.defaultTitle ?? ""}
         />
       </FieldGroup>
       <FieldGroup label="Audio URL (repo-relative)" htmlFor="tr-audio">
-        <TrackAudioPick
+        <select
           id="tr-audio"
-          selectClass={inputLikeClass}
-          initialAudioUrl={defaultAudioUrl}
-          audioChoices={audioChoices}
-        />
+          name="audioUrl"
+          required
+          class={trackInputLikeClass}
+          value={defaultAudioUrl}
+        >
+          <option value="">Select audio file...</option>
+          {audioChoices.map((path) => (
+            <option key={path} value={path}>
+              {path}
+            </option>
+          ))}
+        </select>
         {defaultIsMissing && (
           <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
             Current value is no longer in `data/music`; choose an existing file
@@ -77,11 +84,48 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
           </p>
         )}
       </FieldGroup>
-      <TrackDifficultyPick initialDifficulty={initialDifficulty} />
-      <TrackCategoriesPick
-        categories={props.categories}
-        initialSelectedIds={props.selectedCategoryIds ?? []}
-      />
+      <fieldset class="space-y-1">
+        <legend class="text-sm font-medium">Difficulty</legend>
+        <div class="flex gap-3 pt-1">
+          {(["easy", "hard"] as const).map((option) => (
+            <label
+              key={option}
+              class="flex items-center gap-2 text-sm capitalize"
+            >
+              <input
+                type="radio"
+                name="difficulty"
+                value={option}
+                class="h-4 w-4 shrink-0 accent-emerald-600 dark:accent-emerald-400"
+                checked={initialDifficulty === option}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset class="space-y-2">
+        <legend class="text-sm font-medium">Categories</legend>
+        <div class="flex flex-col gap-2">
+          {props.categories.map((category) => {
+            const categoryId = String(category.id);
+            return (
+              <label key={categoryId} class="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="categoryIds"
+                  value={categoryId}
+                  class="h-4 w-4 shrink-0 accent-emerald-600 dark:accent-emerald-400"
+                  checked={(props.selectedCategoryIds ?? []).includes(
+                    categoryId,
+                  )}
+                />
+                {category.name}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
       <Button type="submit" variant="success" class="w-full">
         {props.submitLabel}
       </Button>

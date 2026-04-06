@@ -14,6 +14,7 @@ import {
   toQuizPayload,
 } from "../../../../lib/selectTracks.ts";
 import { QuizPlayer } from "../../../../components/quiz/QuizPlayer.tsx";
+import QuizPlayerClient from "../../../../islands/QuizPlayerClient.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -85,6 +86,14 @@ export default define.page<typeof handler>(({ data }) => (
       <meta property="og:type" content="website" />
       <meta property="og:url" content={data.shareMeta.url} />
     </Head>
-    <QuizPlayer {...data} />
+    <QuizPlayer category={data.category}>
+      <QuizPlayerClient
+        identity={data.identity}
+        replayLimit={data.replayLimit}
+        tracks={data.tracks}
+        titleSuggestions={data.titleSuggestions}
+        quizPath={data.quizPath}
+      />
+    </QuizPlayer>
   </>
 ));

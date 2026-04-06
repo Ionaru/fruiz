@@ -7,7 +7,7 @@ import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
-import { TrackForm } from "../../../components/admin/TrackForm.tsx";
+import TrackForm from "../../../islands/TrackForm.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
