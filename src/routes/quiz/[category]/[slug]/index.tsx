@@ -61,6 +61,7 @@ export const handler = define.handlers({
     return {
       data: {
         category,
+        difficulty,
         identity: { categorySlug, difficulty, seed },
         replayLimit,
         tracks: tracksPayload,
@@ -86,7 +87,7 @@ export default define.page<typeof handler>(({ data }) => (
       <meta property="og:type" content="website" />
       <meta property="og:url" content={data.shareMeta.url} />
     </Head>
-    <QuizPlayer category={data.category}>
+    <QuizPlayer category={data.category} difficulty={data.difficulty}>
       <QuizPlayerClient
         identity={data.identity}
         replayLimit={data.replayLimit}
