@@ -1,8 +1,8 @@
 import { useSignal } from "@preact/signals";
+import { SelectInput } from "../components/ui/SelectInput.tsx";
 
 export interface TrackAudioPickProps {
   id: string;
-  selectClass: string;
   initialAudioUrl: string;
   audioChoices: string[];
 }
@@ -15,11 +15,10 @@ export default function TrackAudioPick(props: Readonly<TrackAudioPickProps>) {
   const selected = useSignal(props.initialAudioUrl);
 
   return (
-    <select
+    <SelectInput
       id={props.id}
       name="audioUrl"
       required
-      class={props.selectClass}
       value={selected.value}
       onInput={(ev) => {
         selected.value = (ev.currentTarget as HTMLSelectElement).value;
@@ -31,6 +30,6 @@ export default function TrackAudioPick(props: Readonly<TrackAudioPickProps>) {
           {path}
         </option>
       ))}
-    </select>
+    </SelectInput>
   );
 }

@@ -2,6 +2,7 @@ import { Head } from "fresh/runtime";
 import { asc } from "drizzle-orm";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
+import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
 import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
 import { define } from "../../../utils.ts";
@@ -39,7 +40,10 @@ export default define.page<typeof handler>(({ data }) => (
     <ul class="flex flex-col gap-2">
       {data.tracks.map((t) => (
         <li key={t.id}>
-          <div class="plateau rounded-xl px-4 py-3 flex flex-wrap items-center gap-3">
+          <PlateauCard
+            padding="none"
+            class="rounded-xl px-4 py-3 flex flex-wrap items-center gap-3"
+          >
             <div class="shrink-0">
               <AudioPlayer audioId={t.id} compact />
             </div>
@@ -50,7 +54,7 @@ export default define.page<typeof handler>(({ data }) => (
               <span class="font-medium">{t.title}</span>
               <span class="text-sm opacity-80 capitalize">{t.difficulty}</span>
             </a>
-          </div>
+          </PlateauCard>
         </li>
       ))}
     </ul>

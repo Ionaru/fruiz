@@ -1,9 +1,11 @@
 import { Button } from "../Button.tsx";
 import { FieldGroup } from "../ui/FieldGroup.tsx";
+import { TextInput } from "../ui/TextInput.tsx";
+import { SelectInput } from "../ui/SelectInput.tsx";
+import { CheckControl } from "../ui/CheckControl.tsx";
+import { CheckGroup } from "../ui/CheckGroup.tsx";
+import { PlateauCard } from "../ui/PlateauCard.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
-
-export const trackInputLikeClass =
-  "plateau nm-dent-sm rounded-xl px-4 py-3 w-full border-0 bg-transparent text-base-900 dark:text-base-100";
 
 export function resolvedDifficulty(
   raw: string | undefined,
@@ -42,93 +44,85 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
     !props.audioChoices.some((v) => normalizedPath(v) === defaultAudioUrl);
 
   return (
-    <form
-      method={props.method ?? "post"}
-      action={props.action}
-      class="plateau w-full rounded-2xl p-5 space-y-4"
-    >
-      <FieldGroup label="Title" htmlFor="tr-title">
-        <input
-          id="tr-title"
-          name="title"
-          type="text"
-          required
-          class={trackInputLikeClass}
-          value={props.defaultTitle ?? ""}
-        />
-      </FieldGroup>
-      <FieldGroup label="Audio URL (repo-relative)" htmlFor="tr-audio">
-        <select
-          id="tr-audio"
-          name="audioUrl"
-          required
-          class={trackInputLikeClass}
-          value={defaultAudioUrl}
+    <PlateauCard class="w-full" padding="5">
+      <form
+        method={props.method ?? "post"}
+        action={props.action}
+        class="space-y-4"
+      >
+        <FieldGroup label="Title" htmlFor="tr-title">
+          <TextInput
+            id="tr-title"
+            name="title"
+            type="text"
+            required
+            value={props.defaultTitle ?? ""}
+          />
+        </FieldGroup>
+        <FieldGroup label="Audio URL (repo-relative)" htmlFor="tr-audio">
+          <SelectInput
+            id="tr-audio"
+            name="audioUrl"
+            required
+            value={defaultAudioUrl}
+          >
+            <option value="">Select audio file...</option>
+            {audioChoices.map((path) => (
+              <option key={path} value={path}>
+                {path}
+              </option>
+            ))}
+          </SelectInput>
+          {defaultIsMissing && (
+            <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              Current value is no longer in `data/music`; choose an existing
+              file to save.
+            </p>
+          )}
+          {audioChoices.length === 0 && (
+            <p class="mt-1 text-xs text-base-600 dark:text-base-300">
+              Add audio files under `data/music` to select one here.
+            </p>
+          )}
+        </FieldGroup>
+        <CheckGroup
+          legend="Difficulty"
+          class="space-y-1"
+          optionsClass="flex gap-3 pt-1"
         >
-          <option value="">Select audio file...</option>
-          {audioChoices.map((path) => (
-            <option key={path} value={path}>
-              {path}
-            </option>
-          ))}
-        </select>
-        {defaultIsMissing && (
-          <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
-            Current value is no longer in `data/music`; choose an existing file
-            to save.
-          </p>
-        )}
-        {audioChoices.length === 0 && (
-          <p class="mt-1 text-xs text-base-600 dark:text-base-300">
-            Add audio files under `data/music` to select one here.
-          </p>
-        )}
-      </FieldGroup>
-      <fieldset class="space-y-1">
-        <legend class="text-sm font-medium">Difficulty</legend>
-        <div class="flex gap-3 pt-1">
           {(["easy", "hard"] as const).map((option) => (
-            <label
+            <CheckControl
               key={option}
-              class="flex items-center gap-2 text-sm capitalize"
-            >
-              <input
-                type="radio"
-                name="difficulty"
-                value={option}
-                class="h-4 w-4 shrink-0 accent-emerald-600 dark:accent-emerald-400"
-                checked={initialDifficulty === option}
-              />
-              {option}
-            </label>
+              type="radio"
+              name="difficulty"
+              value={option}
+              checked={initialDifficulty === option}
+              label={option}
+              class="capitalize"
+            />
           ))}
-        </div>
-      </fieldset>
-      <fieldset class="space-y-2">
-        <legend class="text-sm font-medium">Categories</legend>
-        <div class="flex flex-col gap-2">
+        </CheckGroup>
+        <CheckGroup legend="Categories">
           {props.categories.map((category) => {
             const categoryId = String(category.id);
             return (
-              <label key={categoryId} class="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="categoryIds"
-                  value={categoryId}
-                  class="h-4 w-4 shrink-0 accent-emerald-600 dark:accent-emerald-400"
-                  checked={(props.selectedCategoryIds ?? []).includes(
-                    categoryId,
-                  )}
-                />
-                {category.name}
-              </label>
+              <CheckControl
+                key={categoryId}
+                type="checkbox"
+                name="categoryIds"
+                value={categoryId}
+                checked={(props.selectedCategoryIds ?? []).includes(
+                  categoryId,
+                )}
+                label={category.name}
+              />
             );
           })}
-        </div>
-      </fieldset>
-      <Button type="submit" variant="success" class="w-full">
-        {props.submitLabel}
-      </Button>
-    </form>
+        </CheckGroup>
+        <Button type="submit" variant="success" class="w-full">
+          {props.submitLabel}
+        </Button>
+      </form>
+    </PlateauCard>
   );
 }

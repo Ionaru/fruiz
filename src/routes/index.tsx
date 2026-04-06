@@ -11,6 +11,7 @@ import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
 import { Button } from "../components/Button.tsx";
 import { PageShell } from "../components/layout/PageShell.tsx";
 import { PillLink } from "../components/ui/PillLink.tsx";
+import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -73,42 +74,40 @@ export default define.page<typeof handler>(({ data }) => (
       )}
       {data.options.length === 0
         ? (
-          <p class="plateau rounded-2xl p-6 text-base-800 dark:text-base-100">
+          <PlateauCard class="text-base-800 dark:text-base-100">
             No quizzes available yet. Seed categories and at least 20 tracks per
             difficulty mode.
-          </p>
+          </PlateauCard>
         )
         : (
           <div class="flex flex-col gap-6">
             {data.options.map((opt) => (
-              <form
-                key={opt.category.slug}
-                method="post"
-                class="plateau rounded-2xl p-5 space-y-4"
-              >
-                <input
-                  type="hidden"
-                  name="category"
-                  value={opt.category.slug}
-                />
-                <h2 class="text-xl font-medium text-base-900 dark:text-base-100">
-                  {opt.category.name}
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                  {opt.difficulties.map((d) => (
-                    <Button
-                      key={d}
-                      variant="info"
-                      class="px-6 capitalize"
-                      name="difficulty"
-                      value={d}
-                      type="submit"
-                    >
-                      {d}
-                    </Button>
-                  ))}
-                </div>
-              </form>
+              <PlateauCard key={opt.category.slug} padding="5">
+                <form method="post" class="space-y-4">
+                  <input
+                    type="hidden"
+                    name="category"
+                    value={opt.category.slug}
+                  />
+                  <h2 class="text-xl font-medium text-base-900 dark:text-base-100">
+                    {opt.category.name}
+                  </h2>
+                  <div class="flex flex-wrap gap-2">
+                    {opt.difficulties.map((d) => (
+                      <Button
+                        key={d}
+                        variant="info"
+                        class="px-6 capitalize"
+                        name="difficulty"
+                        value={d}
+                        type="submit"
+                      >
+                        {d}
+                      </Button>
+                    ))}
+                  </div>
+                </form>
+              </PlateauCard>
             ))}
           </div>
         )}

@@ -3,7 +3,6 @@ import { TextInput } from "../components/ui/TextInput.tsx";
 
 export interface TrackTitleInputProps {
   id: string;
-  inputClass: string;
   initialTitle: string;
 }
 
@@ -20,7 +19,6 @@ export default function TrackTitleInput(props: Readonly<TrackTitleInputProps>) {
       name="title"
       type="text"
       required
-      class={props.inputClass}
       value={title.value}
       onInput={(ev) => {
         title.value = (ev.currentTarget as HTMLInputElement).value;

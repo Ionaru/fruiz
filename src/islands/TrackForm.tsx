@@ -6,10 +6,10 @@ import {
   normalizedPath,
   resolvedDifficulty,
   type TrackFormProps,
-  trackInputLikeClass,
 } from "../components/admin/TrackForm.tsx";
 import { Button } from "../components/Button.tsx";
 import { FieldGroup } from "../components/ui/FieldGroup.tsx";
+import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 
 export default function TrackForm(props: Readonly<TrackFormProps>) {
   const initialDifficulty = resolvedDifficulty(props.defaultDifficulty);
@@ -27,45 +27,45 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
     );
 
   return (
-    <form
-      method={props.method ?? "post"}
-      action={props.action}
-      class="plateau w-full rounded-2xl p-5 space-y-4"
-    >
-      <FieldGroup label="Title" htmlFor="tr-title">
-        <TrackTitleInput
-          id="tr-title"
-          inputClass={trackInputLikeClass}
-          initialTitle={props.defaultTitle ?? ""}
+    <PlateauCard class="w-full" padding="5">
+      <form
+        method={props.method ?? "post"}
+        action={props.action}
+        class="space-y-4"
+      >
+        <FieldGroup label="Title" htmlFor="tr-title">
+          <TrackTitleInput
+            id="tr-title"
+            initialTitle={props.defaultTitle ?? ""}
+          />
+        </FieldGroup>
+        <FieldGroup label="Audio URL (repo-relative)" htmlFor="tr-audio">
+          <TrackAudioPick
+            id="tr-audio"
+            initialAudioUrl={defaultAudioUrl}
+            audioChoices={audioChoices}
+          />
+          {defaultIsMissing && (
+            <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              Current value is no longer in `data/music`; choose an existing
+              file to save.
+            </p>
+          )}
+          {audioChoices.length === 0 && (
+            <p class="mt-1 text-xs text-base-600 dark:text-base-300">
+              Add audio files under `data/music` to select one here.
+            </p>
+          )}
+        </FieldGroup>
+        <TrackDifficultyPick initialDifficulty={initialDifficulty} />
+        <TrackCategoriesPick
+          categories={props.categories}
+          initialSelectedIds={props.selectedCategoryIds ?? []}
         />
-      </FieldGroup>
-      <FieldGroup label="Audio URL (repo-relative)" htmlFor="tr-audio">
-        <TrackAudioPick
-          id="tr-audio"
-          selectClass={trackInputLikeClass}
-          initialAudioUrl={defaultAudioUrl}
-          audioChoices={audioChoices}
-        />
-        {defaultIsMissing && (
-          <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">
-            Current value is no longer in `data/music`; choose an existing file
-            to save.
-          </p>
-        )}
-        {audioChoices.length === 0 && (
-          <p class="mt-1 text-xs text-base-600 dark:text-base-300">
-            Add audio files under `data/music` to select one here.
-          </p>
-        )}
-      </FieldGroup>
-      <TrackDifficultyPick initialDifficulty={initialDifficulty} />
-      <TrackCategoriesPick
-        categories={props.categories}
-        initialSelectedIds={props.selectedCategoryIds ?? []}
-      />
-      <Button type="submit" variant="success" class="w-full">
-        {props.submitLabel}
-      </Button>
-    </form>
+        <Button type="submit" variant="success" class="w-full">
+          {props.submitLabel}
+        </Button>
+      </form>
+    </PlateauCard>
   );
 }

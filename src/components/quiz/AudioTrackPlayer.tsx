@@ -1,4 +1,5 @@
 import type { ComponentChildren } from "preact";
+import { PlateauCard } from "../ui/PlateauCard.tsx";
 
 export interface AudioTrackPlayerProps {
   /** 1-based index in the quiz order (never the real song title). */
@@ -10,7 +11,7 @@ export interface AudioTrackPlayerProps {
 /** Quiz playback shell: does not reveal the answer title—only which clip slot is active. */
 export function AudioTrackPlayer(props: Readonly<AudioTrackPlayerProps>) {
   return (
-    <div class="plateau rounded-2xl p-4 space-y-3">
+    <PlateauCard padding="4" class="space-y-3">
       <h3 class="text-lg font-semibold">
         Clip {props.clipNumber} of {props.clipTotal}
       </h3>
@@ -18,6 +19,6 @@ export function AudioTrackPlayer(props: Readonly<AudioTrackPlayerProps>) {
         Listen, then type your guess below.
       </p>
       {props.children}
-    </div>
+    </PlateauCard>
   );
 }
