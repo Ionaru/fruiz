@@ -51,8 +51,8 @@
     "npm:@preact/signals@^2.9.0": "2.9.0_preact@10.29.1",
     "npm:@prefresh/vite@^2.4.8": "2.4.12_preact@10.29.1_vite@7.3.1",
     "npm:@tailwindcss/vite@^4.1.12": "4.2.2_vite@7.3.1",
-    "npm:drizzle-kit@1.0.0-beta.19": "1.0.0-beta.19",
-    "npm:drizzle-orm@1.0.0-beta.19": "1.0.0-beta.19_@opentelemetry+api@1.9.1",
+    "npm:drizzle-kit@1.0.0-beta.20": "1.0.0-beta.20",
+    "npm:drizzle-orm@1.0.0-beta.20": "1.0.0-beta.20_@opentelemetry+api@1.9.1_@types+mssql@9.1.11__@azure+core-client@1.10.1_mssql@11.0.1__@azure+core-client@1.10.1_@azure+core-client@1.10.1",
     "npm:esbuild-wasm@~0.25.11": "0.25.12",
     "npm:esbuild@0.25.7": "0.25.7",
     "npm:esbuild@~0.25.5": "0.25.12",
@@ -363,17 +363,17 @@
         "tslib@2.8.1"
       ]
     },
-    "@azure/msal-browser@5.6.2": {
-      "integrity": "sha512-ZgcN9ToRJ80f+wNPBBKYJ+DG0jlW7ktEjYtSNkNsTrlHVMhKB8tKMdI1yIG1I9BJtykkXtqnuOjlJaEMC7J6aw==",
+    "@azure/msal-browser@5.6.3": {
+      "integrity": "sha512-sTjMtUm+bJpENU/1WlRzHEsgEHppZDZ1EtNyaOODg/sQBtMxxJzGB+MOCM+T2Q5Qe1fKBrdxUmjyRxm0r7Ez9w==",
       "dependencies": [
         "@azure/msal-common"
       ]
     },
-    "@azure/msal-common@16.4.0": {
-      "integrity": "sha512-twXt09PYtj1PffNNIAzQlrBd0DS91cdA6i1gAfzJ6BnPM4xNk5k9q/5xna7jLIjU3Jnp0slKYtucshGM8OGNAw=="
+    "@azure/msal-common@16.4.1": {
+      "integrity": "sha512-Bl8f+w37xkXsYh7QRkAKCFGYtWMYuOVO7Lv+BxILrvGz3HbIEF22Pt0ugyj0QPOl6NLrHcnNUQ9yeew98P/5iw=="
     },
-    "@azure/msal-node@5.1.1": {
-      "integrity": "sha512-71grXU6+5hl+3CL3joOxlj/AW6rmhthuTlG0fRqsTrhPArQBpZuUFzCIlKOGdcafLUa/i1hBdV78ZxJdlvRA+g==",
+    "@azure/msal-node@5.1.2": {
+      "integrity": "sha512-DoeSJ9U5KPAIZoHsPywvfEj2MhBniQe0+FSpjLUTdWoIkI999GB5USkW6nNEHnIaLVxROHXvprWA1KzdS1VQ4A==",
       "dependencies": [
         "@azure/msal-common",
         "jsonwebtoken",
@@ -1395,11 +1395,12 @@
       "integrity": "sha512-vcujgrDbDezCxNDO4KY6gjwduLYOKfrexpRUwhoysRvcXZ3+IgZ/PMYFDgh8c3cQIxZ6skAwYo+H6ibMrBWPjQ==",
       "dependencies": [
         "@types/node",
-        "tarn"
+        "tarn",
+        "tedious@19.2.1_@azure+core-client@1.10.1"
       ]
     },
-    "@types/node@25.5.0": {
-      "integrity": "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==",
+    "@types/node@25.5.2": {
+      "integrity": "sha512-tO4ZIRKNC+MDWV4qKVZe3Ql/woTnmHDr5JD8UI5hn2pwBrHEwOEMZK7WlNb5RKB6EoJ02gwmQS9OrjuFnZYdpg==",
       "dependencies": [
         "undici-types"
       ]
@@ -1509,8 +1510,8 @@
     "detect-libc@2.1.2": {
       "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="
     },
-    "drizzle-kit@1.0.0-beta.19": {
-      "integrity": "sha512-LO9cz8iipjyOROaBLmVAhu1WT4JGd8QKSc0XYhnO0FGXP5FappHII52lHcxfj2j+vVuDCTjoqeTTvW1N9NJYZQ==",
+    "drizzle-kit@1.0.0-beta.20": {
+      "integrity": "sha512-qMUBnrOQIU+H32aF80BSn7lT1IQuKmofCypmkrKMuOMqvM0bhz5hjCHim1bLcXUzXYRtTSr6U2pe0MSV79WbAg==",
       "dependencies": [
         "@drizzle-team/brocli",
         "@js-temporal/polyfill",
@@ -1520,8 +1521,8 @@
       ],
       "bin": true
     },
-    "drizzle-orm@1.0.0-beta.19_@opentelemetry+api@1.9.1": {
-      "integrity": "sha512-wL8FoHl9NRVYdrescFWyAVY5rNuEmbY4KDqO6Qo4RTVt1rYMbz7btq5Mhg91GN3x+qeUbQ83l9QkHYd4QmVTvg==",
+    "drizzle-orm@1.0.0-beta.20_@opentelemetry+api@1.9.1_@types+mssql@9.1.11__@azure+core-client@1.10.1_mssql@11.0.1__@azure+core-client@1.10.1_@azure+core-client@1.10.1": {
+      "integrity": "sha512-7qiuw+Z6yGr+ywt3PS5dP6UCfdymIuFT/ni6GnPGzLhkBIolNBTo4ByMBWTxJ7dW/Ya6d73GtkeuKfcVcriVHA==",
       "dependencies": [
         "@opentelemetry/api",
         "@types/mssql",
@@ -1704,6 +1705,12 @@
     },
     "iconv-lite@0.6.3": {
       "integrity": "sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==",
+      "dependencies": [
+        "safer-buffer"
+      ]
+    },
+    "iconv-lite@0.7.2": {
+      "integrity": "sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==",
       "dependencies": [
         "safer-buffer"
       ]
@@ -1900,7 +1907,7 @@
         "debug",
         "rfdc",
         "tarn",
-        "tedious"
+        "tedious@18.6.2_@azure+core-client@1.10.1"
       ],
       "bin": true
     },
@@ -2077,7 +2084,22 @@
         "@js-joda/core",
         "@types/node",
         "bl",
-        "iconv-lite",
+        "iconv-lite@0.6.3",
+        "js-md4",
+        "native-duplexpair",
+        "sprintf-js"
+      ]
+    },
+    "tedious@19.2.1_@azure+core-client@1.10.1": {
+      "integrity": "sha512-pk1Q16Yl62iocuQB+RWbg6rFUFkIyzqOFQ6NfysCltRvQqKwfurgj8v/f2X+CKvDhSL4IJ0cCOfCHDg9PWEEYA==",
+      "dependencies": [
+        "@azure/core-auth",
+        "@azure/identity",
+        "@azure/keyvault-keys",
+        "@js-joda/core",
+        "@types/node",
+        "bl",
+        "iconv-lite@0.7.2",
         "js-md4",
         "native-duplexpair",
         "sprintf-js"
@@ -2154,8 +2176,8 @@
       "jsr:@std/http@^1.0.25",
       "npm:@preact/signals@^2.9.0",
       "npm:@tailwindcss/vite@^4.1.12",
-      "npm:drizzle-kit@1.0.0-beta.19",
-      "npm:drizzle-orm@1.0.0-beta.19",
+      "npm:drizzle-kit@1.0.0-beta.20",
+      "npm:drizzle-orm@1.0.0-beta.20",
       "npm:preact@^10.29.1",
       "npm:react-icons@^5.6.0",
       "npm:tailwindcss-neumorphism-ui@2",
