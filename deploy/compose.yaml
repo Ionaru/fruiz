@@ -9,7 +9,10 @@ services:
     volumes:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     restart: unless-stopped
-    command: deno task db:sync && deno task start
+    command:
+      - /bin/sh
+      - -c
+      - deno task db:sync && exec deno task start
 
 volumes:
   data:
