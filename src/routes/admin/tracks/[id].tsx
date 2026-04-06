@@ -4,6 +4,7 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { categories, trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
@@ -14,6 +15,7 @@ export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
+    const audioChoices = await listAudioFilesInMusicDir();
     const id = ctx.params.id;
     const [track] = await db.select().from(tracks).where(eq(tracks.id, id))
       .limit(1);
@@ -39,6 +41,7 @@ export const handler = define.handlers({
         session: gate.session,
         track,
         categoryOptions,
+        audioChoices,
         selectedCategoryIds,
         queryError,
       },
@@ -66,11 +69,17 @@ export const handler = define.handlers({
     }
 
     const title = String(form.get("title") ?? "").trim();
-    const audioUrl = String(form.get("audioUrl") ?? "").trim();
+    const audioUrl = String(form.get("audioUrl") ?? "").trim().replaceAll(
+      "\\",
+      "/",
+    );
     const difficulty = String(form.get("difficulty") ?? "");
     const categoryIds = form.getAll("categoryIds").map((v) => String(v));
+    const audioChoices = await listAudioFilesInMusicDir();
+    const validAudioChoices = new Set(audioChoices);
     if (
-      !title || !audioUrl || (difficulty !== "easy" && difficulty !== "hard")
+      !title || !audioUrl || !validAudioChoices.has(audioUrl) ||
+      (difficulty !== "easy" && difficulty !== "hard")
     ) {
       return Response.redirect(
         new URL(`/admin/tracks/${id}`, ctx.req.url).href,
@@ -111,6 +120,7 @@ export default define.page<typeof handler>(({ data }) => (
       <TrackForm
         action={`/admin/tracks/${data.track.id}`}
         categories={data.categoryOptions}
+        audioChoices={data.audioChoices}
         selectedCategoryIds={data.selectedCategoryIds}
         defaultTitle={data.track.title}
         defaultAudioUrl={data.track.audioUrl}
