@@ -20,7 +20,7 @@ function parseQuizPathParts(
 ): { category: string; slug: string } | null {
   const parts = quizPath.split("/").filter(Boolean);
   const category = parts[1];
-  const slug = parts[parts.length - 1];
+  const slug = parts.at(-1);
   if (!slug || !category || parts[0] !== "quiz") return null;
   return { category, slug };
 }
@@ -81,7 +81,7 @@ function readInProgressEntries(): InProgressQuizEntry[] {
   const entries: InProgressQuizEntry[] = [];
   for (let index = 0; index < localStorage.length; index++) {
     const key = localStorage.key(index);
-    if (!key || !key.startsWith(STORAGE_KEY_PREFIX)) continue;
+    if (!key?.startsWith(STORAGE_KEY_PREFIX)) continue;
     const rawValue = localStorage.getItem(key);
     if (!rawValue) continue;
     const entry = buildEntry(key, rawValue);
@@ -140,7 +140,7 @@ export default function InProgressQuizSection() {
             key={entry.storageKey}
             class="plateau rounded-xl px-3 py-3 space-y-3"
           >
-            <div class="text-sm space-y-1 break-words">
+            <div class="text-sm space-y-1 wrap-break-word">
               <p class="font-medium capitalize">{entry.category}</p>
               <p class="opacity-90">
                 Difficulty: <span class="capitalize">{entry.difficulty}</span>
