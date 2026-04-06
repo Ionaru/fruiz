@@ -1,9 +1,7 @@
 import { join } from "node:path";
 
-import { db } from "../db/db.ts";
+import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
-
-export type DrizzleDb = typeof db;
 
 const AUDIO_EXT = new Set([
   ".mp3",
@@ -48,7 +46,7 @@ function displayNameFromSlug(slug: string): string {
 }
 
 async function ensureCategoryId(
-  drizzle: DrizzleDb,
+  drizzle: DB,
   slug: string,
   nameOverride: string | undefined,
 ): Promise<string> {
@@ -76,7 +74,7 @@ async function ensureCategoryId(
  * If `categorySlug` is set, the category is created when missing (`categoryName` optional).
  */
 export async function seedTracksFromMusicDir(
-  drizzle: DrizzleDb,
+  drizzle: DB,
   options: SeedMusicOptions = {},
 ): Promise<{ inserted: number; skipped: number }> {
   const musicDir = options.musicDir ?? "data/music";

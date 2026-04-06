@@ -1,10 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 
-import { db } from "../db/db.ts";
+import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
 import type { DifficultyMode } from "./types.ts";
-
-type DrizzleDb = typeof db;
 
 const MIN_TRACKS = 20;
 
@@ -34,7 +32,7 @@ export interface AvailableQuizOption {
  * Per-category track counts for eligibility (>= MIN_TRACKS per selected difficulty mode).
  */
 export async function loadCategoryTrackCounts(
-  db: DrizzleDb,
+  db: DB,
 ): Promise<
   Map<
     string,
@@ -79,7 +77,7 @@ export async function loadCategoryTrackCounts(
 }
 
 export async function getAvailableQuizOptions(
-  db: DrizzleDb,
+  db: DB,
 ): Promise<AvailableQuizOption[]> {
   const map = await loadCategoryTrackCounts(db);
   const out: AvailableQuizOption[] = [];
@@ -105,7 +103,7 @@ export async function getAvailableQuizOptions(
 }
 
 export async function isQuizCombinationAvailable(
-  db: DrizzleDb,
+  db: DB,
   categorySlug: string,
   difficulty: DifficultyMode,
 ): Promise<boolean> {
@@ -117,7 +115,7 @@ export async function isQuizCombinationAvailable(
 }
 
 export async function getCategoryBySlug(
-  db: DrizzleDb,
+  db: DB,
   slug: string,
 ): Promise<CategoryRow | null> {
   const row = await db.query.categories.findFirst({
@@ -128,7 +126,7 @@ export async function getCategoryBySlug(
 }
 
 export async function getTracksForCategory(
-  db: DrizzleDb,
+  db: DB,
   categoryId: string,
 ): Promise<
   { id: string; title: string; audioUrl: string; difficulty: "easy" | "hard" }[]
@@ -151,7 +149,7 @@ export async function getTracksForCategory(
 }
 
 export async function getDistinctTitlesForCategory(
-  db: DrizzleDb,
+  db: DB,
   categoryId: string,
 ): Promise<string[]> {
   const rows = await db

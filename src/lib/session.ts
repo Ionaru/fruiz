@@ -1,7 +1,7 @@
 import { getCookies, setCookie } from "@std/http/cookie";
 import { eq } from "drizzle-orm";
 
-import { db } from "../db/db.ts";
+import { DB, db } from "../db/db.ts";
 import { sessions } from "../db/schema.ts";
 
 /** Opaque DB-backed session id stored in the browser cookie (replaces legacy HMAC cookie). */
@@ -27,8 +27,6 @@ export type LoadedSession = {
   expiresAt: Date;
 };
 
-type DbLike = typeof db;
-
 function parseSessionData(raw: string | null): Record<string, unknown> {
   if (!raw) return {};
   try {
@@ -43,7 +41,7 @@ function parseSessionData(raw: string | null): Record<string, unknown> {
 
 export async function loadActiveSession(
   sessionId: string,
-  runner: DbLike = db,
+  runner: DB = db,
 ): Promise<LoadedSession | null> {
   const now = new Date();
   const row = await runner.query.sessions.findFirst({
@@ -71,7 +69,7 @@ export async function loadActiveSession(
 
 export async function createDbSession(
   userId: string,
-  runner: DbLike = db,
+  runner: DB = db,
 ): Promise<string> {
   const id = crypto.randomUUID();
   const now = new Date();
@@ -89,14 +87,14 @@ export async function createDbSession(
 
 export async function deleteDbSession(
   sessionId: string,
-  runner: DbLike = db,
+  runner: DB = db,
 ): Promise<void> {
   await runner.delete(sessions).where(eq(sessions.id, sessionId));
 }
 
 export async function touchSessionExpiry(
   sessionId: string,
-  runner: DbLike = db,
+  runner: DB = db,
 ): Promise<void> {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
@@ -109,7 +107,7 @@ export async function touchSessionExpiry(
 export async function persistSessionData(
   sessionId: string,
   data: Record<string, unknown>,
-  runner: DbLike = db,
+  runner: DB = db,
 ): Promise<void> {
   const now = new Date();
   await runner

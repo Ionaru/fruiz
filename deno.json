@@ -22,7 +22,6 @@
     "**/_fresh/*"
   ],
   "imports": {
-    "@/": "./",
     "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
     "@preact/signals": "npm:@preact/signals@^2.9.0",
     "@simplewebauthn/browser": "jsr:@simplewebauthn/browser@^13.3.0",

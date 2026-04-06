@@ -1,12 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 
-import { db } from "../db/db.ts";
+import type { DB } from "../db/db.ts";
 import { quizInstances, quizInstanceTracks, tracks } from "../db/schema.ts";
 import type { DifficultyMode, QuizTrackPayload } from "./types.ts";
 import { selectTracksDeterministic } from "./selectTracks.ts";
 import { getTracksForCategory } from "./categories.ts";
-
-type DrizzleDb = typeof db;
 
 interface CreateArgs {
   categorySlug: string;
@@ -53,7 +51,7 @@ export function toSnapshotQuizPayload(
 }
 
 async function createQuizInstance(
-  drizzle: DrizzleDb,
+  drizzle: DB,
   args: CreateArgs,
 ): Promise<QuizInstanceData | null> {
   const pool = await getTracksForCategory(drizzle, args.categoryId);
@@ -102,7 +100,7 @@ async function createQuizInstance(
 }
 
 export async function getQuizInstance(
-  drizzle: DrizzleDb,
+  drizzle: DB,
   categorySlug: string,
   difficulty: DifficultyMode,
   code: string,
@@ -138,7 +136,7 @@ export async function getQuizInstance(
 }
 
 export async function getOrCreateQuizInstance(
-  drizzle: DrizzleDb,
+  drizzle: DB,
   args: CreateArgs,
 ): Promise<QuizInstanceData | null> {
   const existing = await getQuizInstance(
