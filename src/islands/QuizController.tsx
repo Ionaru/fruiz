@@ -80,6 +80,27 @@ function findNextTrackAfterSkip(
   return currentTrackId;
 }
 
+/**
+ * On resume/reload, prefer the first track in quiz order that is still
+ * `unanswered` (therefore unskipped). Fall back to the provided current id when
+ * valid, otherwise the first track id.
+ */
+function findResumeActiveTrackId(
+  trackList: QuizTrackPayload[],
+  progressState: QuizProgress,
+  currentTrackId: string | null,
+): string | null {
+  for (const track of trackList) {
+    const status = progressState.tracks.find((row) => row.trackId === track.id)
+      ?.status;
+    if (status === "unanswered") return track.id;
+  }
+  if (currentTrackId && trackList.some((track) => track.id === currentTrackId)) {
+    return currentTrackId;
+  }
+  return trackList[0]?.id ?? null;
+}
+
 /** Returns merged progress from `localStorage`, or `null` if missing or invalid. */
 function tryMergeStoredProgress(
   raw: string | null,
@@ -137,6 +158,16 @@ export default function QuizController(props: Readonly<Props>) {
         );
         if (merged) {
           progress.value = merged;
+          const resumedActiveId = findResumeActiveTrackId(
+            props.tracks,
+            merged,
+            activeId.value,
+          );
+          activeId.value = resumedActiveId;
+          const resumedRow = resumedActiveId
+            ? merged.tracks.find((entry) => entry.trackId === resumedActiveId)
+            : undefined;
+          answerDraft.value = resumedRow?.selectedTitle ?? "";
           if (isComplete(merged)) showResults.value = true;
         }
       } catch {

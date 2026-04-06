@@ -12,6 +12,7 @@ import { Button } from "../components/Button.tsx";
 import { PageShell } from "../components/layout/PageShell.tsx";
 import { PillLink } from "../components/ui/PillLink.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import InProgressQuizSection from "../islands/InProgressQuizSection.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -72,45 +73,51 @@ export default define.page<typeof handler>(({ data }) => (
           query on the home URL is ignored until you open a quiz.
         </p>
       )}
-      {data.options.length === 0
-        ? (
-          <PlateauCard class="text-base-800 dark:text-base-100">
-            No quizzes available yet. Seed categories and at least 20 tracks per
-            difficulty mode.
-          </PlateauCard>
-        )
-        : (
-          <div class="flex flex-col gap-6">
-            {data.options.map((opt) => (
-              <PlateauCard key={opt.category.slug} padding="5">
-                <form method="post" class="space-y-4">
-                  <input
-                    type="hidden"
-                    name="category"
-                    value={opt.category.slug}
-                  />
-                  <h2 class="text-xl font-medium text-base-900 dark:text-base-100">
-                    {opt.category.name}
-                  </h2>
-                  <div class="flex flex-wrap gap-2">
-                    {opt.difficulties.map((d) => (
-                      <Button
-                        key={d}
-                        variant="info"
-                        class="px-6 capitalize"
-                        name="difficulty"
-                        value={d}
-                        type="submit"
-                      >
-                        {d}
-                      </Button>
-                    ))}
-                  </div>
-                </form>
-              </PlateauCard>
-            ))}
-          </div>
-        )}
+      <InProgressQuizSection />
+      <section class="space-y-3">
+        <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
+          Start new quiz
+        </h2>
+        {data.options.length === 0
+          ? (
+            <PlateauCard class="text-base-800 dark:text-base-100">
+              No quizzes available yet. Seed categories and at least 20 tracks
+              per difficulty mode.
+            </PlateauCard>
+          )
+          : (
+            <div class="flex flex-col gap-6">
+              {data.options.map((opt) => (
+                <PlateauCard key={opt.category.slug} padding="5">
+                  <form method="post" class="space-y-4">
+                    <input
+                      type="hidden"
+                      name="category"
+                      value={opt.category.slug}
+                    />
+                    <h3 class="text-xl font-medium text-base-900 dark:text-base-100">
+                      {opt.category.name}
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                      {opt.difficulties.map((d) => (
+                        <Button
+                          key={d}
+                          variant="info"
+                          class="px-6 capitalize"
+                          name="difficulty"
+                          value={d}
+                          type="submit"
+                        >
+                          {d}
+                        </Button>
+                      ))}
+                    </div>
+                  </form>
+                </PlateauCard>
+              ))}
+            </div>
+          )}
+      </section>
     </div>
   </PageShell>
 ));
