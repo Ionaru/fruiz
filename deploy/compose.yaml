@@ -4,6 +4,9 @@ services:
     build:
       context: ../
       dockerfile: deploy/Dockerfile
+    environment:
+      - FRUIZ_SECURE_COOKIES
+      - FRUIZ_RP_ID
     ports:
       - "${FRUIZ_PORT:-8000}:8000"
     volumes:
