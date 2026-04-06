@@ -1,8 +1,8 @@
 import { Head } from "fresh/runtime";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
-import { categories, trackCategories, tracks } from "../../../db/schema.ts";
+import { trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
@@ -17,24 +17,19 @@ export const handler = define.handlers({
     if (gate instanceof Response) return gate;
     const audioChoices = await listAudioFilesInMusicDir();
     const id = ctx.params.id;
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, id))
-      .limit(1);
-    if (!track) {
+    const trackWithCategories = await db.query.tracks.findFirst({
+      where: { id },
+      with: { categories: true },
+    });
+    if (!trackWithCategories) {
       return Response.redirect(new URL("/admin/tracks", ctx.req.url).href, 302);
     }
-    const categoryOptions = await db
-      .select({
-        id: categories.id,
-        name: categories.name,
-        slug: categories.slug,
-      })
-      .from(categories)
-      .orderBy(asc(categories.name));
-    const links = await db
-      .select({ categoryId: trackCategories.categoryId })
-      .from(trackCategories)
-      .where(eq(trackCategories.trackId, id));
-    const selectedCategoryIds = links.map((l) => l.categoryId);
+    const { categories: linkedCategories, ...track } = trackWithCategories;
+    const categoryOptions = await db.query.categories.findMany({
+      columns: { id: true, name: true, slug: true },
+      orderBy: (categoryRow, { asc }) => asc(categoryRow.name),
+    });
+    const selectedCategoryIds = linkedCategories.map((link) => link.id);
     const queryError = new URL(ctx.req.url).searchParams.get("err");
     return {
       data: {

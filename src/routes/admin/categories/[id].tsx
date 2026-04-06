@@ -24,6 +24,7 @@ export const handler = define.handlers({
         302,
       );
     }
+    // Relational query API is a poor fit for aggregates; keep explicit SQL.
     const [{ c }] = await db
       .select({ c: sql<number>`count(*)` })
       .from(trackCategories)
@@ -55,6 +56,7 @@ export const handler = define.handlers({
           302,
         );
       }
+      // Aggregate guard; see GET handler comment.
       const [{ c }] = await db
         .select({ c: sql<number>`count(*)` })
         .from(trackCategories)

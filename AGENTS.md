@@ -11,7 +11,8 @@ If this file conflicts with the constitution, follow the constitution.
 When guidance conflicts, use this precedence order:
 
 1. [.specify/memory/constitution.md](.specify/memory/constitution.md)
-2. Repo-enforced checks and automation (`deno.json`, `.github/workflows/cd.yaml`)
+2. Repo-enforced checks and automation (`deno.json`,
+   `.github/workflows/cd.yaml`)
 3. This file (`AGENTS.md`)
 4. Generated or auxiliary guidance (`.specify/templates/*`, `.cursor/rules/*`,
    command helper docs)
@@ -61,8 +62,8 @@ flowchart TD
 
 ## Code Design Principles
 
-- Apply Clean Code practices: descriptive names, small focused functions/modules,
-  and straightforward control flow.
+- Apply Clean Code practices: descriptive names, small focused
+  functions/modules, and straightforward control flow.
 - Apply SOLID principles pragmatically for TypeScript modules, route handlers,
   and component/island boundaries.
 - Apply DRY: consolidate duplicated business rules, normalization behavior, and
@@ -77,8 +78,8 @@ flowchart TD
   requirements.
 - Authentication changes MUST preserve challenge verification and credential
   counter update semantics.
-- Session cookies for admin auth MUST preserve secure invariants used by the
-  app (`HttpOnly`, `Secure`, and current SameSite policy).
+- Session cookies for admin auth MUST preserve secure invariants used by the app
+  (`HttpOnly`, `Secure`, and current SameSite policy).
 - Destructive admin operations MUST require an explicit confirmation step before
   data removal.
 
@@ -109,8 +110,7 @@ flowchart TD
   mobile validation, security/admin implications, and verification approach.
 - Plans MUST include a constitution check that covers deterministic identity,
   server-first boundaries, SSR versus island boundaries, `@preact/signals`
-  usage, code quality principles (Clean Code/SOLID/DRY), and Deno quality
-  gates.
+  usage, code quality principles (Clean Code/SOLID/DRY), and Deno quality gates.
 - Tasks MUST be organized into independently testable user stories and include
   required verification work (automated and/or explicit manual validation).
 

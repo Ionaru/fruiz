@@ -1,20 +1,17 @@
 import { Head } from "fresh/runtime";
-import { asc } from "drizzle-orm";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
 import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
-import { categories } from "../../../db/schema.ts";
+import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
-    const rows = await db.select().from(categories).orderBy(
-      asc(categories.name),
-    );
+    const rows = await listAdminCategories(db);
     return { data: { session: gate.session, categories: rows } };
   },
 });

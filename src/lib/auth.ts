@@ -8,7 +8,7 @@ import { decodeBase64Url, encodeBase64Url } from "@std/encoding/base64url";
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
-import { passkeys, users } from "../db/schema.ts";
+import { passkeys } from "../db/schema.ts";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
@@ -93,17 +93,14 @@ export async function beginPublicRegistration(
 export async function beginAddPasskey(
   userId: string,
 ): Promise<{ challengeId: string; options: unknown }> {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const user = await db.query.users.findFirst({
+    where: { id: userId },
+  });
   if (!user) throw new Error("User not found");
 
-  const existing = await db
-    .select()
-    .from(passkeys)
-    .where(eq(passkeys.userId, userId));
+  const existing = await db.query.passkeys.findMany({
+    where: { userId },
+  });
 
   const options = await generateRegistrationOptions({
     rpName: getRpName(),
@@ -239,7 +236,7 @@ export async function verifyAddPasskey(
 export async function beginAuthentication(): Promise<
   { challengeId: string; options: unknown }
 > {
-  const anyPasskey = await db.select().from(passkeys).limit(1);
+  const anyPasskey = await db.query.passkeys.findMany({ limit: 1 });
   if (anyPasskey.length === 0) {
     throw new Error("No passkeys registered");
   }
@@ -274,11 +271,10 @@ export async function finishAuthentication(
   const credId = (credential as { id?: string }).id;
   if (!credId) throw new Error("Missing credential id");
 
-  const [row] = await db
-    .select()
-    .from(passkeys)
-    .where(eq(passkeys.credentialId, credId))
-    .limit(1);
+  const row = await db.query.passkeys.findFirst({
+    where: { credentialId: credId },
+    with: { user: true },
+  });
   if (!row) throw new Error("Unknown credential");
 
   const verification = await verifyAuthenticationResponse({
@@ -302,11 +298,7 @@ export async function finishAuthentication(
     .set({ counter: verification.authenticationInfo.newCounter })
     .where(eq(passkeys.id, row.id));
 
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, row.userId))
-    .limit(1);
+  const user = row.user;
   if (!user) throw new Error("User missing");
 
   return {
