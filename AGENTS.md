@@ -43,6 +43,17 @@ flowchart TD
   components --> components
 ```
 
+## Data access (Drizzle ORM)
+
+- Prefer **relational reads** using `db.query.<table>.findFirst` / `findMany`
+  with `where`, `orderBy`, `columns`, and nested `with` as described in the
+  [Drizzle relational query API (RQB v2)](https://orm.drizzle.team/docs/rqb-v2).
+- Keep **`db.select` / the SQL query builder** for aggregates (`count`,
+  `groupBy`, `sql` fragments), `selectDistinct`, joins that are not modeled as
+  relations, and other cases where the relational API is a poor fit.
+- Reuse shared query helpers (for example `listAdminCategories` in
+  `src/lib/adminReads.ts`) when multiple call sites need the same read.
+
 ## Fresh 2.x and Preact Standards
 
 - Use Fresh 2.x conventions and APIs (for example `App` from `fresh` and route

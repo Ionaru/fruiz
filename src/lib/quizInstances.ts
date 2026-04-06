@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
 import { quizInstances, quizInstanceTracks, tracks } from "../db/schema.ts";
@@ -107,18 +107,15 @@ export async function getQuizInstance(
   difficulty: DifficultyMode,
   code: string,
 ): Promise<QuizInstanceData | null> {
-  const [instance] = await drizzle.select({
-    id: quizInstances.id,
-    categorySlug: quizInstances.categorySlug,
-    difficulty: quizInstances.difficulty,
-    code: quizInstances.code,
-  }).from(quizInstances).where(
-    and(
-      eq(quizInstances.categorySlug, categorySlug),
-      eq(quizInstances.difficulty, difficulty),
-      eq(quizInstances.code, code),
-    ),
-  ).limit(1);
+  const instance = await drizzle.query.quizInstances.findFirst({
+    where: { categorySlug, difficulty, code },
+    columns: {
+      id: true,
+      categorySlug: true,
+      difficulty: true,
+      code: true,
+    },
+  });
   if (!instance) return null;
 
   const snapshotRows = await drizzle.select({

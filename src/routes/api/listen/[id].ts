@@ -1,10 +1,7 @@
 import { join } from "node:path";
 
-import { eq } from "drizzle-orm";
-
 import { contentTypeForAudioPath } from "../../../lib/audioExtensions.ts";
 import { db } from "../../../db/db.ts";
-import { tracks } from "../../../db/schema.ts";
 import { define } from "../../../utils.ts";
 
 const RANGE_CHUNK_BYTES = 64 * 1024;
@@ -66,11 +63,10 @@ function resolveAudioFilePath(audioUrl: string): string {
 }
 
 async function getAudioPathForTrack(id: string): Promise<string | undefined> {
-  const [row] = await db
-    .select({ audioUrl: tracks.audioUrl })
-    .from(tracks)
-    .where(eq(tracks.id, id))
-    .limit(1);
+  const row = await db.query.tracks.findFirst({
+    where: { id },
+    columns: { audioUrl: true },
+  });
   if (!row) return undefined;
   try {
     return resolveAudioFilePath(row.audioUrl);

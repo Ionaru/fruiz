@@ -1,7 +1,5 @@
 import { join } from "node:path";
 
-import { eq } from "drizzle-orm";
-
 import { db } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
 
@@ -54,11 +52,10 @@ async function ensureCategoryId(
   slug: string,
   nameOverride: string | undefined,
 ): Promise<string> {
-  const [existing] = await drizzle
-    .select({ id: categories.id })
-    .from(categories)
-    .where(eq(categories.slug, slug))
-    .limit(1);
+  const existing = await drizzle.query.categories.findFirst({
+    where: { slug },
+    columns: { id: true },
+  });
   if (existing) return existing.id;
 
   const name = nameOverride?.trim() || displayNameFromSlug(slug);
@@ -115,9 +112,9 @@ export async function seedTracksFromMusicDir(
     .map((e) => e.name)
     .sort((a, b) => a.localeCompare(b));
 
-  const existingRows = await drizzle
-    .select({ audioUrl: tracks.audioUrl })
-    .from(tracks);
+  const existingRows = await drizzle.query.tracks.findMany({
+    columns: { audioUrl: true },
+  });
   const existing = new Set(
     existingRows.map((r) => r.audioUrl.replaceAll("\\", "/")),
   );

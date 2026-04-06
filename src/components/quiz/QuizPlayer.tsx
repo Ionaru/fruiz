@@ -24,8 +24,12 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
           <p class="text-sm opacity-80">Category</p>
           <h1 class="text-2xl font-semibold">{props.category.name}</h1>
           <div class="flex items-center gap-2">
-            <span class="bg-blue-300 dark:bg-blue-900 px-1.5 py-0.5 rounded-md capitalize">{props.difficulty}</span>
-            <span class="text-sm opacity-80">{DIFFICULTY_DETAILS[props.difficulty]}</span>
+            <span class="bg-blue-300 dark:bg-blue-900 px-1.5 py-0.5 rounded-md capitalize">
+              {props.difficulty}
+            </span>
+            <span class="text-sm opacity-80">
+              {DIFFICULTY_DETAILS[props.difficulty]}
+            </span>
           </div>
         </PlateauCard>
         {props.children}

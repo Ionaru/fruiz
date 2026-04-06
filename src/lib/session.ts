@@ -2,7 +2,7 @@ import { getCookies, setCookie } from "@std/http/cookie";
 import { eq } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
-import { sessions, users } from "../db/schema.ts";
+import { sessions } from "../db/schema.ts";
 
 /** Opaque DB-backed session id stored in the browser cookie (replaces legacy HMAC cookie). */
 export const SESSION_COOKIE_NAME = "fruiz_session";
@@ -46,33 +46,23 @@ export async function loadActiveSession(
   runner: DbLike = db,
 ): Promise<LoadedSession | null> {
   const now = new Date();
-  const rows = await runner
-    .select({
-      sessionId: sessions.id,
-      data: sessions.data,
-      expiresAt: sessions.expiresAt,
-      userId: users.id,
-      username: users.username,
-      admin: users.admin,
-    })
-    .from(sessions)
-    .innerJoin(users, eq(sessions.userId, users.id))
-    .where(eq(sessions.id, sessionId))
-    .limit(1);
-
-  const row = rows[0];
+  const row = await runner.query.sessions.findFirst({
+    where: { id: sessionId },
+    with: { user: true },
+  });
   if (!row) return null;
+  if (!row.user) return null;
   if (row.expiresAt < now) {
     await runner.delete(sessions).where(eq(sessions.id, sessionId));
     return null;
   }
 
   return {
-    sessionId: row.sessionId,
+    sessionId: row.id,
     user: {
-      id: row.userId,
-      username: row.username,
-      admin: row.admin,
+      id: row.user.id,
+      username: row.user.username,
+      admin: row.user.admin,
     },
     data: parseSessionData(row.data),
     expiresAt: row.expiresAt,

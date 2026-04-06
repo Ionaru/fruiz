@@ -1,8 +1,8 @@
 import { Head } from "fresh/runtime";
-import { asc } from "drizzle-orm";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
-import { categories, trackCategories, tracks } from "../../../db/schema.ts";
+import { trackCategories, tracks } from "../../../db/schema.ts";
+import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
@@ -14,14 +14,7 @@ export const handler = define.handlers({
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const audioChoices = await listAudioFilesInMusicDir();
-    const categoryOptions = await db
-      .select({
-        id: categories.id,
-        name: categories.name,
-        slug: categories.slug,
-      })
-      .from(categories)
-      .orderBy(asc(categories.name));
+    const categoryOptions = await listAdminCategories(db);
     return { data: { session: gate.session, categoryOptions, audioChoices } };
   },
 

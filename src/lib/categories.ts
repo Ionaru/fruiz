@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
@@ -120,17 +120,11 @@ export async function getCategoryBySlug(
   db: DrizzleDb,
   slug: string,
 ): Promise<CategoryRow | null> {
-  const [row] = await db
-    .select({
-      id: categories.id,
-      name: categories.name,
-      slug: categories.slug,
-    })
-    .from(categories)
-    .where(eq(categories.slug, slug))
-    .limit(1);
+  const row = await db.query.categories.findFirst({
+    where: { slug },
+  });
   if (!row) return null;
-  return row;
+  return { id: row.id, name: row.name, slug: row.slug };
 }
 
 export async function getTracksForCategory(
@@ -139,23 +133,21 @@ export async function getTracksForCategory(
 ): Promise<
   { id: string; title: string; audioUrl: string; difficulty: "easy" | "hard" }[]
 > {
-  const rows = await db
-    .select({
-      id: tracks.id,
-      title: tracks.title,
-      audioUrl: tracks.audioUrl,
-      difficulty: tracks.difficulty,
-    })
-    .from(tracks)
-    .innerJoin(trackCategories, eq(trackCategories.trackId, tracks.id))
-    .where(eq(trackCategories.categoryId, categoryId))
-    .orderBy(asc(tracks.id));
-
-  const seen = new Map<string, (typeof rows)[0]>();
-  for (const trackRow of rows) {
-    seen.set(trackRow.id, trackRow);
-  }
-  return [...seen.values()];
+  const category = await db.query.categories.findFirst({
+    where: { id: categoryId },
+    with: {
+      tracks: {
+        orderBy: (t, { asc }) => asc(t.id),
+      },
+    },
+  });
+  if (!category) return [];
+  return category.tracks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    audioUrl: t.audioUrl,
+    difficulty: t.difficulty,
+  }));
 }
 
 export async function getDistinctTitlesForCategory(

@@ -15,9 +15,9 @@ export const handler = define.handlers({
     const gate = requireAdminSessionOrRedirect(ctx);
     if (gate instanceof Response) return gate;
     const id = ctx.params.id;
-    const [row] = await db.select().from(categories).where(
-      eq(categories.id, id),
-    ).limit(1);
+    const row = await db.query.categories.findFirst({
+      where: { id },
+    });
     if (!row) {
       return Response.redirect(
         new URL("/admin/categories", ctx.req.url).href,
