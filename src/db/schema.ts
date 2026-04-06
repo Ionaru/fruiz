@@ -3,6 +3,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
 export const tracks = sqliteTable("tracks", {
@@ -46,6 +47,43 @@ export const sessions = sqliteTable("sessions", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
+
+export const quizInstances = sqliteTable(
+  "quiz_instances",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    categorySlug: text("category_slug").notNull(),
+    difficulty: text("difficulty", { enum: ["easy", "hard", "mixed"] })
+      .notNull(),
+    code: text("code").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("quiz_instances_category_difficulty_code_idx").on(
+      table.categorySlug,
+      table.difficulty,
+      table.code,
+    ),
+  ],
+);
+
+export const quizInstanceTracks = sqliteTable(
+  "quiz_instance_tracks",
+  {
+    quizInstanceId: text("quiz_instance_id").notNull().references(
+      () => quizInstances.id,
+      { onDelete: "cascade" },
+    ),
+    position: integer("position").notNull(),
+    // Intentionally no FK to tracks: deleted tracks should remain representable
+    // as unavailable rounds while preserving snapshot identity.
+    trackId: text("track_id").notNull(),
+    trackTitleSnapshot: text("track_title_snapshot").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.quizInstanceId, table.position] }),
+  ],
+);
 
 export const passkeys = sqliteTable("passkeys", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

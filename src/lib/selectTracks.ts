@@ -47,5 +47,6 @@ export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
     title: track.title,
     audioUrl: track.audioUrl,
     difficulty: track.difficulty,
+    unavailable: false,
   }));
 }

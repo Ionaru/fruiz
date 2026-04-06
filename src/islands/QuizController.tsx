@@ -4,7 +4,7 @@ import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
 import { variantForStatus } from "../lib/quiz_ui.ts";
-import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
+import { encodeSlug, generateShortCode } from "../lib/slug.ts";
 import type {
   QuizIdentity,
   QuizProgress,
@@ -26,7 +26,7 @@ function buildDefaultProgress(
     score: 0,
     tracks: trackList.map((track) => ({
       trackId: track.id,
-      status: "unanswered",
+      status: track.unavailable ? "unavailable" : "unanswered",
       selectedTitle: null,
       replayCount: 0,
     })),
@@ -46,7 +46,9 @@ function canEndQuizWithSkippedRemaining(progress: QuizProgress): boolean {
 }
 
 function scoreFromProgress(progress: QuizProgress): number {
-  return progress.tracks.filter((entry) => entry.status === "correct").length;
+  return progress.tracks.filter((entry) =>
+    entry.status === "correct" || entry.status === "unavailable"
+  ).length;
 }
 
 /**
@@ -95,7 +97,9 @@ function findResumeActiveTrackId(
       ?.status;
     if (status === "unanswered") return track.id;
   }
-  if (currentTrackId && trackList.some((track) => track.id === currentTrackId)) {
+  if (
+    currentTrackId && trackList.some((track) => track.id === currentTrackId)
+  ) {
     return currentTrackId;
   }
   return trackList[0]?.id ?? null;
@@ -225,10 +229,15 @@ export default function QuizController(props: Readonly<Props>) {
       (entry) => entry.trackId === trackId,
     );
     if (!progressRow) return true;
+    if (progressRow.status === "unavailable") return true;
     return progressRow.replayCount >= limit;
   };
 
   const onPlayStart = (trackId: string) => {
+    const progressRow = progress.value.tracks.find(
+      (entry) => entry.trackId === trackId,
+    );
+    if (!progressRow || progressRow.status === "unavailable") return;
     updateTrack(trackId, (row) => ({
       ...row,
       replayCount: row.replayCount + 1,
@@ -280,7 +289,8 @@ export default function QuizController(props: Readonly<Props>) {
     );
     if (
       !progressRow || progressRow.status === "correct" ||
-      progressRow.status === "incorrect"
+      progressRow.status === "incorrect" ||
+      progressRow.status === "unavailable"
     ) {
       return;
     }
@@ -330,8 +340,8 @@ export default function QuizController(props: Readonly<Props>) {
   };
 
   const playAgain = () => {
-    const seed = generateShortSeed();
-    const slug = encodeSlug(props.identity.difficulty, seed);
+    const code = generateShortCode();
+    const slug = encodeSlug(props.identity.difficulty, code);
     const search = new URL(globalThis.location.href).search;
     globalThis.location.assign(
       `/quiz/${props.identity.categorySlug}/${slug}${search}`,
@@ -409,7 +419,8 @@ export default function QuizController(props: Readonly<Props>) {
     )
     : undefined;
   const answerLocked = currentRow?.status === "correct" ||
-    currentRow?.status === "incorrect";
+    currentRow?.status === "incorrect" ||
+    currentRow?.status === "unavailable";
 
   const currentClipNumber = currentTrack
     ? props.tracks.findIndex((track) => track.id === currentTrack.id) + 1
@@ -443,17 +454,25 @@ export default function QuizController(props: Readonly<Props>) {
           clipNumber={currentClipNumber}
           clipTotal={props.tracks.length}
         >
-          <AudioPlayer
-            key={currentTrack.id}
-            audioId={currentTrack.id}
-            disabled={answerLocked || replayBlocked(currentTrack.id)}
-            onPlayStart={() => onPlayStart(currentTrack.id)}
-          />
+          {currentTrack.audioUrl
+            ? (
+              <AudioPlayer
+                key={currentTrack.id}
+                audioId={currentTrack.id}
+                disabled={answerLocked || replayBlocked(currentTrack.id)}
+                onPlayStart={() => onPlayStart(currentTrack.id)}
+              />
+            )
+            : (
+              <p class="text-sm opacity-80">
+                This track is unavailable, so this round is auto-marked correct.
+              </p>
+            )}
           <AnswerInput
             instanceId={currentTrack.id}
             suggestions={props.titleSuggestions}
             value={answerDraft.value}
-            disabled={answerLocked}
+            disabled={answerLocked || !currentTrack.audioUrl}
             onValue={(nextValue) => {
               answerDraft.value = nextValue;
             }}

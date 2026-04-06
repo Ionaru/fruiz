@@ -4,15 +4,10 @@ import { db } from "../../../../db/db.ts";
 import {
   getCategoryBySlug,
   getDistinctTitlesForCategory,
-  getTracksForCategory,
-  isQuizCombinationAvailable,
   parseReplayLimitFromUrl,
 } from "../../../../lib/categories.ts";
 import { decodeSlug } from "../../../../lib/slug.ts";
-import {
-  selectTracksDeterministic,
-  toQuizPayload,
-} from "../../../../lib/selectTracks.ts";
+import { getOrCreateQuizInstance } from "../../../../lib/quizInstances.ts";
 import { QuizPlayer } from "../../../../components/quiz/QuizPlayer.tsx";
 import QuizPlayerClient from "../../../../islands/QuizPlayerClient.tsx";
 
@@ -30,19 +25,14 @@ export const handler = define.handlers({
       return Response.redirect(new URL("/", ctx.req.url).href, 302);
     }
 
-    const { difficulty, seed } = decoded;
-    const available = await isQuizCombinationAvailable(
-      db,
+    const { difficulty, code } = decoded;
+    const quizInstance = await getOrCreateQuizInstance(db, {
       categorySlug,
+      categoryId: category.id,
       difficulty,
-    );
-    if (!available) {
-      return Response.redirect(new URL("/", ctx.req.url).href, 302);
-    }
-
-    const pool = await getTracksForCategory(db, category.id);
-    const selected = selectTracksDeterministic(pool, difficulty, seed, 20);
-    if (selected.length < 20) {
+      code,
+    });
+    if (!quizInstance || quizInstance.tracks.length < 20) {
       return Response.redirect(new URL("/", ctx.req.url).href, 302);
     }
 
@@ -53,7 +43,7 @@ export const handler = define.handlers({
       db,
       category.id,
     );
-    const tracksPayload = toQuizPayload(selected);
+    const tracksPayload = quizInstance.tracks;
     const quizPath = `/quiz/${categorySlug}/${slugParam}`;
     const origin = new URL(ctx.req.url).origin;
     const shareDescription = `20-track ${category.name} quiz on fruiz`;
@@ -62,7 +52,7 @@ export const handler = define.handlers({
       data: {
         category,
         difficulty,
-        identity: { categorySlug, difficulty, seed },
+        identity: { categorySlug, difficulty, code },
         replayLimit,
         tracks: tracksPayload,
         titleSuggestions,

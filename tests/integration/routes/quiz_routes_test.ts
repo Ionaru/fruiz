@@ -4,7 +4,7 @@ import { selectTracksDeterministic } from "../../../src/lib/selectTracks.ts";
 import type { SelectableTrack } from "../../../src/lib/selectTracks.ts";
 
 Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
-  const decoded = decodeSlug("mabcdef1");
+  const decoded = decodeSlug("mA1Z");
   assertEquals(decoded?.difficulty, "mixed");
   const pool: SelectableTrack[] = Array.from({ length: 22 }, (_, i) => ({
     id: `id-${i}`,
@@ -15,7 +15,7 @@ Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
   const picked = selectTracksDeterministic(
     pool,
     decoded!.difficulty,
-    decoded!.seed,
+    decoded!.code,
     20,
   );
   assertEquals(picked.length, 20);

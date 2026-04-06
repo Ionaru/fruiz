@@ -3,14 +3,19 @@ export type DifficultyMode = "easy" | "hard" | "mixed";
 export interface QuizIdentity {
   categorySlug: string;
   difficulty: DifficultyMode;
-  seed: string;
+  code: string;
 }
 
 export interface QuizSettings {
   replayLimit: number;
 }
 
-export type TrackStatus = "unanswered" | "skipped" | "correct" | "incorrect";
+export type TrackStatus =
+  | "unanswered"
+  | "skipped"
+  | "correct"
+  | "incorrect"
+  | "unavailable";
 
 export interface QuizProgressTrack {
   trackId: string;
@@ -28,6 +33,7 @@ export interface QuizProgress {
 export interface QuizTrackPayload {
   id: string;
   title: string;
-  audioUrl: string;
+  audioUrl: string | null;
   difficulty: "easy" | "hard";
+  unavailable: boolean;
 }

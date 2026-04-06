@@ -39,4 +39,16 @@ export const relations = defineRelations(schema, (relations) => ({
       to: relations.users.id,
     }),
   },
+  quizInstances: {
+    tracks: relations.many.quizInstanceTracks({
+      from: relations.quizInstances.id,
+      to: relations.quizInstanceTracks.quizInstanceId,
+    }),
+  },
+  quizInstanceTracks: {
+    quizInstance: relations.one.quizInstances({
+      from: relations.quizInstanceTracks.quizInstanceId,
+      to: relations.quizInstances.id,
+    }),
+  },
 }));

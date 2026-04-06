@@ -7,7 +7,7 @@ import {
   parseReplayLimitFromUrl,
 } from "../lib/categories.ts";
 import type { DifficultyMode } from "../lib/types.ts";
-import { encodeSlug, generateShortSeed } from "../lib/slug.ts";
+import { encodeSlug, generateShortCode } from "../lib/slug.ts";
 import { Button } from "../components/Button.tsx";
 import { PageShell } from "../components/layout/PageShell.tsx";
 import { PillLink } from "../components/ui/PillLink.tsx";
@@ -39,8 +39,8 @@ export const handler = define.handlers({
     if (!await isQuizCombinationAvailable(db, category, difficulty)) {
       return Response.redirect(new URL("/", ctx.req.url).href, 302);
     }
-    const seed = generateShortSeed();
-    const path = `/quiz/${category}/${encodeSlug(difficulty, seed)}`;
+    const code = generateShortCode();
+    const path = `/quiz/${category}/${encodeSlug(difficulty, code)}`;
     return Response.redirect(new URL(path, ctx.req.url).href, 302);
   },
 });

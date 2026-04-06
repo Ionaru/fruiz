@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
@@ -148,7 +148,8 @@ export async function getTracksForCategory(
     })
     .from(tracks)
     .innerJoin(trackCategories, eq(trackCategories.trackId, tracks.id))
-    .where(eq(trackCategories.categoryId, categoryId));
+    .where(eq(trackCategories.categoryId, categoryId))
+    .orderBy(asc(tracks.id));
 
   const seen = new Map<string, (typeof rows)[0]>();
   for (const trackRow of rows) {

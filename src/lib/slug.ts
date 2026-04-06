@@ -12,34 +12,35 @@ const PREFIX_TO_DIFF: Record<string, DifficultyMode> = {
   m: "mixed",
 };
 
-const BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const CODE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const CODE_LENGTH = 3;
 
-export function encodeSlug(difficulty: DifficultyMode, seed: string): string {
+export function encodeSlug(difficulty: DifficultyMode, code: string): string {
   const difficultyPrefix = DIFF_PREFIX[difficulty];
   if (!difficultyPrefix) throw new Error("Invalid difficulty");
-  return `${difficultyPrefix}${seed}`;
+  return `${difficultyPrefix}${code}`;
 }
 
 export function decodeSlug(
   slug: string,
-): { difficulty: DifficultyMode; seed: string } | null {
+): { difficulty: DifficultyMode; code: string } | null {
   if (!slug || slug.length < 2) return null;
   const pathPrefixChar = slug[0]!;
   const difficulty = PREFIX_TO_DIFF[pathPrefixChar];
   if (!difficulty) return null;
-  const seed = slug.slice(1);
-  if (!/^[0-9a-zA-Z]+$/.test(seed) || seed.length < 6 || seed.length > 8) {
+  const code = slug.slice(1);
+  if (!/^[0-9A-Z]{3}$/.test(code)) {
     return null;
   }
-  return { difficulty, seed };
+  return { difficulty, code };
 }
 
-export function generateShortSeed(length = 7): string {
+export function generateShortCode(length = CODE_LENGTH): string {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   let out = "";
   for (let byteIndex = 0; byteIndex < length; byteIndex++) {
-    out += BASE62[bytes[byteIndex]! % BASE62.length]!;
+    out += CODE_ALPHABET[bytes[byteIndex]! % CODE_ALPHABET.length]!;
   }
   return out;
 }
