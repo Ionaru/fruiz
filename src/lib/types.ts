@@ -36,4 +36,6 @@ export interface QuizTrackPayload {
   audioUrl: string | null;
   difficulty: "easy" | "hard";
   unavailable: boolean;
+  /** dB toward ~-16 LUFS; null if not measured. */
+  playbackGainDb: number | null;
 }

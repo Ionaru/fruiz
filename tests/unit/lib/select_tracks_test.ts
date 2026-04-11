@@ -7,6 +7,7 @@ const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, i) => ({
   title: `Title ${i}`,
   audioUrl: `a${i}`,
   difficulty: i % 2 === 0 ? "easy" : "hard",
+  playbackGainDb: null,
 }));
 
 Deno.test("selectTracksDeterministic returns 20 tracks in stable order for same seed", () => {

@@ -5,6 +5,7 @@ import { trackCategories, tracks } from "../../../db/schema.ts";
 import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
+import { analyzeAndStorePlaybackGainForTrack } from "../../../lib/playbackGainAnalysis.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import TrackForm from "../../../islands/TrackForm.tsx";
@@ -28,7 +29,7 @@ export const handler = define.handlers({
       "/",
     );
     const difficulty = String(form.get("difficulty") ?? "");
-    const categoryIds = form.getAll("categoryIds").map((v) => String(v));
+    const categoryIds = form.getAll("categoryIds").map(String);
     const audioChoices = await listAudioFilesInMusicDir();
     const validAudioChoices = new Set(audioChoices);
     if (
@@ -52,6 +53,7 @@ export const handler = define.handlers({
         categoryIds.map((categoryId) => ({ trackId, categoryId })),
       );
     }
+    await analyzeAndStorePlaybackGainForTrack(db, trackId, audioUrl);
     return Response.redirect(new URL("/admin/tracks", ctx.req.url).href, 302);
   },
 });

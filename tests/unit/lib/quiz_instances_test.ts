@@ -10,6 +10,7 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       title: "Track One",
       audioUrl: "audio/one.mp3",
       difficulty: "easy" as const,
+      playbackGainDb: null as number | null,
     },
     {
       trackId: "track-2",
@@ -17,6 +18,7 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       title: "Track Two",
       audioUrl: "audio/two.mp3",
       difficulty: "hard" as const,
+      playbackGainDb: null as number | null,
     },
   ];
 
@@ -29,6 +31,7 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       title: "Extra Track",
       audioUrl: "audio/extra.mp3",
       difficulty: "easy" as const,
+      playbackGainDb: null as number | null,
     },
   ].slice(0, 2));
 
@@ -43,6 +46,7 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
       title: null,
       audioUrl: null,
       difficulty: null,
+      playbackGainDb: null,
     },
   ]);
 
@@ -52,5 +56,6 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
     audioUrl: null,
     difficulty: "easy",
     unavailable: true,
+    playbackGainDb: null,
   }]);
 });

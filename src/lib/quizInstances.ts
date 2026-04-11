@@ -27,6 +27,7 @@ export interface SnapshotTrackRow {
   title: string | null;
   audioUrl: string | null;
   difficulty: "easy" | "hard" | null;
+  playbackGainDb: number | null;
 }
 
 export function toSnapshotQuizPayload(
@@ -46,6 +47,7 @@ export function toSnapshotQuizPayload(
       audioUrl: resolvedAudioUrl,
       difficulty: resolvedDifficulty,
       unavailable: missingTrack,
+      playbackGainDb: missingTrack ? null : snapshotRow.playbackGainDb,
     };
   });
 }
@@ -95,6 +97,7 @@ async function createQuizInstance(
       audioUrl: selectedTrack.audioUrl,
       difficulty: selectedTrack.difficulty,
       unavailable: false,
+      playbackGainDb: selectedTrack.playbackGainDb,
     })),
   };
 }
@@ -123,6 +126,7 @@ export async function getQuizInstance(
     title: tracks.title,
     audioUrl: tracks.audioUrl,
     difficulty: tracks.difficulty,
+    playbackGainDb: tracks.playbackGainDb,
   }).from(quizInstanceTracks)
     .leftJoin(tracks, eq(tracks.id, quizInstanceTracks.trackId))
     .where(eq(quizInstanceTracks.quizInstanceId, instance.id))
@@ -149,7 +153,7 @@ export async function getOrCreateQuizInstance(
 
   try {
     return await createQuizInstance(drizzle, args);
-  } catch (_error) {
+  } catch {
     // Unique conflicts can happen when two requests create the same code.
     return await getQuizInstance(
       drizzle,

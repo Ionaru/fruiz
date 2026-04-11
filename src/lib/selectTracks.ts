@@ -6,6 +6,7 @@ export interface SelectableTrack {
   title: string;
   audioUrl: string;
   difficulty: "easy" | "hard";
+  playbackGainDb: number | null;
 }
 
 /**
@@ -48,5 +49,6 @@ export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
     audioUrl: track.audioUrl,
     difficulty: track.difficulty,
     unavailable: false,
+    playbackGainDb: track.playbackGainDb,
   }));
 }

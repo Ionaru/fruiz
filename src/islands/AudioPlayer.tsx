@@ -1,6 +1,8 @@
-import { effect, useSignal } from "@preact/signals";
+import { effect, useSignal, useSignalEffect } from "@preact/signals";
 import { useSignalRef } from "@preact/signals/utils";
+
 import { Button } from "../components/Button.tsx";
+import { playbackGainDbToLinear } from "../lib/playbackGainMath.ts";
 
 export enum PlayState {
   Idle = "idle",
@@ -18,6 +20,8 @@ interface AudioPlayerProps {
   onPlayStart?: () => void;
   /** Smaller controls for dense layouts (e.g. admin lists). */
   compact?: boolean;
+  /** Measured playback gain in dB; null/undefined = no Web Audio normalization. */
+  playbackGainDb?: number | null;
 }
 
 export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
@@ -29,6 +33,46 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
   const hasStartedPlayback = useSignal(false);
   /** True until the first `playing` event after `play()` (skips rebuffer `playing`). */
   const pendingPlayStartNotification = useSignal(false);
+
+  const playbackGainSig = useSignal(props.playbackGainDb ?? null);
+  playbackGainSig.value = props.playbackGainDb ?? null;
+
+  const graphSig = useSignal<
+    { ctx: AudioContext; gainNode: GainNode; el: HTMLMediaElement } | null
+  >(null);
+
+  /**
+   * Keeps Web Audio in sync with the `<audio>` element and gain. Does not return
+   * a disposer: returning one would run before every re-run and would close the
+   * context while the same `HTMLMediaElement` can only be wired once.
+   */
+  useSignalEffect(() => {
+    const el = audioRef.value;
+    const db = playbackGainSig.value;
+
+    if (!el || db === null) {
+      const g = graphSig.value;
+      if (g) {
+        void g.ctx.close();
+        graphSig.value = null;
+      }
+      return;
+    }
+
+    const linear = playbackGainDbToLinear(db);
+    const existing = graphSig.value;
+    if (!existing || existing.el !== el) {
+      if (existing) void existing.ctx.close();
+      const ctx = new AudioContext();
+      const source = ctx.createMediaElementSource(el);
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = linear;
+      source.connect(gainNode).connect(ctx.destination);
+      graphSig.value = { ctx, gainNode, el };
+    } else {
+      existing.gainNode.gain.value = linear;
+    }
+  });
 
   effect(() => {
     const state = playState.value;
@@ -91,11 +135,16 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     if (!el) return;
     playState.value = PlayState.Loading;
     pendingPlayStartNotification.value = true;
-    el.play().catch(() => {
-      pendingPlayStartNotification.value = false;
-      hasStartedPlayback.value = false;
-      playState.value = PlayState.Idle;
-    });
+    void (async () => {
+      try {
+        await graphSig.value?.ctx.resume();
+        await el.play();
+      } catch {
+        pendingPlayStartNotification.value = false;
+        hasStartedPlayback.value = false;
+        playState.value = PlayState.Idle;
+      }
+    })();
   };
 
   const stop = () => {

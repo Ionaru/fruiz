@@ -461,6 +461,7 @@ export default function QuizController(props: Readonly<Props>) {
               <AudioPlayer
                 key={currentTrack.id}
                 audioId={currentTrack.id}
+                playbackGainDb={currentTrack.playbackGainDb}
                 disabled={answerLocked || replayBlocked(currentTrack.id)}
                 onPlayStart={() => onPlayStart(currentTrack.id)}
               />

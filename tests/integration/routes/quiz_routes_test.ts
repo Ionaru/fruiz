@@ -11,6 +11,7 @@ Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
     title: `T${i}`,
     audioUrl: `u${i}`,
     difficulty: "easy",
+    playbackGainDb: null,
   }));
   const picked = selectTracksDeterministic(
     pool,

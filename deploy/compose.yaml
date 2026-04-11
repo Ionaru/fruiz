@@ -16,7 +16,7 @@ services:
     command:
       - /bin/sh
       - -c
-      - deno task db:sync && exec deno task start
+      - deno task db:sync && deno task playback-gain:backfill && exec deno task start
 
 volumes:
   data:

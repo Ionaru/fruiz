@@ -5,6 +5,7 @@ import { db } from "../../../db/db.ts";
 import { trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
+import { analyzeAndStorePlaybackGainForTrack } from "../../../lib/playbackGainAnalysis.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
@@ -75,7 +76,7 @@ export const handler = define.handlers({
       "/",
     );
     const difficulty = String(form.get("difficulty") ?? "");
-    const categoryIds = form.getAll("categoryIds").map((v) => String(v));
+    const categoryIds = form.getAll("categoryIds").map(String);
     const audioChoices = await listAudioFilesInMusicDir();
     const validAudioChoices = new Set(audioChoices);
     if (
@@ -96,6 +97,7 @@ export const handler = define.handlers({
         categoryIds.map((categoryId) => ({ trackId: id, categoryId })),
       );
     }
+    await analyzeAndStorePlaybackGainForTrack(db, id, audioUrl);
     return Response.redirect(
       new URL(`/admin/tracks/${id}`, ctx.req.url).href,
       302,
@@ -118,6 +120,13 @@ export default define.page<typeof handler>(({ data }) => (
       </InlineAlert>
     )}
     <div class="mx-auto flex w-full flex-col gap-6">
+      <p class="text-sm opacity-80">
+        {data.track.playbackGainDb == null
+          ? "Playback loudness not measured yet. Saving this track runs analysis when ffmpeg is on PATH; or run `deno task playback-gain:backfill`."
+          : `Playback gain (toward -16 LUFS): ${
+            data.track.playbackGainDb.toFixed(1)
+          } dB`}
+      </p>
       <TrackForm
         action={`/admin/tracks/${data.track.id}`}
         categories={data.categoryOptions}

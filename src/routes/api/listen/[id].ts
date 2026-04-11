@@ -1,5 +1,4 @@
-import { join } from "node:path";
-
+import { absolutePathFromTracksAudioUrl } from "../../../lib/audioFilePath.ts";
 import { contentTypeForAudioPath } from "../../../lib/audioExtensions.ts";
 import { db } from "../../../db/db.ts";
 import { define } from "../../../utils.ts";
@@ -50,18 +49,6 @@ function rangeReadableStreamFromPosition(
   });
 }
 
-function resolveAudioFilePath(audioUrl: string): string {
-  const s = audioUrl.trim();
-  if (/^https?:\/\//i.test(s)) {
-    throw new Deno.errors.NotFound();
-  }
-  const rel = s.replace(/^\/+/, "");
-  if (!rel || rel.split(/[/\\]/).includes("..")) {
-    throw new Deno.errors.NotFound();
-  }
-  return join(Deno.cwd(), ...rel.split("/"));
-}
-
 async function getAudioPathForTrack(id: string): Promise<string | undefined> {
   const row = await db.query.tracks.findFirst({
     where: { id },
@@ -69,7 +56,7 @@ async function getAudioPathForTrack(id: string): Promise<string | undefined> {
   });
   if (!row) return undefined;
   try {
-    return resolveAudioFilePath(row.audioUrl);
+    return absolutePathFromTracksAudioUrl(row.audioUrl);
   } catch {
     return undefined;
   }

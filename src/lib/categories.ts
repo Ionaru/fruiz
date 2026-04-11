@@ -129,7 +129,13 @@ export async function getTracksForCategory(
   db: DB,
   categoryId: string,
 ): Promise<
-  { id: string; title: string; audioUrl: string; difficulty: "easy" | "hard" }[]
+  {
+    id: string;
+    title: string;
+    audioUrl: string;
+    difficulty: "easy" | "hard";
+    playbackGainDb: number | null;
+  }[]
 > {
   const category = await db.query.categories.findFirst({
     where: { id: categoryId },
@@ -145,6 +151,7 @@ export async function getTracksForCategory(
     title: t.title,
     audioUrl: t.audioUrl,
     difficulty: t.difficulty,
+    playbackGainDb: t.playbackGainDb,
   }));
 }
 

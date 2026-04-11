@@ -53,7 +53,11 @@ export default define.page<typeof handler>(({ data }) => (
             class="rounded-xl px-4 py-3 flex flex-wrap items-center gap-3"
           >
             <div class="shrink-0">
-              <AudioPlayer audioId={track.id} compact />
+              <AudioPlayer
+                audioId={track.id}
+                compact
+                playbackGainDb={track.playbackGainDb}
+              />
             </div>
             <a
               href={`/admin/tracks/${track.id}`}

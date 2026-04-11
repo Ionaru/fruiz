@@ -1,6 +1,7 @@
 import {
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -11,6 +12,8 @@ export const tracks = sqliteTable("tracks", {
   title: text("title").notNull(),
   audioUrl: text("audio_url").notNull(),
   difficulty: text("difficulty", { enum: ["easy", "hard"] }).notNull(),
+  /** dB gain toward ~-16 LUFS; null if not measured (see playback gain analysis). */
+  playbackGainDb: real("playback_gain_db"),
 });
 
 export const categories = sqliteTable("categories", {
