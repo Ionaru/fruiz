@@ -12,6 +12,14 @@ export enum PlayState {
 
 const LOADING_UI_DELAY_MS = 500;
 
+let sharedAudioContext: AudioContext | null = null;
+function getSharedAudioContext(): AudioContext {
+  if (!sharedAudioContext) {
+    sharedAudioContext = new AudioContext();
+  }
+  return sharedAudioContext;
+}
+
 interface AudioPlayerProps {
   audioId: string;
   /** When true, play is blocked until this becomes false. */
@@ -38,7 +46,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
   playbackGainSig.value = props.playbackGainDb ?? null;
 
   const graphSig = useSignal<
-    { ctx: AudioContext; gainNode: GainNode; el: HTMLMediaElement } | null
+    { gainNode: GainNode; el: HTMLMediaElement } | null
   >(null);
 
   /**
@@ -53,7 +61,6 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     if (!el || db === null) {
       const g = graphSig.value;
       if (g) {
-        void g.ctx.close();
         graphSig.value = null;
       }
       return;
@@ -62,13 +69,12 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     const linear = playbackGainDbToLinear(db);
     const existing = graphSig.value;
     if (!existing || existing.el !== el) {
-      if (existing) void existing.ctx.close();
-      const ctx = new AudioContext();
+      const ctx = getSharedAudioContext();
       const source = ctx.createMediaElementSource(el);
       const gainNode = ctx.createGain();
       gainNode.gain.value = linear;
       source.connect(gainNode).connect(ctx.destination);
-      graphSig.value = { ctx, gainNode, el };
+      graphSig.value = { gainNode, el };
     } else {
       existing.gainNode.gain.value = linear;
     }
@@ -137,7 +143,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     pendingPlayStartNotification.value = true;
     void (async () => {
       try {
-        await graphSig.value?.ctx.resume();
+        await getSharedAudioContext().resume();
         await el.play();
       } catch {
         pendingPlayStartNotification.value = false;
