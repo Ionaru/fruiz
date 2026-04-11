@@ -11,6 +11,7 @@ COPY deno.json deno.lock .
 RUN deno install --frozen
 
 COPY drizzle.config.ts vite.config.ts .
+COPY tools ./tools
 COPY src ./src
 RUN deno task build
 
