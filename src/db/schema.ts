@@ -14,6 +14,10 @@ export const tracks = sqliteTable("tracks", {
   difficulty: text("difficulty", { enum: ["easy", "hard"] }).notNull(),
   /** dB gain toward ~-16 LUFS; null if not measured (see playback gain analysis). */
   playbackGainDb: real("playback_gain_db"),
+  /** Byte size of the audio file when gain was last computed or fingerprint seeded. */
+  playbackGainSourceSize: integer("playback_gain_source_size"),
+  /** `mtime` of the audio file in ms since epoch; null if unknown (no cache skip). */
+  playbackGainSourceMtimeMs: integer("playback_gain_source_mtime_ms"),
 });
 
 export const categories = sqliteTable("categories", {
