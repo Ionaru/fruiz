@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 
+import { DEFAULT_MAX_PLAY_SECONDS } from "../../../src/lib/quizPlayback.ts";
 import { toSnapshotQuizPayload } from "../../../src/lib/quizInstances.ts";
 
 Deno.test("snapshot payload remains stable when extra tracks exist", () => {
@@ -11,6 +12,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       audioUrl: "audio/one.mp3",
       difficulty: "easy" as const,
       playbackGainDb: null as number | null,
+      playStartSeconds: null as number | null,
+      maxPlaySeconds: null as number | null,
     },
     {
       trackId: "track-2",
@@ -19,6 +22,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       audioUrl: "audio/two.mp3",
       difficulty: "hard" as const,
       playbackGainDb: null as number | null,
+      playStartSeconds: null as number | null,
+      maxPlaySeconds: null as number | null,
     },
   ];
 
@@ -32,6 +37,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       audioUrl: "audio/extra.mp3",
       difficulty: "easy" as const,
       playbackGainDb: null as number | null,
+      playStartSeconds: null as number | null,
+      maxPlaySeconds: null as number | null,
     },
   ].slice(0, 2));
 
@@ -47,6 +54,8 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
       audioUrl: null,
       difficulty: null,
       playbackGainDb: null,
+      playStartSeconds: null,
+      maxPlaySeconds: null,
     },
   ]);
 
@@ -57,5 +66,7 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
     difficulty: "easy",
     unavailable: true,
     playbackGainDb: null,
+    playStartSeconds: 0,
+    maxPlaySeconds: DEFAULT_MAX_PLAY_SECONDS,
   }]);
 });

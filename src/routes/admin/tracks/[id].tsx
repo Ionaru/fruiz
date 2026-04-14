@@ -6,11 +6,17 @@ import { trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
 import { analyzeAndStorePlaybackGainForTrack } from "../../../lib/playbackGainAnalysis.ts";
+import { parseTrackPlaybackFormFields } from "../../../lib/quizPlayback.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
 import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
+import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
+import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
+import { resolvedPlaybackFromDbFields } from "../../../lib/quizPlayback.ts";
 import TrackForm from "../../../islands/TrackForm.tsx";
+
+const TRACK_EDIT_FORM_ID = "track-edit-form";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -88,7 +94,20 @@ export const handler = define.handlers({
         302,
       );
     }
-    await db.update(tracks).set({ title, audioUrl, difficulty }).where(
+    const playbackParsed = parseTrackPlaybackFormFields(form);
+    if (!playbackParsed.ok) {
+      return Response.redirect(
+        new URL(`/admin/tracks/${id}?err=playback`, ctx.req.url).href,
+        302,
+      );
+    }
+    await db.update(tracks).set({
+      title,
+      audioUrl,
+      difficulty,
+      playStartSeconds: playbackParsed.playStartSeconds,
+      maxPlaySeconds: playbackParsed.maxPlaySeconds,
+    }).where(
       eq(tracks.id, id),
     );
     await db.delete(trackCategories).where(eq(trackCategories.trackId, id));
@@ -119,6 +138,12 @@ export default define.page<typeof handler>(({ data }) => (
         Type DELETE to confirm removal.
       </InlineAlert>
     )}
+    {data.queryError === "playback" && (
+      <InlineAlert variant="error" role="alert">
+        Fix playback start and max length: use non-negative start and a max
+        length of at least 2.5 seconds.
+      </InlineAlert>
+    )}
     <div class="mx-auto flex w-full flex-col gap-6">
       <p class="text-sm opacity-80">
         {data.track.playbackGainDb == null
@@ -135,8 +160,29 @@ export default define.page<typeof handler>(({ data }) => (
         defaultTitle={data.track.title}
         defaultAudioUrl={data.track.audioUrl}
         defaultDifficulty={data.track.difficulty}
+        defaultPlayStartSeconds={data.track.playStartSeconds}
+        defaultMaxPlaySeconds={data.track.maxPlaySeconds}
+        formDomId={TRACK_EDIT_FORM_ID}
         submitLabel="Save changes"
       />
+      <PlateauCard class="w-full" padding="5">
+        <h2 class="text-lg font-semibold text-base-900 dark:text-base-100">
+          Playback preview
+        </h2>
+        <p class="text-sm opacity-80 mb-4">
+          Play uses the playback start and max length fields in the form above,
+          including changes you have not saved yet.
+        </p>
+        <AudioPlayer
+          audioId={data.track.id}
+          playbackGainDb={data.track.playbackGainDb}
+          {...resolvedPlaybackFromDbFields({
+            playStartSeconds: data.track.playStartSeconds,
+            maxPlaySeconds: data.track.maxPlaySeconds,
+          })}
+          syncPlaybackFromFormId={TRACK_EDIT_FORM_ID}
+        />
+      </PlateauCard>
       <DangerZoneDeleteForm
         action={`/admin/tracks/${data.track.id}`}
         confirmInputId="confirm-del-track"

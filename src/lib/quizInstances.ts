@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import type { DB } from "../db/db.ts";
 import { quizInstances, quizInstanceTracks, tracks } from "../db/schema.ts";
 import type { DifficultyMode, QuizTrackPayload } from "./types.ts";
+import { resolvedPlaybackFromDbFields } from "./quizPlayback.ts";
 import { selectTracksDeterministic } from "./selectTracks.ts";
 import { getTracksForCategory } from "./categories.ts";
 
@@ -28,6 +29,8 @@ export interface SnapshotTrackRow {
   audioUrl: string | null;
   difficulty: "easy" | "hard" | null;
   playbackGainDb: number | null;
+  playStartSeconds: number | null;
+  maxPlaySeconds: number | null;
 }
 
 export function toSnapshotQuizPayload(
@@ -41,6 +44,12 @@ export function toSnapshotQuizPayload(
       : snapshotRow.title!;
     const resolvedDifficulty = missingTrack ? "easy" : snapshotRow.difficulty!;
     const resolvedAudioUrl = missingTrack ? null : snapshotRow.audioUrl!;
+    const playback = missingTrack
+      ? resolvedPlaybackFromDbFields({})
+      : resolvedPlaybackFromDbFields({
+        playStartSeconds: snapshotRow.playStartSeconds,
+        maxPlaySeconds: snapshotRow.maxPlaySeconds,
+      });
     return {
       id: snapshotRow.trackId,
       title: resolvedTitle,
@@ -48,6 +57,8 @@ export function toSnapshotQuizPayload(
       difficulty: resolvedDifficulty,
       unavailable: missingTrack,
       playbackGainDb: missingTrack ? null : snapshotRow.playbackGainDb,
+      playStartSeconds: playback.playStartSeconds,
+      maxPlaySeconds: playback.maxPlaySeconds,
     };
   });
 }
@@ -91,14 +102,22 @@ async function createQuizInstance(
   return {
     ...quizInstance,
     difficulty: quizInstance.difficulty as DifficultyMode,
-    tracks: selected.map((selectedTrack) => ({
-      id: selectedTrack.id,
-      title: selectedTrack.title,
-      audioUrl: selectedTrack.audioUrl,
-      difficulty: selectedTrack.difficulty,
-      unavailable: false,
-      playbackGainDb: selectedTrack.playbackGainDb,
-    })),
+    tracks: selected.map((selectedTrack) => {
+      const playback = resolvedPlaybackFromDbFields({
+        playStartSeconds: selectedTrack.playStartSeconds,
+        maxPlaySeconds: selectedTrack.maxPlaySeconds,
+      });
+      return {
+        id: selectedTrack.id,
+        title: selectedTrack.title,
+        audioUrl: selectedTrack.audioUrl,
+        difficulty: selectedTrack.difficulty,
+        unavailable: false,
+        playbackGainDb: selectedTrack.playbackGainDb,
+        playStartSeconds: playback.playStartSeconds,
+        maxPlaySeconds: playback.maxPlaySeconds,
+      };
+    }),
   };
 }
 
@@ -127,6 +146,8 @@ export async function getQuizInstance(
     audioUrl: tracks.audioUrl,
     difficulty: tracks.difficulty,
     playbackGainDb: tracks.playbackGainDb,
+    playStartSeconds: tracks.playStartSeconds,
+    maxPlaySeconds: tracks.maxPlaySeconds,
   }).from(quizInstanceTracks)
     .leftJoin(tracks, eq(tracks.id, quizInstanceTracks.trackId))
     .where(eq(quizInstanceTracks.quizInstanceId, instance.id))

@@ -135,6 +135,8 @@ export async function getTracksForCategory(
     audioUrl: string;
     difficulty: "easy" | "hard";
     playbackGainDb: number | null;
+    playStartSeconds: number | null;
+    maxPlaySeconds: number | null;
   }[]
 > {
   const category = await db.query.categories.findFirst({
@@ -152,6 +154,8 @@ export async function getTracksForCategory(
     audioUrl: t.audioUrl,
     difficulty: t.difficulty,
     playbackGainDb: t.playbackGainDb,
+    playStartSeconds: t.playStartSeconds,
+    maxPlaySeconds: t.maxPlaySeconds,
   }));
 }
 

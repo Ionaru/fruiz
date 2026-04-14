@@ -38,4 +38,8 @@ export interface QuizTrackPayload {
   unavailable: boolean;
   /** dB toward ~-16 LUFS; null if not measured. */
   playbackGainDb: number | null;
+  /** Resolved start offset in seconds (>= 0). */
+  playStartSeconds: number;
+  /** Resolved max clip length in seconds (includes fade-in/out). */
+  maxPlaySeconds: number;
 }

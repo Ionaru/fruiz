@@ -6,6 +6,7 @@ import { CheckControl } from "../ui/CheckControl.tsx";
 import { CheckGroup } from "../ui/CheckGroup.tsx";
 import { PlateauCard } from "../ui/PlateauCard.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
+import { DEFAULT_MAX_PLAY_SECONDS } from "../../lib/quizPlayback.ts";
 
 export function resolvedDifficulty(
   raw: string | undefined,
@@ -27,6 +28,12 @@ export interface TrackFormProps {
   defaultTitle?: string;
   defaultAudioUrl?: string;
   defaultDifficulty?: "easy" | "hard";
+  /** Seconds; null/undefined = leave blank (stored as null, resolved to 0). */
+  defaultPlayStartSeconds?: number | null;
+  /** Seconds; null/undefined = leave blank (stored as null, app default max). */
+  defaultMaxPlaySeconds?: number | null;
+  /** When set, the form element gets this `id` (e.g. for playback preview). */
+  formDomId?: string;
   submitLabel: string;
 }
 
@@ -46,6 +53,7 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
   return (
     <PlateauCard class="w-full" padding="5">
       <form
+        id={props.formDomId}
         method={props.method ?? "post"}
         action={props.action}
         class="space-y-4"
@@ -102,6 +110,40 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
             />
           ))}
         </CheckGroup>
+        <FieldGroup label="Playback start (seconds)" htmlFor="tr-play-start">
+          <TextInput
+            id="tr-play-start"
+            name="playStartSeconds"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="any"
+            defaultValue={props.defaultPlayStartSeconds == null
+              ? ""
+              : String(props.defaultPlayStartSeconds)}
+            placeholder="0"
+          />
+          <p class="text-xs opacity-80">
+            Optional. Leave blank to start at the beginning of the file.
+          </p>
+        </FieldGroup>
+        <FieldGroup label="Max play length (seconds)" htmlFor="tr-max-play">
+          <TextInput
+            id="tr-max-play"
+            name="maxPlaySeconds"
+            type="number"
+            inputMode="decimal"
+            min={2.5}
+            step="any"
+            defaultValue={props.defaultMaxPlaySeconds == null
+              ? ""
+              : String(props.defaultMaxPlaySeconds)}
+            placeholder={`${DEFAULT_MAX_PLAY_SECONDS}`}
+          />
+          <p class="text-xs opacity-80">
+            Optional. Leave blank for app default (includes fade-in/out).
+          </p>
+        </FieldGroup>
         <CheckGroup legend="Categories">
           {props.categories.map((category) => {
             const categoryId = String(category.id);

@@ -1,5 +1,6 @@
 import { mulberry32, seedStringToUint32 } from "./prng.ts";
 import type { DifficultyMode, QuizTrackPayload } from "./types.ts";
+import { resolvedPlaybackFromDbFields } from "./quizPlayback.ts";
 
 export interface SelectableTrack {
   id: string;
@@ -7,6 +8,8 @@ export interface SelectableTrack {
   audioUrl: string;
   difficulty: "easy" | "hard";
   playbackGainDb: number | null;
+  playStartSeconds: number | null;
+  maxPlaySeconds: number | null;
 }
 
 /**
@@ -43,12 +46,20 @@ export function selectTracksDeterministic(
 }
 
 export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
-  return tracks.map((track) => ({
-    id: track.id,
-    title: track.title,
-    audioUrl: track.audioUrl,
-    difficulty: track.difficulty,
-    unavailable: false,
-    playbackGainDb: track.playbackGainDb,
-  }));
+  return tracks.map((track) => {
+    const playback = resolvedPlaybackFromDbFields({
+      playStartSeconds: track.playStartSeconds,
+      maxPlaySeconds: track.maxPlaySeconds,
+    });
+    return {
+      id: track.id,
+      title: track.title,
+      audioUrl: track.audioUrl,
+      difficulty: track.difficulty,
+      unavailable: false,
+      playbackGainDb: track.playbackGainDb,
+      playStartSeconds: playback.playStartSeconds,
+      maxPlaySeconds: playback.maxPlaySeconds,
+    };
+  });
 }

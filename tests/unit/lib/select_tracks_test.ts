@@ -2,12 +2,14 @@ import { assertEquals } from "@std/assert";
 import { selectTracksDeterministic } from "../../../src/lib/selectTracks.ts";
 import type { SelectableTrack } from "../../../src/lib/selectTracks.ts";
 
-const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, i) => ({
-  id: `t${i}`,
-  title: `Title ${i}`,
-  audioUrl: `a${i}`,
-  difficulty: i % 2 === 0 ? "easy" : "hard",
+const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, index) => ({
+  id: `t${index}`,
+  title: `Title ${index}`,
+  audioUrl: `a${index}`,
+  difficulty: index % 2 === 0 ? "easy" : "hard",
   playbackGainDb: null,
+  playStartSeconds: null,
+  maxPlaySeconds: null,
 }));
 
 Deno.test("selectTracksDeterministic returns 20 tracks in stable order for same seed", () => {

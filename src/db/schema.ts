@@ -18,6 +18,10 @@ export const tracks = sqliteTable("tracks", {
   playbackGainSourceSize: integer("playback_gain_source_size"),
   /** `mtime` of the audio file in ms since epoch; null if unknown (no cache skip). */
   playbackGainSourceMtimeMs: integer("playback_gain_source_mtime_ms"),
+  /** Seconds into the file where quiz playback starts; null = 0. */
+  playStartSeconds: real("play_start_seconds"),
+  /** Max clip length from start (includes fades); null = app default. */
+  maxPlaySeconds: real("max_play_seconds"),
 });
 
 export const categories = sqliteTable("categories", {

@@ -7,6 +7,7 @@ import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { resolvedPlaybackFromDbFields } from "../../../lib/quizPlayback.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -57,6 +58,10 @@ export default define.page<typeof handler>(({ data }) => (
                 audioId={track.id}
                 compact
                 playbackGainDb={track.playbackGainDb}
+                {...resolvedPlaybackFromDbFields({
+                  playStartSeconds: track.playStartSeconds,
+                  maxPlaySeconds: track.maxPlaySeconds,
+                })}
               />
             </div>
             <a
