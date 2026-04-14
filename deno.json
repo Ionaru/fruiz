@@ -13,6 +13,7 @@
   },
   "lint": {
     "rules": {
+      "include": ["no-non-null-assertion"],
       "tags": [
         "fresh",
         "recommended"

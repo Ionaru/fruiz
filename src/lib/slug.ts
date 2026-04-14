@@ -25,7 +25,7 @@ export function decodeSlug(
   slug: string,
 ): { difficulty: DifficultyMode; code: string } | null {
   if (!slug || slug.length < 2) return null;
-  const pathPrefixChar = slug[0]!;
+  const pathPrefixChar = slug.charAt(0);
   const difficulty = PREFIX_TO_DIFF[pathPrefixChar];
   if (!difficulty) return null;
   const code = slug.slice(1);
@@ -39,8 +39,8 @@ export function generateShortCode(length = CODE_LENGTH): string {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   let out = "";
-  for (let byteIndex = 0; byteIndex < length; byteIndex++) {
-    out += CODE_ALPHABET[bytes[byteIndex]! % CODE_ALPHABET.length]!;
+  for (const byte of bytes) {
+    out += CODE_ALPHABET.charAt(byte % CODE_ALPHABET.length);
   }
   return out;
 }

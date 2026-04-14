@@ -391,7 +391,10 @@ export default function QuizController(props: Readonly<Props>) {
           {props.tracks.map((track, index) => {
             const progressRow = progress.value.tracks.find(
               (entry) => entry.trackId === track.id,
-            )!;
+            );
+            if (!progressRow) {
+              throw new Error(`Missing progress for track ${track.id}`);
+            }
             const rowVariant = variantForStatus(progressRow.status);
             return (
               <li

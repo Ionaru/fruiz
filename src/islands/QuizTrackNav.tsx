@@ -60,7 +60,10 @@ export default function QuizTrackNav(props: Readonly<Props>) {
               {props.tracks.map((track, trackIndex) => {
                 const progressRow = props.progress.value.tracks.find(
                   (entry) => entry.trackId === track.id,
-                )!;
+                );
+                if (!progressRow) {
+                  throw new Error(`Missing progress for track ${track.id}`);
+                }
                 const isActiveTrack = props.activeId.value === track.id;
                 return (
                   <Button
@@ -103,7 +106,10 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                 {props.tracks.map((track) => {
                   const progressRow = props.progress.value.tracks.find(
                     (entry) => entry.trackId === track.id,
-                  )!;
+                  );
+                  if (!progressRow) {
+                    throw new Error(`Missing progress for track ${track.id}`);
+                  }
                   const isActiveTrack = props.activeId.value === track.id;
                   const variant = variantForStatus(progressRow.status);
                   const plateauVariant = variant ? ` ${variant}` : "";

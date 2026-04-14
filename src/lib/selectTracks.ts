@@ -37,10 +37,11 @@ export function selectTracksDeterministic(
     shuffleIndex--
   ) {
     const swapIndex = Math.floor(rand() * (shuffleIndex + 1));
-    [copy[shuffleIndex], copy[swapIndex]] = [
-      copy[swapIndex]!,
-      copy[shuffleIndex]!,
-    ];
+    const left = copy[swapIndex];
+    const right = copy[shuffleIndex];
+    if (left === undefined || right === undefined) continue;
+    copy[shuffleIndex] = left;
+    copy[swapIndex] = right;
   }
   return copy.slice(0, take);
 }

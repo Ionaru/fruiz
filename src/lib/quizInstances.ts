@@ -37,26 +37,33 @@ export function toSnapshotQuizPayload(
   snapshotRows: SnapshotTrackRow[],
 ): QuizTrackPayload[] {
   return snapshotRows.map((snapshotRow) => {
-    const missingTrack = !snapshotRow.title || !snapshotRow.difficulty ||
-      !snapshotRow.audioUrl;
-    const resolvedTitle = missingTrack
-      ? `${snapshotRow.trackTitleSnapshot} (Unavailable)`
-      : snapshotRow.title!;
-    const resolvedDifficulty = missingTrack ? "easy" : snapshotRow.difficulty!;
-    const resolvedAudioUrl = missingTrack ? null : snapshotRow.audioUrl!;
-    const playback = missingTrack
-      ? resolvedPlaybackFromDbFields({})
-      : resolvedPlaybackFromDbFields({
+    const title = snapshotRow.title;
+    const difficulty = snapshotRow.difficulty;
+    const audioUrl = snapshotRow.audioUrl;
+    if (title && difficulty && audioUrl) {
+      const playback = resolvedPlaybackFromDbFields({
         playStartSeconds: snapshotRow.playStartSeconds,
         maxPlaySeconds: snapshotRow.maxPlaySeconds,
       });
+      return {
+        id: snapshotRow.trackId,
+        title,
+        audioUrl,
+        difficulty,
+        unavailable: false,
+        playbackGainDb: snapshotRow.playbackGainDb,
+        playStartSeconds: playback.playStartSeconds,
+        maxPlaySeconds: playback.maxPlaySeconds,
+      };
+    }
+    const playback = resolvedPlaybackFromDbFields({});
     return {
       id: snapshotRow.trackId,
-      title: resolvedTitle,
-      audioUrl: resolvedAudioUrl,
-      difficulty: resolvedDifficulty,
-      unavailable: missingTrack,
-      playbackGainDb: missingTrack ? null : snapshotRow.playbackGainDb,
+      title: `${snapshotRow.trackTitleSnapshot} (Unavailable)`,
+      audioUrl: null,
+      difficulty: "easy",
+      unavailable: true,
+      playbackGainDb: null,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
     };
