@@ -34,7 +34,7 @@ export type PlaybackGainSourceFingerprint = {
 export function fingerprintFromFileInfo(
   info: Deno.FileInfo,
 ): PlaybackGainSourceFingerprint | null {
-  if (info.mtime == null) return null;
+  if (info.mtime === null) return null;
   return { size: info.size, mtimeMs: info.mtime.getTime() };
 }
 
@@ -57,7 +57,7 @@ export function hasCompleteStoredFingerprint(
   storedSize: number | null,
   storedMtimeMs: number | null,
 ): boolean {
-  return storedSize != null && storedMtimeMs != null;
+  return storedSize !== null && storedMtimeMs !== null;
 }
 
 export type AnalyzePlaybackGainOutcome =
@@ -154,7 +154,7 @@ export async function analyzeAndStorePlaybackGainForTrack(
 
   const fingerprint = fingerprintFromFileInfo(stat);
 
-  if (!force && gainDb != null && fingerprint != null) {
+  if (!force && gainDb !== null && fingerprint !== null) {
     if (storedFingerprintMatchesFile(storedSize, storedMtimeMs, fingerprint)) {
       return "cache_hit";
     }
@@ -168,7 +168,7 @@ export async function analyzeAndStorePlaybackGainForTrack(
   }
 
   const measured = await measurePlaybackGainDb(absolutePath);
-  if (measured == null) {
+  if (measured === null) {
     return "ffmpeg_failed";
   }
 

@@ -43,7 +43,7 @@ for (const row of rows) {
         where: { id: row.id },
         columns: { playbackGainDb: true },
       });
-      if (after?.playbackGainDb != null) {
+      if (after !== undefined && after.playbackGainDb !== null) {
         measured++;
         console.log(
           `Measured "${row.title}" (${row.id}): ${after.playbackGainDb} dB`,

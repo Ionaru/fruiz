@@ -146,7 +146,7 @@ export default define.page<typeof handler>(({ data }) => (
     )}
     <div class="mx-auto flex w-full flex-col gap-6">
       <p class="text-sm opacity-80">
-        {data.track.playbackGainDb == null
+        {data.track.playbackGainDb === null
           ? "Playback loudness not measured yet. Saving this track runs analysis when ffmpeg is on PATH; or run `deno task playback-gain:backfill`."
           : `Playback gain (toward -16 LUFS): ${
             data.track.playbackGainDb.toFixed(1)

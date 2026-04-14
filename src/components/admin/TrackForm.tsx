@@ -118,7 +118,7 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
             inputMode="decimal"
             min={0}
             step="any"
-            defaultValue={props.defaultPlayStartSeconds == null
+            defaultValue={(props.defaultPlayStartSeconds ?? null) === null
               ? ""
               : String(props.defaultPlayStartSeconds)}
             placeholder="0"
@@ -135,7 +135,7 @@ export function TrackForm(props: Readonly<TrackFormProps>) {
             inputMode="decimal"
             min={2.5}
             step="any"
-            defaultValue={props.defaultMaxPlaySeconds == null
+            defaultValue={(props.defaultMaxPlaySeconds ?? null) === null
               ? ""
               : String(props.defaultMaxPlaySeconds)}
             placeholder={`${DEFAULT_MAX_PLAY_SECONDS}`}

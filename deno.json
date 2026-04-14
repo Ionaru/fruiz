@@ -13,9 +13,11 @@
   },
   "lint": {
     "rules": {
-      "include": ["no-non-null-assertion"],
+      "include": ["no-non-null-assertion", "eqeqeq"],
       "tags": [
         "fresh",
+        "jsx",
+        "workspace",
         "recommended"
       ]
     }
