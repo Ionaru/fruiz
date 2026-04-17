@@ -1,9 +1,8 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { decodeSlug } from "../lib/slug.ts";
+import { STORAGE_KEY_PREFIX } from "../lib/quizProgress.ts";
 import type { QuizProgress } from "../lib/types.ts";
-
-const STORAGE_KEY_PREFIX = "fruiz-quiz:";
 
 interface InProgressQuizEntry {
   storageKey: string;

@@ -1,17 +1,37 @@
 import TrackAudioPick from "./TrackAudioPick.tsx";
-import TrackCategoriesPick from "./TrackCategoriesPick.tsx";
-import TrackDifficultyPick from "./TrackDifficultyPick.tsx";
 import TrackTitleInput from "./TrackTitleInput.tsx";
-import {
-  normalizedPath,
-  resolvedDifficulty,
-  type TrackFormProps,
-} from "../components/admin/TrackForm.tsx";
+import CheckboxGroupField from "./CheckboxGroupField.tsx";
+import RadioGroupField from "./RadioGroupField.tsx";
+import { normalizedPath, resolvedDifficulty } from "../lib/trackFormHelpers.ts";
 import { Button } from "../components/Button.tsx";
 import { FieldGroup } from "../components/ui/FieldGroup.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
 import { DEFAULT_MAX_PLAY_SECONDS } from "../lib/quizPlayback.ts";
+import type { CategoryRow } from "../lib/categories.ts";
+
+const DIFFICULTY_OPTIONS = [
+  { value: "easy", label: "easy" },
+  { value: "hard", label: "hard" },
+] as const;
+
+export interface TrackFormProps {
+  action: string;
+  method?: "post";
+  categories: CategoryRow[];
+  audioChoices: string[];
+  selectedCategoryIds?: string[];
+  defaultTitle?: string;
+  defaultAudioUrl?: string;
+  defaultDifficulty?: "easy" | "hard";
+  /** Seconds; null/undefined = leave blank (stored as null, resolved to 0). */
+  defaultPlayStartSeconds?: number | null;
+  /** Seconds; null/undefined = leave blank (stored as null, app default max). */
+  defaultMaxPlaySeconds?: number | null;
+  /** When set, the form element gets this `id` (e.g. for playback preview). */
+  formDomId?: string;
+  submitLabel: string;
+}
 
 export default function TrackForm(props: Readonly<TrackFormProps>) {
   const initialDifficulty = resolvedDifficulty(props.defaultDifficulty);
@@ -95,10 +115,22 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
             includes fade-in/out).
           </p>
         </FieldGroup>
-        <TrackDifficultyPick initialDifficulty={initialDifficulty} />
-        <TrackCategoriesPick
-          categories={props.categories}
-          initialSelectedIds={props.selectedCategoryIds ?? []}
+        <RadioGroupField
+          legend="Difficulty"
+          name="difficulty"
+          options={DIFFICULTY_OPTIONS}
+          initialValue={initialDifficulty}
+          class="space-y-1"
+          optionsClass="flex gap-3 pt-1"
+        />
+        <CheckboxGroupField
+          legend="Categories"
+          name="categoryIds"
+          options={props.categories.map((category) => ({
+            value: String(category.id),
+            label: category.name,
+          }))}
+          initialValues={(props.selectedCategoryIds ?? []).map(String)}
         />
         <Button type="submit" variant="success" class="w-full">
           {props.submitLabel}

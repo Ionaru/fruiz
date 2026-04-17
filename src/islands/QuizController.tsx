@@ -4,135 +4,34 @@ import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
-import { variantForStatus } from "../lib/quiz_ui.ts";
+import {
+  buildDefaultProgress,
+  canEndQuizWithSkippedRemaining,
+  findNextTrackAfterSkip,
+  findResumeActiveTrackId,
+  isComplete,
+  scoreFromProgress,
+  STORAGE_KEY_PREFIX,
+  tryMergeStoredProgress,
+} from "../lib/quizProgress.ts";
 import { encodeSlug, generateShortCode } from "../lib/slug.ts";
 import type {
   QuizIdentity,
   QuizProgress,
+  QuizProgressTrack,
   QuizTrackPayload,
 } from "../lib/types.ts";
 import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
 import { GuessResultModal } from "./GuessResultModal.tsx";
 import QuizTrackNav from "./QuizTrackNav.tsx";
+import { QuizResults } from "./QuizResults.tsx";
 import { SettingsGate } from "./SettingsGate.tsx";
 
-const STORAGE_KEY_PREFIX = "fruiz-quiz:";
-
-function buildDefaultProgress(
-  trackList: QuizTrackPayload[],
-  quizPath: string,
-): QuizProgress {
-  return {
-    quizPath,
-    score: 0,
-    tracks: trackList.map((track) => ({
-      trackId: track.id,
-      status: track.unavailable ? "unavailable" : "unanswered",
-      selectedTitle: null,
-      replayCount: 0,
-    })),
-  };
-}
-
-function isComplete(progress: QuizProgress): boolean {
-  return progress.tracks.every(
-    (entry) => entry.status !== "unanswered" && entry.status !== "skipped",
-  );
-}
-
-function canEndQuizWithSkippedRemaining(progress: QuizProgress): boolean {
-  const hasUnanswered = progress.tracks.some((t) => t.status === "unanswered");
-  const hasSkipped = progress.tracks.some((t) => t.status === "skipped");
-  return !hasUnanswered && hasSkipped;
-}
-
-function scoreFromProgress(progress: QuizProgress): number {
-  return progress.tracks.filter((entry) =>
-    entry.status === "correct" || entry.status === "unavailable"
-  ).length;
-}
-
-/**
- * After the current track is marked skipped, pick where focus should go:
- * circular scan from the next list index, preferring `unanswered` while any
- * exist globally; otherwise the first `skipped` track in that scan.
- */
-function findNextTrackAfterSkip(
-  trackList: QuizTrackPayload[],
-  progressAfterSkip: QuizProgress,
-  currentTrackId: string,
-): string {
-  const n = trackList.length;
-  if (n === 0) return currentTrackId;
-  const currentIndex = trackList.findIndex((t) => t.id === currentTrackId);
-  if (currentIndex < 0) return currentTrackId;
-
-  const hasAnyUnanswered = progressAfterSkip.tracks.some(
-    (row) => row.status === "unanswered",
-  );
-  const targetStatus: "unanswered" | "skipped" = hasAnyUnanswered
-    ? "unanswered"
-    : "skipped";
-
-  for (let offset = 1; offset <= n; offset++) {
-    const next = trackList[(currentIndex + offset) % n];
-    if (!next) break;
-    const id = next.id;
-    const status = progressAfterSkip.tracks.find((row) => row.trackId === id)
-      ?.status;
-    if (status === targetStatus) return id;
-  }
-  return currentTrackId;
-}
-
-/**
- * On resume/reload, prefer the first track in quiz order that is still
- * `unanswered` (therefore unskipped). Fall back to the provided current id when
- * valid, otherwise the first track id.
- */
-function findResumeActiveTrackId(
-  trackList: QuizTrackPayload[],
-  progressState: QuizProgress,
-  currentTrackId: string | null,
-): string | null {
-  for (const track of trackList) {
-    const status = progressState.tracks.find((row) => row.trackId === track.id)
-      ?.status;
-    if (status === "unanswered") return track.id;
-  }
-  if (
-    currentTrackId && trackList.some((track) => track.id === currentTrackId)
-  ) {
-    return currentTrackId;
-  }
-  return trackList[0]?.id ?? null;
-}
-
-/** Returns merged progress from `localStorage`, or `null` if missing or invalid. */
-function tryMergeStoredProgress(
-  raw: string | null,
-  quizPath: string,
-  tracks: QuizTrackPayload[],
-): QuizProgress | null {
-  if (!raw) return null;
-  let parsed: QuizProgress;
-  try {
-    parsed = JSON.parse(raw) as QuizProgress;
-  } catch {
-    return null;
-  }
-  if (parsed.quizPath !== quizPath || !Array.isArray(parsed.tracks)) {
-    return null;
-  }
-  const validIds = new Set(tracks.map((track) => track.id));
-  if (
-    parsed.tracks.length !== tracks.length ||
-    !parsed.tracks.every((row) => validIds.has(row.trackId))
-  ) {
-    return null;
-  }
-  return { ...parsed, score: scoreFromProgress(parsed) };
+interface PopupResult {
+  status: "correct" | "incorrect";
+  newCollectionAdd: boolean;
+  trackTitle: string;
 }
 
 interface Props {
@@ -156,13 +55,40 @@ export default function QuizController(props: Readonly<Props>) {
   );
   const showResults = useSignal(false);
   const didHydrateStorage = useSignal(false);
-
-  type PopupResult = {
-    status: "correct" | "incorrect";
-    newCollectionAdd: boolean;
-    trackTitle: string;
-  };
   const popupResult = useSignal<PopupResult | null>(null);
+
+  const trackMap = Object.fromEntries(
+    props.tracks.map((track) => [track.id, track]),
+  );
+
+  // --- helpers ---
+
+  const updateProgress = (next: QuizProgress) => {
+    next.score = scoreFromProgress(next);
+    progress.value = next;
+  };
+
+  const updateTrack = (
+    trackId: string,
+    fn: (row: QuizProgressTrack) => QuizProgressTrack,
+  ) => {
+    updateProgress({
+      ...progress.value,
+      tracks: progress.value.tracks.map((row) =>
+        row.trackId === trackId ? fn(row) : row
+      ),
+    });
+  };
+
+  const advanceToTrack = (trackId: string) => {
+    activeId.value = trackId;
+    const row = progress.value.tracks.find(
+      (entry) => entry.trackId === trackId,
+    );
+    answerDraft.value = row?.selectedTitle ?? "";
+  };
+
+  // --- effects ---
 
   useSignalEffect(() => {
     if (!didHydrateStorage.value) {
@@ -174,14 +100,14 @@ export default function QuizController(props: Readonly<Props>) {
         );
         if (merged) {
           progress.value = merged;
-          const resumedActiveId = findResumeActiveTrackId(
+          const resumedId = findResumeActiveTrackId(
             props.tracks,
             merged,
             activeId.value,
           );
-          activeId.value = resumedActiveId;
-          const resumedRow = resumedActiveId
-            ? merged.tracks.find((entry) => entry.trackId === resumedActiveId)
+          activeId.value = resumedId;
+          const resumedRow = resumedId
+            ? merged.tracks.find((entry) => entry.trackId === resumedId)
             : undefined;
           answerDraft.value = resumedRow?.selectedTitle ?? "";
           if (isComplete(merged)) showResults.value = true;
@@ -221,92 +147,61 @@ export default function QuizController(props: Readonly<Props>) {
     return () => document.removeEventListener("keydown", onKeyDown);
   });
 
+  // --- actions ---
+
   const confirmSettings = () => {
-    const replayLimitValue = Math.max(
-      0,
-      Math.floor(Number(draftLimit.value)) || 0,
-    );
-    draftLimit.value = replayLimitValue;
-    replayLimit.value = replayLimitValue;
+    const value = Math.max(0, Math.floor(Number(draftLimit.value)) || 0);
+    draftLimit.value = value;
+    replayLimit.value = value;
     const url = new URL(globalThis.location.href);
-    url.searchParams.set("limit", String(replayLimitValue));
+    url.searchParams.set("limit", String(value));
     globalThis.history.replaceState(null, "", url.toString());
     settingsOpen.value = false;
   };
 
-  const trackMap = Object.fromEntries(
-    props.tracks.map((track) => [track.id, track]),
-  );
-
-  const updateTrack = (
-    trackId: string,
-    fn: (row: QuizProgress["tracks"][0]) => QuizProgress["tracks"][0],
-  ) => {
-    const next: QuizProgress = {
-      ...progress.value,
-      tracks: progress.value.tracks.map((row) =>
-        row.trackId === trackId ? fn(row) : row
-      ),
-    };
-    next.score = scoreFromProgress(next);
-    progress.value = next;
-  };
-
-  const replayBlocked = (trackId: string) => {
+  const replayBlocked = (trackId: string): boolean => {
     const limit = replayLimit.value;
     if (limit <= 0) return false;
-    const progressRow = progress.value.tracks.find(
+    const row = progress.value.tracks.find(
       (entry) => entry.trackId === trackId,
     );
-    if (!progressRow) return true;
-    if (progressRow.status === "unavailable") return true;
-    return progressRow.replayCount >= limit;
+    if (!row || row.status === "unavailable") return true;
+    return row.replayCount >= limit;
   };
 
   const onPlayStart = (trackId: string) => {
-    const progressRow = progress.value.tracks.find(
+    const row = progress.value.tracks.find(
       (entry) => entry.trackId === trackId,
     );
-    if (!progressRow || progressRow.status === "unavailable") return;
-    updateTrack(trackId, (row) => ({
-      ...row,
-      replayCount: row.replayCount + 1,
+    if (!row || row.status === "unavailable") return;
+    updateTrack(trackId, (current) => ({
+      ...current,
+      replayCount: current.replayCount + 1,
     }));
   };
 
   const onSkip = () => {
     const activeTrackId = activeId.value;
     if (!activeTrackId) return;
-    const progressRow = progress.value.tracks.find(
+    const row = progress.value.tracks.find(
       (entry) => entry.trackId === activeTrackId,
     );
-    if (
-      !progressRow || progressRow.status === "correct" ||
-      progressRow.status === "incorrect"
-    ) {
-      return;
-    }
+    if (!row || row.status === "correct" || row.status === "incorrect") return;
+
     const nextProgress: QuizProgress = {
       ...progress.value,
-      tracks: progress.value.tracks.map((row) =>
-        row.trackId === activeTrackId
-          ? { ...row, status: "skipped" as const, selectedTitle: null }
-          : row
+      tracks: progress.value.tracks.map((entry) =>
+        entry.trackId === activeTrackId
+          ? { ...entry, status: "skipped" as const, selectedTitle: null }
+          : entry
       ),
     };
     nextProgress.score = scoreFromProgress(nextProgress);
-    const nextId = findNextTrackAfterSkip(
-      props.tracks,
-      nextProgress,
-      activeTrackId,
-    );
     progress.value = nextProgress;
     if (isComplete(nextProgress)) showResults.value = true;
-    activeId.value = nextId;
-    const nextRow = nextProgress.tracks.find(
-      (entry) => entry.trackId === nextId,
+    advanceToTrack(
+      findNextTrackAfterSkip(props.tracks, nextProgress, activeTrackId),
     );
-    answerDraft.value = nextRow?.selectedTitle ?? "";
   };
 
   const onSubmit = () => {
@@ -314,16 +209,13 @@ export default function QuizController(props: Readonly<Props>) {
     if (!activeTrackId) return;
     const track = trackMap[activeTrackId];
     if (!track) return;
-    const progressRow = progress.value.tracks.find(
+    const row = progress.value.tracks.find(
       (entry) => entry.trackId === activeTrackId,
     );
     if (
-      !progressRow || progressRow.status === "correct" ||
-      progressRow.status === "incorrect" ||
-      progressRow.status === "unavailable"
-    ) {
-      return;
-    }
+      !row || row.status === "correct" || row.status === "incorrect" ||
+      row.status === "unavailable"
+    ) return;
 
     if (
       !guessMatchesSuggestionPool(answerDraft.value, props.titleSuggestions)
@@ -337,7 +229,7 @@ export default function QuizController(props: Readonly<Props>) {
       trackId: activeTrackId,
       status: isCorrect ? "correct" : "incorrect",
       selectedTitle: answerDraft.value,
-      replayCount: progressRow.replayCount,
+      replayCount: row.replayCount,
     }));
 
     popupResult.value = {
@@ -347,47 +239,48 @@ export default function QuizController(props: Readonly<Props>) {
     };
 
     if (isCorrect && props.loggedIn) {
-      (async () => {
-        try {
-          const response = await fetch(
-            `/api/collection/${activeTrackId}`,
-            { method: "POST" },
-          );
+      void fetch(`/api/collection/${activeTrackId}`, { method: "POST" })
+        .then((response) => {
           if (response.status === 201 && popupResult.value !== null) {
             popupResult.value = {
               ...popupResult.value,
               newCollectionAdd: true,
             };
           }
-        } catch {
-          /* silent */
-        }
-      })();
+        })
+        .catch(() => {/* silent */});
     }
 
     answerDraft.value = "";
   };
 
-  const onEndQuizMarkSkippedIncorrect = () => {
+  const onEndQuiz = () => {
     if (!canEndQuizWithSkippedRemaining(progress.value)) return;
-    const next: QuizProgress = {
+    updateProgress({
       ...progress.value,
-      tracks: progress.value.tracks.map((row) =>
-        row.status === "skipped"
-          ? { ...row, status: "incorrect" as const, selectedTitle: null }
-          : row
+      tracks: progress.value.tracks.map((entry) =>
+        entry.status === "skipped"
+          ? { ...entry, status: "incorrect" as const, selectedTitle: null }
+          : entry
       ),
-    };
-    next.score = scoreFromProgress(next);
-    progress.value = next;
+    });
     showResults.value = true;
+  };
+
+  const onDismissPopup = () => {
+    popupResult.value = null;
+    if (activeId.value && !isComplete(progress.value)) {
+      advanceToTrack(
+        findNextTrackAfterSkip(props.tracks, progress.value, activeId.value),
+      );
+    } else {
+      showResults.value = true;
+    }
   };
 
   const copyBarePath = async () => {
     const url = new URL(globalThis.location.href);
-    url.searchParams.keys().forEach((key) => {
-      url.searchParams.delete(key);
-    });
+    url.searchParams.keys().forEach((key) => url.searchParams.delete(key));
     try {
       await navigator.clipboard.writeText(url.toString());
     } catch {
@@ -396,13 +289,17 @@ export default function QuizController(props: Readonly<Props>) {
   };
 
   const playAgain = () => {
-    const code = generateShortCode();
-    const slug = encodeSlug(props.identity.difficulty, code);
+    const slug = encodeSlug(
+      props.identity.difficulty,
+      generateShortCode(),
+    );
     const search = new URL(globalThis.location.href).search;
     globalThis.location.assign(
       `/quiz/${props.identity.categorySlug}/${slug}${search}`,
     );
   };
+
+  // --- render ---
 
   if (settingsOpen.value) {
     return (
@@ -419,84 +316,32 @@ export default function QuizController(props: Readonly<Props>) {
   }
 
   if (showResults.value) {
-    const total = props.tracks.length;
-    const correct = scoreFromProgress(progress.value);
     return (
-      <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row gap-3">
-          <Button
-            class="flex-1"
-            variant="info"
-            onClick={() => void copyBarePath()}
-          >
-            Copy quiz link
-          </Button>
-          <Button class="flex-1" variant="success" onClick={playAgain}>
-            Play again
-          </Button>
-          {props.loggedIn && (
-            <a
-              href="/collection"
-              class="flex-1 plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-            >
-              Collection
-            </a>
-          )}
-        </div>
-        <div class="plateau rounded-2xl p-6 space-y-2 text-center">
-          <p class="text-sm opacity-80">Results</p>
-          <p class="text-4xl font-bold tabular-nums">
-            {correct} / {total}
-          </p>
-        </div>
-        <ul class="space-y-2">
-          {props.tracks.map((track, index) => {
-            const progressRow = progress.value.tracks.find(
-              (entry) => entry.trackId === track.id,
-            );
-            if (!progressRow) {
-              throw new Error(`Missing progress for track ${track.id}`);
-            }
-            const rowVariant = variantForStatus(progressRow.status);
-            return (
-              <li
-                key={track.id}
-                class={`plateau rounded-xl px-4 py-3 flex justify-between gap-2 font-bold ${
-                  rowVariant ? ` ${rowVariant}` : ""
-                }`}
-              >
-                <span class="font-medium truncate">
-                  {index + 1}: {track.title}
-                </span>
-                <span class="shrink-0 capitalize opacity-90">
-                  {progressRow.status}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <QuizResults
+        tracks={props.tracks}
+        progress={progress.value}
+        loggedIn={props.loggedIn}
+        onCopyLink={() => void copyBarePath()}
+        onPlayAgain={playAgain}
+      />
     );
   }
 
   const currentTrack = activeId.value ? trackMap[activeId.value] : undefined;
   const currentRow = activeId.value
-    ? progress.value.tracks.find(
-      (entry) => entry.trackId === activeId.value,
-    )
+    ? progress.value.tracks.find((entry) => entry.trackId === activeId.value)
     : undefined;
   const answerLocked = currentRow?.status === "correct" ||
     currentRow?.status === "incorrect" ||
     currentRow?.status === "unavailable";
-
   const currentClipNumber = currentTrack
     ? props.tracks.findIndex((track) => track.id === currentTrack.id) + 1
     : 0;
-
   const canSubmitGuess = guessMatchesSuggestionPool(
     answerDraft.value,
     props.titleSuggestions,
   );
+  const showEndQuiz = canEndQuizWithSkippedRemaining(progress.value);
 
   let submitTitle: string | undefined;
   if (!answerLocked && !canSubmitGuess) {
@@ -504,8 +349,6 @@ export default function QuizController(props: Readonly<Props>) {
       ? "Type a title that matches the suggestions list."
       : "Adjust your answer to match a suggested title (same spelling rules as scoring).";
   }
-
-  const showEndQuiz = canEndQuizWithSkippedRemaining(progress.value);
 
   return (
     <div class="space-y-6">
@@ -576,7 +419,7 @@ export default function QuizController(props: Readonly<Props>) {
                 variant="danger"
                 class="px-6"
                 title="Skipped clips will be marked incorrect."
-                onClick={onEndQuizMarkSkippedIncorrect}
+                onClick={onEndQuiz}
               >
                 End quiz
               </Button>
@@ -590,23 +433,7 @@ export default function QuizController(props: Readonly<Props>) {
           status={popupResult.value.status}
           newCollectionAdd={popupResult.value.newCollectionAdd}
           trackTitle={popupResult.value.trackTitle}
-          onDismiss={() => {
-            popupResult.value = null;
-            if (activeId.value && !isComplete(progress.value)) {
-              const nextId = findNextTrackAfterSkip(
-                props.tracks,
-                progress.value,
-                activeId.value,
-              );
-              activeId.value = nextId;
-              const nextRow = progress.value.tracks.find(
-                (entry) => entry.trackId === nextId,
-              );
-              answerDraft.value = nextRow?.selectedTitle ?? "";
-            } else {
-              showResults.value = true;
-            }
-          }}
+          onDismiss={onDismissPopup}
         />
       )}
     </div>

@@ -65,6 +65,6 @@ Deno.test("routes use island entrypoints for interactive track and quiz composit
       'import TrackForm from "../../../islands/TrackForm.tsx";',
     ),
   );
-  assert(quizRoute.includes("import QuizPlayerClient"));
-  assert(quizRoute.includes("<QuizPlayerClient"));
+  assert(quizRoute.includes("import QuizController"));
+  assert(quizRoute.includes("<QuizController"));
 });

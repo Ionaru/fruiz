@@ -9,7 +9,7 @@ import {
 import { decodeSlug } from "../../../../lib/slug.ts";
 import { getOrCreateQuizInstance } from "../../../../lib/quizInstances.ts";
 import { QuizPlayer } from "../../../../components/quiz/QuizPlayer.tsx";
-import QuizPlayerClient from "../../../../islands/QuizPlayerClient.tsx";
+import QuizController from "../../../../islands/QuizController.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -56,7 +56,7 @@ export const handler = define.handlers({
         category,
         difficulty,
         identity: { categorySlug, difficulty, code },
-        replayLimit,
+        initialReplayLimit: replayLimit,
         tracks: tracksPayload,
         titleSuggestions,
         quizPath,
@@ -82,9 +82,9 @@ export default define.page<typeof handler>(({ data }) => (
       <meta property="og:url" content={data.shareMeta.url} />
     </Head>
     <QuizPlayer category={data.category} difficulty={data.difficulty}>
-      <QuizPlayerClient
+      <QuizController
         identity={data.identity}
-        replayLimit={data.replayLimit ?? 0}
+        initialReplayLimit={data.initialReplayLimit ?? 0}
         tracks={data.tracks}
         titleSuggestions={data.titleSuggestions}
         quizPath={data.quizPath}

@@ -20,6 +20,12 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
   return (
     <PageShell paddingY="6">
       <div class="max-w-lg mx-auto flex flex-col gap-6 text-base-900 dark:text-base-100">
+      <a
+          href="/"
+          class="plateau rounded-full px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
+        >
+          ← Back to home
+        </a>
         <PlateauCard padding="5">
           <p class="text-sm opacity-80">Category</p>
           <h1 class="text-2xl font-semibold">{props.category.name}</h1>
@@ -33,12 +39,6 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
           </div>
         </PlateauCard>
         {props.children}
-        <a
-          href="/"
-          class="plateau rounded-full px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-        >
-          ← Back to home
-        </a>
       </div>
     </PageShell>
   );
