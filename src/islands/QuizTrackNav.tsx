@@ -1,7 +1,8 @@
 import type { Signal } from "@preact/signals";
-import { useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Button } from "../components/Button.tsx";
+import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { variantForStatus } from "../lib/quiz_ui.ts";
 import type { QuizProgress, QuizTrackPayload } from "../lib/types.ts";
 
@@ -45,6 +46,18 @@ export default function QuizTrackNav(props: Readonly<Props>) {
     if (!next) return;
     selectTrack(next.id);
   };
+
+  useSignalEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (isInteractiveFocus()) return;
+      event.preventDefault();
+      if (event.key === "ArrowLeft") goPrev();
+      else goNext();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  });
 
   const total = props.tracks.length;
   const idx = activeIndex();

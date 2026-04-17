@@ -2,6 +2,7 @@ import { useSignal, useSignalEffect } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
+import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
 import { variantForStatus } from "../lib/quiz_ui.ts";
 import { encodeSlug, generateShortCode } from "../lib/slug.ts";
@@ -191,6 +192,25 @@ export default function QuizController(props: Readonly<Props>) {
     } catch {
       /* ignore */
     }
+  });
+
+  useSignalEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== " ") return;
+      if (isInteractiveFocus()) return;
+      event.preventDefault();
+      const trackId = activeId.value;
+      if (!trackId) return;
+      const stop = document.getElementById(`listen-stop-${trackId}`);
+      if (stop) {
+        stop.click();
+        return;
+      }
+      const play = document.getElementById(`listen-play-${trackId}`);
+      if (play && !play.hasAttribute("disabled")) play.click();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   });
 
   const confirmSettings = () => {
