@@ -33,6 +33,12 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
           </div>
         </PlateauCard>
         {props.children}
+        <a
+          href="/"
+          class="plateau rounded-full px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
+        >
+          ← Back to home
+        </a>
       </div>
     </PageShell>
   );
