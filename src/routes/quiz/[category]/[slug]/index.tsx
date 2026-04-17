@@ -84,7 +84,7 @@ export default define.page<typeof handler>(({ data }) => (
     <QuizPlayer category={data.category} difficulty={data.difficulty}>
       <QuizPlayerClient
         identity={data.identity}
-        replayLimit={data.replayLimit}
+        replayLimit={data.replayLimit ?? 0}
         tracks={data.tracks}
         titleSuggestions={data.titleSuggestions}
         quizPath={data.quizPath}
