@@ -96,6 +96,22 @@ export const quizInstanceTracks = sqliteTable(
   ],
 );
 
+export const collectedTracks = sqliteTable(
+  "collected_tracks",
+  {
+    userId: text("user_id").notNull().references(() => users.id, {
+      onDelete: "cascade",
+    }),
+    trackId: text("track_id").notNull().references(() => tracks.id, {
+      onDelete: "cascade",
+    }),
+    collectedAt: integer("collected_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.trackId] }),
+  ],
+);
+
 export const passkeys = sqliteTable("passkeys", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => users.id, {

@@ -89,6 +89,12 @@ export default function AccountManage({ username, isAdmin }: Props) {
         </p>
       )}
       <div class="flex flex-col gap-3">
+        <a
+          href="/collection"
+          class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
+        >
+          My collection
+        </a>
         <Button
           type="button"
           variant="info"

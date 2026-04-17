@@ -7,6 +7,7 @@ interface QuizPlayerClientProps {
   tracks: QuizTrackPayload[];
   titleSuggestions: string[];
   quizPath: string;
+  loggedIn: boolean;
 }
 
 export default function QuizPlayerClient(
@@ -19,6 +20,7 @@ export default function QuizPlayerClient(
       tracks={props.tracks}
       titleSuggestions={props.titleSuggestions}
       quizPath={props.quizPath}
+      loggedIn={props.loggedIn}
     />
   );
 }

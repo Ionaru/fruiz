@@ -60,6 +60,7 @@ export const handler = define.handlers({
         tracks: tracksPayload,
         titleSuggestions,
         quizPath,
+        loggedIn: ctx.state.session.user !== null,
         shareMeta: {
           title: `${category.name} quiz`,
           description: shareDescription,
@@ -87,6 +88,7 @@ export default define.page<typeof handler>(({ data }) => (
         tracks={data.tracks}
         titleSuggestions={data.titleSuggestions}
         quizPath={data.quizPath}
+        loggedIn={data.loggedIn}
       />
     </QuizPlayer>
   </>

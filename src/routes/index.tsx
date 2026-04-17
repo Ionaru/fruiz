@@ -25,6 +25,7 @@ export const handler = define.handlers({
       data: {
         options,
         homeLimitQuery,
+        loggedIn: user !== null,
         showAdminLink: user?.admin === true,
       },
     };
@@ -59,6 +60,14 @@ export default define.page<typeof handler>(({ data }) => (
           <PillLink href="/account" class="text-base-900 dark:text-base-100">
             Account
           </PillLink>
+          {data.loggedIn && (
+            <PillLink
+              href="/collection"
+              class="text-base-900 dark:text-base-100"
+            >
+              Collection
+            </PillLink>
+          )}
           {data.showAdminLink && (
             <PillLink href="/admin" class="text-base-900 dark:text-base-100">
               Admin

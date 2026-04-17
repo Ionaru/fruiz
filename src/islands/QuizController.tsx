@@ -139,6 +139,7 @@ interface Props {
   tracks: QuizTrackPayload[];
   titleSuggestions: string[];
   quizPath: string;
+  loggedIn: boolean;
 }
 
 export default function QuizController(props: Readonly<Props>) {
@@ -311,6 +312,11 @@ export default function QuizController(props: Readonly<Props>) {
       selectedTitle: answerDraft.value,
       replayCount: progressRow.replayCount,
     }));
+    if (isCorrect && props.loggedIn) {
+      fetch(`/api/collection/${activeTrackId}`, { method: "POST" }).catch(
+        () => {},
+      );
+    }
     answerDraft.value = "";
   };
 
@@ -380,6 +386,14 @@ export default function QuizController(props: Readonly<Props>) {
           <Button class="flex-1" variant="success" onClick={playAgain}>
             Play again
           </Button>
+          {props.loggedIn && (
+            <a
+              href="/collection"
+              class="flex-1 plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
+            >
+              Collection
+            </a>
+          )}
         </div>
         <div class="plateau rounded-2xl p-6 space-y-2 text-center">
           <p class="text-sm opacity-80">Results</p>

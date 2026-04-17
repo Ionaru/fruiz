@@ -26,6 +26,10 @@ export const relations = defineRelations(schema, (relations) => ({
       from: relations.users.id,
       to: relations.sessions.userId,
     }),
+    collectedTracks: relations.many.collectedTracks({
+      from: relations.users.id,
+      to: relations.collectedTracks.userId,
+    }),
   },
   passkeys: {
     user: relations.one.users({
@@ -49,6 +53,16 @@ export const relations = defineRelations(schema, (relations) => ({
     quizInstance: relations.one.quizInstances({
       from: relations.quizInstanceTracks.quizInstanceId,
       to: relations.quizInstances.id,
+    }),
+  },
+  collectedTracks: {
+    user: relations.one.users({
+      from: relations.collectedTracks.userId,
+      to: relations.users.id,
+    }),
+    track: relations.one.tracks({
+      from: relations.collectedTracks.trackId,
+      to: relations.tracks.id,
     }),
   },
 }));
