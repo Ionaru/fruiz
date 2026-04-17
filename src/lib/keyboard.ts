@@ -1,4 +1,10 @@
-const INTERACTIVE_TAGS = new Set(["INPUT", "TEXTAREA", "BUTTON", "SELECT", "A"]);
+const INTERACTIVE_TAGS = new Set([
+  "INPUT",
+  "TEXTAREA",
+  "BUTTON",
+  "SELECT",
+  "A",
+]);
 
 export function isInteractiveFocus(): boolean {
   const el = document.activeElement as HTMLElement | null;

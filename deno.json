@@ -34,6 +34,7 @@
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
     "@std/http": "jsr:@std/http@^1.0.25",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.12",
+    "@tsparticles/confetti": "npm:@tsparticles/confetti@^3.9.1",
     "drizzle-kit": "npm:drizzle-kit@1.0.0-beta.21",
     "drizzle-orm": "npm:drizzle-orm@1.0.0-beta.21",
     "fresh": "jsr:@fresh/core@^2.2.0",

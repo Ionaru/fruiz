@@ -13,6 +13,7 @@ import type {
 } from "../lib/types.ts";
 import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
+import { GuessResultModal } from "./GuessResultModal.tsx";
 import QuizTrackNav from "./QuizTrackNav.tsx";
 import { SettingsGate } from "./SettingsGate.tsx";
 
@@ -156,6 +157,13 @@ export default function QuizController(props: Readonly<Props>) {
   const showResults = useSignal(false);
   const didHydrateStorage = useSignal(false);
 
+  type PopupResult = {
+    status: "correct" | "incorrect";
+    newCollectionAdd: boolean;
+    trackTitle: string;
+  };
+  const popupResult = useSignal<PopupResult | null>(null);
+
   useSignalEffect(() => {
     if (!didHydrateStorage.value) {
       try {
@@ -242,7 +250,6 @@ export default function QuizController(props: Readonly<Props>) {
     };
     next.score = scoreFromProgress(next);
     progress.value = next;
-    if (isComplete(next)) showResults.value = true;
   };
 
   const replayBlocked = (trackId: string) => {
@@ -332,11 +339,32 @@ export default function QuizController(props: Readonly<Props>) {
       selectedTitle: answerDraft.value,
       replayCount: progressRow.replayCount,
     }));
+
+    popupResult.value = {
+      status: isCorrect ? "correct" : "incorrect",
+      newCollectionAdd: false,
+      trackTitle: track.title,
+    };
+
     if (isCorrect && props.loggedIn) {
-      fetch(`/api/collection/${activeTrackId}`, { method: "POST" }).catch(
-        () => {},
-      );
+      (async () => {
+        try {
+          const response = await fetch(
+            `/api/collection/${activeTrackId}`,
+            { method: "POST" },
+          );
+          if (response.status === 201 && popupResult.value !== null) {
+            popupResult.value = {
+              ...popupResult.value,
+              newCollectionAdd: true,
+            };
+          }
+        } catch {
+          /* silent */
+        }
+      })();
     }
+
     answerDraft.value = "";
   };
 
@@ -555,6 +583,31 @@ export default function QuizController(props: Readonly<Props>) {
             )}
           </div>
         </AudioTrackPlayer>
+      )}
+
+      {popupResult.value !== null && (
+        <GuessResultModal
+          status={popupResult.value.status}
+          newCollectionAdd={popupResult.value.newCollectionAdd}
+          trackTitle={popupResult.value.trackTitle}
+          onDismiss={() => {
+            popupResult.value = null;
+            if (activeId.value && !isComplete(progress.value)) {
+              const nextId = findNextTrackAfterSkip(
+                props.tracks,
+                progress.value,
+                activeId.value,
+              );
+              activeId.value = nextId;
+              const nextRow = progress.value.tracks.find(
+                (entry) => entry.trackId === nextId,
+              );
+              answerDraft.value = nextRow?.selectedTitle ?? "";
+            } else {
+              showResults.value = true;
+            }
+          }}
+        />
       )}
     </div>
   );
