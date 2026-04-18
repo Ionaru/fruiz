@@ -2,11 +2,13 @@ import { Head } from "fresh/runtime";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
-import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
+import { AdminButton } from "../../../components/ui/AdminButton.tsx";
+import { NewCategoryButton } from "../../../components/admin/NewCategoryButton.tsx";
+
 export const handler = define.handlers({
   async GET(ctx) {
     const gate = requireAdminSessionOrRedirect(ctx);
@@ -25,12 +27,8 @@ export default define.page<typeof handler>(({ data }) => (
       title="Categories"
       actions={
         <>
-          <PillLink href="/admin">
-            Dashboard
-          </PillLink>
-          <PillLink href="/admin/categories/new">
-            New category
-          </PillLink>
+          <AdminButton />
+          <NewCategoryButton />
         </>
       }
     />

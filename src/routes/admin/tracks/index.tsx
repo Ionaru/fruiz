@@ -2,12 +2,13 @@ import { Head } from "fresh/runtime";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
-import { PillLink } from "../../../components/ui/PillLink.tsx";
 import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { resolvedPlaybackFromDbFields } from "../../../lib/quizPlayback.ts";
+import { AdminButton } from "../../../components/ui/AdminButton.tsx";
+import { NewTrackButton } from "../../../components/admin/NewTrackButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -37,12 +38,8 @@ export default define.page<typeof handler>(({ data }) => (
       title="Tracks"
       actions={
         <>
-          <PillLink href="/admin">
-            Dashboard
-          </PillLink>
-          <PillLink href="/admin/tracks/new">
-            New track
-          </PillLink>
+          <AdminButton />
+          <NewTrackButton />
         </>
       }
     />

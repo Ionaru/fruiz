@@ -115,7 +115,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
               >
                 <FaArrowLeft />
               </Button>
-              <div class="flex-1 grid grid-cols-20 py-1">
+              <div class="flex-1 grid grid-cols-20">
                 {props.tracks.map((track) => {
                   const progressRow = props.progress.value.tracks.find(
                     (entry) => entry.trackId === track.id,
@@ -150,7 +150,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
               </Button>
             </div>
             <Button
-              class="w-full"
+              class="w-full px-3 py-2 text-sm"
               onClick={() => {
                 trackNavExpanded.value = true;
               }}

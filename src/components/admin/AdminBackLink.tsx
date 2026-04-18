@@ -1,4 +1,5 @@
 import type { ComponentChildren } from "preact";
+import { FaArrowLeft } from "react-icons/fa";
 import { PillLink } from "../ui/PillLink.tsx";
 
 export interface AdminBackLinkProps {
@@ -8,7 +9,7 @@ export interface AdminBackLinkProps {
 
 export function AdminBackLink(props: Readonly<AdminBackLinkProps>) {
   return (
-    <PillLink href={props.href} class="w-fit">
+    <PillLink href={props.href} class="w-fit" icon={FaArrowLeft}>
       {props.children ?? "Back"}
     </PillLink>
   );

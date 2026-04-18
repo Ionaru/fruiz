@@ -10,9 +10,11 @@ import type { DifficultyMode } from "../lib/types.ts";
 import { encodeSlug, generateShortCode } from "../lib/slug.ts";
 import { Button } from "../components/Button.tsx";
 import { PageShell } from "../components/layout/PageShell.tsx";
-import { PillLink } from "../components/ui/PillLink.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import InProgressQuizSection from "../islands/InProgressQuizSection.tsx";
+import { AccountButton } from "../components/ui/AccountButton.tsx";
+import { CollectionButton } from "../components/ui/CollectionButton.tsx";
+import { AdminButton } from "../components/ui/AdminButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -57,22 +59,9 @@ export default define.page<typeof handler>(({ data }) => (
           Musical quiz
         </h1>
         <nav class="flex flex-wrap gap-2">
-          <PillLink href="/account" class="text-base-900 dark:text-base-100">
-            Account
-          </PillLink>
-          {data.loggedIn && (
-            <PillLink
-              href="/collection"
-              class="text-base-900 dark:text-base-100"
-            >
-              Collection
-            </PillLink>
-          )}
-          {data.showAdminLink && (
-            <PillLink href="/admin" class="text-base-900 dark:text-base-100">
-              Admin
-            </PillLink>
-          )}
+          {data.loggedIn && <CollectionButton />}
+          {data.showAdminLink && <AdminButton />}
+          <AccountButton />
         </nav>
       </div>
       {data.homeLimitQuery !== null && (

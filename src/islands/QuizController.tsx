@@ -359,7 +359,7 @@ export default function QuizController(props: Readonly<Props>) {
   }
 
   return (
-    <div class="space-y-6">
+    <div class="space-y-2 sm:space-y-6">
       <QuizTrackNav
         tracks={props.tracks}
         activeId={activeId}

@@ -1,10 +1,13 @@
 import { Head } from "fresh/runtime";
 import { AdminPageShell } from "../../components/admin/AdminPageShell.tsx";
-import { PillLink } from "../../components/ui/PillLink.tsx";
 import { define } from "../../utils.ts";
 import { db } from "../../db/db.ts";
 import { listAdminCategories, listAdminTracks } from "../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../lib/adminSession.ts";
+import { HomeButton } from "../../components/ui/HomeButton.tsx";
+import { AccountButton } from "../../components/ui/AccountButton.tsx";
+import { ManageCategoriesButton } from "../../components/admin/ManageCategoriesButton.tsx";
+import { ManageTracksButton } from "../../components/admin/ManageTracksButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -37,12 +40,8 @@ export default define.page<typeof handler>(({ data }) => (
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <PillLink href="/" class="text-base-900 dark:text-base-100">
-          Home
-        </PillLink>
-        <PillLink href="/account" class="text-base-900 dark:text-base-100">
-          Account
-        </PillLink>
+        <HomeButton />
+        <AccountButton />
       </div>
     </header>
     <section class="plateau rounded-2xl p-5 space-y-3">
@@ -53,15 +52,8 @@ export default define.page<typeof handler>(({ data }) => (
         {data.categories.length} categories · {data.tracks.length} tracks
       </p>
       <div class="flex flex-wrap gap-2">
-        <PillLink
-          href="/admin/categories"
-          class="text-base-900 dark:text-base-100"
-        >
-          Manage categories
-        </PillLink>
-        <PillLink href="/admin/tracks" class="text-base-900 dark:text-base-100">
-          Manage tracks
-        </PillLink>
+        <ManageCategoriesButton />
+        <ManageTracksButton />
       </div>
     </section>
   </AdminPageShell>

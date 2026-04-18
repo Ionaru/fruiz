@@ -3,8 +3,9 @@ import { define } from "../utils.ts";
 import { db } from "../db/db.ts";
 import { PageShell } from "../components/layout/PageShell.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
-import { PillLink } from "../components/ui/PillLink.tsx";
 import CollectionView from "../islands/CollectionView.tsx";
+import { HomeButton } from "../components/ui/HomeButton.tsx";
+import { AccountButton } from "../components/ui/AccountButton.tsx";
 
 export interface CollectionTrack {
   id: string;
@@ -70,12 +71,8 @@ export default define.page<typeof handler>(({ data }) => (
           Collection
         </h1>
         <nav class="flex flex-wrap gap-2">
-          <PillLink href="/" class="text-base-900 dark:text-base-100">
-            Home
-          </PillLink>
-          <PillLink href="/account" class="text-base-900 dark:text-base-100">
-            Account
-          </PillLink>
+          <HomeButton />
+          <AccountButton />
         </nav>
       </div>
       {data.tracks.length === 0

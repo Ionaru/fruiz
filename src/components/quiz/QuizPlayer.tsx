@@ -1,9 +1,9 @@
 import type { ComponentChildren } from "preact";
-import { FaArrowLeft } from "react-icons/fa";
 import { PageShell } from "../layout/PageShell.tsx";
 import { PlateauCard } from "../ui/PlateauCard.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
 import type { DifficultyMode } from "../../lib/types.ts";
+import { HomeButton } from "../ui/HomeButton.tsx";
 
 export interface QuizPlayerProps {
   category: CategoryRow;
@@ -20,14 +20,10 @@ const DIFFICULTY_DETAILS: Record<DifficultyMode, string> = {
 export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
   return (
     <PageShell paddingY="6">
-      <div class="max-w-lg mx-auto flex flex-col gap-6 text-base-900 dark:text-base-100">
-        <a
-          href="/"
-          class="plateau rounded-full px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center gap-2 text-base-900 dark:text-base-100"
-        >
-          <FaArrowLeft />
-          Back to home
-        </a>
+      <div class="max-w-lg mx-auto flex flex-col gap-2 sm:gap-6 text-base-900 dark:text-base-100">
+        <nav class="w-full">
+          <HomeButton />
+        </nav>
         <PlateauCard padding="5" variant="info">
           <h1 class="text-2xl font-semibold text-center">
             {props.category.name}
