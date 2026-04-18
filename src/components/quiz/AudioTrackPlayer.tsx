@@ -12,10 +12,10 @@ export interface AudioTrackPlayerProps {
 export function AudioTrackPlayer(props: Readonly<AudioTrackPlayerProps>) {
   return (
     <PlateauCard padding="4" class="space-y-3">
-      <h3 class="text-lg font-semibold">
+      <h3 class="text-lg font-semibold text-center">
         Clip {props.clipNumber} of {props.clipTotal}
       </h3>
-      <p class="text-sm opacity-90">
+      <p class="text-sm opacity-90 text-center">
         Listen, then type your guess below.
       </p>
       {props.children}

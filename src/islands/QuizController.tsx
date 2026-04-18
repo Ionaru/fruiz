@@ -25,8 +25,8 @@ import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
 import { GuessResultModal } from "./GuessResultModal.tsx";
 import QuizTrackNav from "./QuizTrackNav.tsx";
-import { QuizResults } from "./QuizResults.tsx";
-import { SettingsGate } from "./SettingsGate.tsx";
+import { QuizResults } from "../components/quiz/QuizResults.tsx";
+import { SettingsGate } from "../components/quiz/SettingsGate.tsx";
 
 interface PopupResult {
   status: "correct" | "incorrect";
@@ -201,6 +201,14 @@ export default function QuizController(props: Readonly<Props>) {
     if (isComplete(nextProgress)) showResults.value = true;
     advanceToTrack(
       findNextTrackAfterSkip(props.tracks, nextProgress, activeTrackId),
+    );
+  };
+
+  const onNext = () => {
+    const activeTrackId = activeId.value;
+    if (!activeTrackId) return;
+    advanceToTrack(
+      findNextTrackAfterSkip(props.tracks, progress.value, activeTrackId),
     );
   };
 
@@ -394,29 +402,12 @@ export default function QuizController(props: Readonly<Props>) {
             }}
           />
           {showEndQuiz && (
-            <p class="text-sm opacity-80">
+            <p class="text-sm opacity-80 text-center">
               No clips left to discover—only skipped ones remain. End the quiz
               to count them as incorrect, or answer a skipped clip above.
             </p>
           )}
-          <div class="flex flex-wrap gap-3">
-            <Button
-              variant="success"
-              class="px-6"
-              title={submitTitle}
-              disabled={answerLocked || !canSubmitGuess}
-              onClick={onSubmit}
-            >
-              Submit
-            </Button>
-            <Button
-              variant="warning"
-              class="px-6"
-              disabled={answerLocked}
-              onClick={onSkip}
-            >
-              Skip
-            </Button>
+          <div class="flex flex-wrap gap-3 justify-center">
             {showEndQuiz && (
               <Button
                 variant="danger"
@@ -425,6 +416,35 @@ export default function QuizController(props: Readonly<Props>) {
                 onClick={onEndQuiz}
               >
                 End quiz
+              </Button>
+            )}
+            {!answerLocked && (
+              <>
+                <Button
+                  variant="warning"
+                  class="px-6"
+                  onClick={onSkip}
+                >
+                  Skip
+                </Button>
+                <Button
+                  variant="success"
+                  class="px-6"
+                  title={submitTitle}
+                  disabled={!canSubmitGuess}
+                  onClick={onSubmit}
+                >
+                  Submit
+                </Button>
+              </>
+            )}
+            {answerLocked && (
+              <Button
+                variant="info"
+                class="px-6"
+                onClick={onNext}
+              >
+                Next
               </Button>
             )}
           </div>

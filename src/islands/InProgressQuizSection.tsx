@@ -1,18 +1,8 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
-import { Button } from "../components/Button.tsx";
+import { InProgressQuizItem } from "../components/quiz/InProgressQuizItem.tsx";
 import { decodeSlug } from "../lib/slug.ts";
 import { STORAGE_KEY_PREFIX } from "../lib/quizProgress.ts";
-import type { QuizProgress } from "../lib/types.ts";
-
-interface InProgressQuizEntry {
-  storageKey: string;
-  quizPath: string;
-  category: string;
-  slug: string;
-  difficulty: string;
-  answered: number;
-  total: number;
-}
+import type { InProgressQuizEntry, QuizProgress } from "../lib/types.ts";
 
 function parseQuizPathParts(
   quizPath: string,
@@ -135,44 +125,13 @@ export default function InProgressQuizSection() {
       </h2>
       <ul class="space-y-3">
         {entries.value.map((entry) => (
-          <li
+          <InProgressQuizItem
             key={entry.storageKey}
-            class="plateau rounded-xl px-3 py-3 space-y-3"
-          >
-            <div class="text-sm space-y-1 wrap-break-word">
-              <p class="font-medium capitalize">{entry.category}</p>
-              <p class="opacity-90">
-                Difficulty: <span class="capitalize">{entry.difficulty}</span>
-              </p>
-              <p class="opacity-90">
-                Progress: {entry.answered}/{entry.total}
-              </p>
-              <p class="opacity-80">Quiz code: {entry.slug}</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <Button
-                variant="info"
-                class="px-3 py-2 text-sm"
-                onClick={() => onResume(entry.quizPath)}
-              >
-                Resume
-              </Button>
-              <Button
-                variant="success"
-                class="px-3 py-2 text-sm"
-                onClick={() => void onShare(entry.quizPath)}
-              >
-                Share
-              </Button>
-              <Button
-                variant="danger"
-                class="px-3 py-2 text-sm"
-                onClick={() => onDelete(entry.storageKey)}
-              >
-                Delete
-              </Button>
-            </div>
-          </li>
+            entry={entry}
+            onResume={onResume}
+            onDelete={onDelete}
+            onShare={(quizPath) => void onShare(quizPath)}
+          />
         ))}
       </ul>
     </div>

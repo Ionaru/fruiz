@@ -74,7 +74,7 @@ export const handler = define.handlers({
 export default define.page<typeof handler>(({ data }) => (
   <>
     <Head>
-      <title>{data.category.name} quiz — fruiz</title>
+      <title>{data.category.name} quiz — Fruiz</title>
       <meta name="description" content={data.shareMeta.description} />
       <meta property="og:title" content={data.shareMeta.title} />
       <meta property="og:description" content={data.shareMeta.description} />

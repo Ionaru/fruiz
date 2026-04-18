@@ -1,4 +1,5 @@
 import { useComputed, useSignal } from "@preact/signals";
+import { CollectionTrackItem } from "../components/collection/CollectionTrackItem.tsx";
 import type { CollectionTrack } from "../routes/collection.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
 
@@ -62,17 +63,11 @@ export default function CollectionView({ tracks }: Readonly<Props>) {
       </p>
       <ul class="flex flex-col gap-3">
         {filtered.value.map((track) => (
-          <li key={track.id} class="plateau rounded-2xl p-4 space-y-3">
-            <div>
-              <p class="font-medium text-base-900 dark:text-base-100">
-                {track.title}
-              </p>
-              {track.categories.length > 0 && (
-                <p class="text-xs opacity-70 mt-1">
-                  {track.categories.join(", ")}
-                </p>
-              )}
-            </div>
+          <CollectionTrackItem
+            key={track.id}
+            title={track.title}
+            categories={track.categories}
+          >
             <AudioPlayer
               audioId={track.id}
               playbackGainDb={track.playbackGainDb}
@@ -82,7 +77,7 @@ export default function CollectionView({ tracks }: Readonly<Props>) {
               playbackGainSourceMtimeMs={track.playbackGainSourceMtimeMs}
               compact
             />
-          </li>
+          </CollectionTrackItem>
         ))}
       </ul>
     </div>

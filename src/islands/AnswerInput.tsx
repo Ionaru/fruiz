@@ -16,8 +16,9 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
   const inputId = `answer-${props.instanceId}`;
   return (
     <div class="flex flex-col gap-2">
-      <FieldGroup label="Your answer" htmlFor={inputId}>
+      <FieldGroup label="Your answer" htmlFor={inputId} center>
         <TextInput
+          class="text-center"
           id={inputId}
           type="text"
           list={listId}

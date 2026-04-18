@@ -1,7 +1,9 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { confetti } from "@tsparticles/confetti";
-import { Button } from "../components/Button.tsx";
-import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import {
+  GUESS_RESULT_HEADLINE_ID,
+  GuessResultContent,
+} from "../components/quiz/GuessResultContent.tsx";
 import { isInteractiveFocus } from "../lib/keyboard.ts";
 
 export type GuessResultStatus = "correct" | "incorrect";
@@ -13,7 +15,6 @@ export interface GuessResultModalProps {
   onDismiss: () => void;
 }
 
-const HEADLINE_ID = "guess-result-headline";
 const INCORRECT_AUTO_DISMISS_MS = 3000;
 
 export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
@@ -83,8 +84,6 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
   });
 
   const isCorrect = props.status === "correct";
-  const headline = isCorrect ? "Correct!" : "Not quite";
-  const variantClass = isCorrect ? "success" : "danger";
 
   return (
     <dialog
@@ -92,7 +91,7 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
         dialogRef.value = element;
       }}
       class="fixed inset-0 z-50 m-0 h-full w-full max-h-full max-w-full bg-transparent backdrop:backdrop-blur-sm flex items-center justify-center"
-      aria-labelledby={HEADLINE_ID}
+      aria-labelledby={GUESS_RESULT_HEADLINE_ID}
     >
       {isCorrect && (
         <canvas
@@ -102,35 +101,12 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
           class="absolute inset-0 w-full h-full pointer-events-none"
         />
       )}
-      <PlateauCard
-        class={`${variantClass} w-full max-w-sm space-y-4 text-center mx-4 z-50`}
-      >
-        <div class="space-y-4">
-          <h2 id={HEADLINE_ID} class="text-2xl font-bold">
-            {headline}
-          </h2>
-          {isCorrect
-            ? (
-              <>
-                <p class="text-lg font-medium">{props.trackTitle}</p>
-                {props.newCollectionAdd && (
-                  <p class="text-sm opacity-90">
-                    Added to your collection.
-                  </p>
-                )}
-                <Button
-                  class="w-full"
-                  variant="success"
-                  autofocus
-                  onClick={props.onDismiss}
-                >
-                  Continue
-                </Button>
-              </>
-            )
-            : <p class="text-sm opacity-90">Keep listening.</p>}
-        </div>
-      </PlateauCard>
+      <GuessResultContent
+        isCorrect={isCorrect}
+        trackTitle={props.trackTitle}
+        newCollectionAdd={props.newCollectionAdd}
+        onDismiss={props.onDismiss}
+      />
     </dialog>
   );
 }

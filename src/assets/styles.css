@@ -4,6 +4,7 @@
 @source inline("shadow-none");
 
 @theme {
+  --breakpoint-xs: 30rem;
   --color-base-50: theme(colors.zinc.50);
   --color-base-100: theme(colors.zinc.100);
   --color-base-200: theme(colors.zinc.200);

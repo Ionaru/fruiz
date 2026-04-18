@@ -130,7 +130,7 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                     <Button
                       key={track.id}
                       type="button"
-                      class={`h-12 w-3 p-0! ${plateauVariant} ${
+                      class={`h-12 p-0! m-0.25 xs:m-0.5 ${plateauVariant} ${
                         isActiveTrack
                           ? "ring-2 ring-base-500 dark:ring-base-300"
                           : ""

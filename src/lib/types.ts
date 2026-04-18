@@ -1,5 +1,15 @@
 export type DifficultyMode = "easy" | "hard" | "mixed";
 
+export interface InProgressQuizEntry {
+  storageKey: string;
+  quizPath: string;
+  category: string;
+  slug: string;
+  difficulty: string;
+  answered: number;
+  total: number;
+}
+
 export interface QuizIdentity {
   categorySlug: string;
   difficulty: DifficultyMode;

@@ -1,9 +1,9 @@
-import { Button } from "../components/Button.tsx";
-import { scoreFromProgress } from "../lib/quizProgress.ts";
-import { variantForStatus } from "../lib/quiz_ui.ts";
-import type { QuizProgress, QuizTrackPayload } from "../lib/types.ts";
+import { Button } from "../Button.tsx";
+import { scoreFromProgress } from "../../lib/quizProgress.ts";
+import { variantForStatus } from "../../lib/quiz_ui.ts";
+import type { QuizProgress, QuizTrackPayload } from "../../lib/types.ts";
 
-interface QuizResultsProps {
+export interface QuizResultsProps {
   tracks: QuizTrackPayload[];
   progress: QuizProgress;
   loggedIn: boolean;

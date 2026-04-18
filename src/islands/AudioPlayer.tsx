@@ -396,7 +396,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
 
   const pad = props.compact ? "px-4 py-2" : "px-8";
   return (
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 items-center">
       {formPlaybackError.value && (
         <p class="text-sm text-red-700 dark:text-red-300" role="alert">
           {formPlaybackError.value}
