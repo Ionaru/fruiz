@@ -137,6 +137,8 @@ export async function getTracksForCategory(
     playbackGainDb: number | null;
     playStartSeconds: number | null;
     maxPlaySeconds: number | null;
+    playbackGainSourceSize: number | null;
+    playbackGainSourceMtimeMs: number | null;
   }[]
 > {
   const category = await db.query.categories.findFirst({
@@ -156,6 +158,8 @@ export async function getTracksForCategory(
     playbackGainDb: t.playbackGainDb,
     playStartSeconds: t.playStartSeconds,
     maxPlaySeconds: t.maxPlaySeconds,
+    playbackGainSourceSize: t.playbackGainSourceSize,
+    playbackGainSourceMtimeMs: t.playbackGainSourceMtimeMs,
   }));
 }
 

@@ -62,6 +62,8 @@ export default define.page<typeof handler>(({ data }) => (
                   playStartSeconds: track.playStartSeconds,
                   maxPlaySeconds: track.maxPlaySeconds,
                 })}
+                playbackGainSourceSize={track.playbackGainSourceSize}
+                playbackGainSourceMtimeMs={track.playbackGainSourceMtimeMs}
               />
             </div>
             <a

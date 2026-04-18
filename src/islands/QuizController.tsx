@@ -372,6 +372,9 @@ export default function QuizController(props: Readonly<Props>) {
                 playbackGainDb={currentTrack.playbackGainDb}
                 playStartSeconds={currentTrack.playStartSeconds}
                 maxPlaySeconds={currentTrack.maxPlaySeconds}
+                playbackGainSourceSize={currentTrack.playbackGainSourceSize}
+                playbackGainSourceMtimeMs={currentTrack
+                  .playbackGainSourceMtimeMs}
                 disabled={answerLocked || replayBlocked(currentTrack.id)}
                 onPlayStart={() => onPlayStart(currentTrack.id)}
               />

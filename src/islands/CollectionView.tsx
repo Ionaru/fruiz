@@ -78,6 +78,8 @@ export default function CollectionView({ tracks }: Readonly<Props>) {
               playbackGainDb={track.playbackGainDb}
               playStartSeconds={0}
               maxPlaySeconds={FULL_PLAY_MAX}
+              playbackGainSourceSize={track.playbackGainSourceSize}
+              playbackGainSourceMtimeMs={track.playbackGainSourceMtimeMs}
               compact
             />
           </li>

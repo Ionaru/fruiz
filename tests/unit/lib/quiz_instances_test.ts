@@ -14,6 +14,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       playbackGainDb: null as number | null,
       playStartSeconds: null as number | null,
       maxPlaySeconds: null as number | null,
+      playbackGainSourceSize: null,
+      playbackGainSourceMtimeMs: null,
     },
     {
       trackId: "track-2",
@@ -24,6 +26,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       playbackGainDb: null as number | null,
       playStartSeconds: null as number | null,
       maxPlaySeconds: null as number | null,
+      playbackGainSourceSize: null,
+      playbackGainSourceMtimeMs: null,
     },
   ];
 
@@ -39,6 +43,8 @@ Deno.test("snapshot payload remains stable when extra tracks exist", () => {
       playbackGainDb: null as number | null,
       playStartSeconds: null as number | null,
       maxPlaySeconds: null as number | null,
+      playbackGainSourceSize: null,
+      playbackGainSourceMtimeMs: null,
     },
   ].slice(0, 2));
 
@@ -56,6 +62,8 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
       playbackGainDb: null,
       playStartSeconds: null,
       maxPlaySeconds: null,
+      playbackGainSourceSize: null,
+      playbackGainSourceMtimeMs: null,
     },
   ]);
 
@@ -68,5 +76,7 @@ Deno.test("snapshot payload marks missing track as unavailable", () => {
     playbackGainDb: null,
     playStartSeconds: 0,
     maxPlaySeconds: DEFAULT_MAX_PLAY_SECONDS,
+    playbackGainSourceSize: null,
+    playbackGainSourceMtimeMs: null,
   }]);
 });

@@ -12,6 +12,8 @@ export interface CollectionTrack {
   audioUrl: string;
   playbackGainDb: number | null;
   categories: string[];
+  playbackGainSourceSize: number | null;
+  playbackGainSourceMtimeMs: number | null;
 }
 
 export const handler = define.handlers({
@@ -31,6 +33,8 @@ export const handler = define.handlers({
             title: true,
             audioUrl: true,
             playbackGainDb: true,
+            playbackGainSourceSize: true,
+            playbackGainSourceMtimeMs: true,
           },
           with: { categories: { columns: { name: true } } },
         },
@@ -46,6 +50,8 @@ export const handler = define.handlers({
         audioUrl: row.track.audioUrl,
         playbackGainDb: row.track.playbackGainDb,
         categories: row.track.categories.map((cat) => cat.name),
+        playbackGainSourceSize: row.track.playbackGainSourceSize,
+        playbackGainSourceMtimeMs: row.track.playbackGainSourceMtimeMs,
       });
     }
 

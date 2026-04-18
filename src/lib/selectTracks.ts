@@ -10,6 +10,8 @@ export interface SelectableTrack {
   playbackGainDb: number | null;
   playStartSeconds: number | null;
   maxPlaySeconds: number | null;
+  playbackGainSourceSize: number | null;
+  playbackGainSourceMtimeMs: number | null;
 }
 
 /**
@@ -61,6 +63,8 @@ export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
       playbackGainDb: track.playbackGainDb,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
+      playbackGainSourceSize: track.playbackGainSourceSize,
+      playbackGainSourceMtimeMs: track.playbackGainSourceMtimeMs,
     };
   });
 }

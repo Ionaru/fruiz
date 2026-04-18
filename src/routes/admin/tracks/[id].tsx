@@ -5,15 +5,21 @@ import { db } from "../../../db/db.ts";
 import { trackCategories, tracks } from "../../../db/schema.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
-import { analyzeAndStorePlaybackGainForTrack } from "../../../lib/playbackGainAnalysis.ts";
-import { parseTrackPlaybackFormFields } from "../../../lib/quizPlayback.ts";
+import {
+  analyzeAndStorePlaybackGainForTrack,
+  fingerprintFromFileInfo,
+} from "../../../lib/playbackGainAnalysis.ts";
+import { absolutePathFromTracksAudioUrl } from "../../../lib/audioFilePath.ts";
+import {
+  parseTrackPlaybackFormFields,
+  resolvedPlaybackFromDbFields,
+} from "../../../lib/quizPlayback.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
 import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
 import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
-import { resolvedPlaybackFromDbFields } from "../../../lib/quizPlayback.ts";
 import TrackForm from "../../../islands/TrackForm.tsx";
 
 const TRACK_EDIT_FORM_ID = "track-edit-form";
@@ -101,12 +107,39 @@ export const handler = define.handlers({
         302,
       );
     }
+    const existingTrack = await db.query.tracks.findFirst({
+      where: { id },
+      columns: { audioUrl: true },
+    });
+    const audioUrlChanged = existingTrack?.audioUrl !== audioUrl;
+
+    const freshFingerprint = await (async () => {
+      if (!audioUrlChanged) return {};
+      try {
+        const absolutePath = absolutePathFromTracksAudioUrl(audioUrl);
+        const fileInfo = await Deno.stat(absolutePath);
+        const fp = fingerprintFromFileInfo(fileInfo);
+        return {
+          playbackGainSourceSize: fp?.size ?? null,
+          playbackGainSourceMtimeMs: fp?.mtimeMs ?? null,
+          playbackGainDb: null,
+        };
+      } catch {
+        return {
+          playbackGainSourceSize: null,
+          playbackGainSourceMtimeMs: null,
+          playbackGainDb: null,
+        };
+      }
+    })();
+
     await db.update(tracks).set({
       title,
       audioUrl,
       difficulty,
       playStartSeconds: playbackParsed.playStartSeconds,
       maxPlaySeconds: playbackParsed.maxPlaySeconds,
+      ...freshFingerprint,
     }).where(
       eq(tracks.id, id),
     );
@@ -180,6 +213,8 @@ export default define.page<typeof handler>(({ data }) => (
             playStartSeconds: data.track.playStartSeconds,
             maxPlaySeconds: data.track.maxPlaySeconds,
           })}
+          playbackGainSourceSize={data.track.playbackGainSourceSize}
+          playbackGainSourceMtimeMs={data.track.playbackGainSourceMtimeMs}
           syncPlaybackFromFormId={TRACK_EDIT_FORM_ID}
         />
       </PlateauCard>

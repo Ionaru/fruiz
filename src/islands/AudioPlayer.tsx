@@ -1,5 +1,6 @@
 import { effect, useSignal, useSignalEffect } from "@preact/signals";
 import { useSignalRef } from "@preact/signals/utils";
+import { buildListenSrc } from "../lib/audioListenUrl.ts";
 
 import { Button } from "../components/Button.tsx";
 import {
@@ -129,6 +130,10 @@ interface AudioPlayerProps {
    * when the form is missing or fields are invalid (play is blocked if invalid).
    */
   syncPlaybackFromFormId?: string;
+  /** Byte size of the audio file — used to cache-bust the listen URL. */
+  playbackGainSourceSize?: number | null;
+  /** mtime of the audio file in ms since epoch — used to cache-bust the listen URL. */
+  playbackGainSourceMtimeMs?: number | null;
 }
 
 export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
@@ -404,7 +409,11 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       >
         <audio
           ref={audioRef}
-          src={`/api/listen/${props.audioId}`}
+          src={buildListenSrc({
+            id: props.audioId,
+            playbackGainSourceSize: props.playbackGainSourceSize ?? null,
+            playbackGainSourceMtimeMs: props.playbackGainSourceMtimeMs ?? null,
+          })}
           preload="metadata"
         />
         {(playState.value === PlayState.Idle ||

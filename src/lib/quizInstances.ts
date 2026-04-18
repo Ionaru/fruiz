@@ -31,6 +31,8 @@ export interface SnapshotTrackRow {
   playbackGainDb: number | null;
   playStartSeconds: number | null;
   maxPlaySeconds: number | null;
+  playbackGainSourceSize: number | null;
+  playbackGainSourceMtimeMs: number | null;
 }
 
 export function toSnapshotQuizPayload(
@@ -54,6 +56,8 @@ export function toSnapshotQuizPayload(
         playbackGainDb: snapshotRow.playbackGainDb,
         playStartSeconds: playback.playStartSeconds,
         maxPlaySeconds: playback.maxPlaySeconds,
+        playbackGainSourceSize: snapshotRow.playbackGainSourceSize,
+        playbackGainSourceMtimeMs: snapshotRow.playbackGainSourceMtimeMs,
       };
     }
     const playback = resolvedPlaybackFromDbFields({});
@@ -66,6 +70,8 @@ export function toSnapshotQuizPayload(
       playbackGainDb: null,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
+      playbackGainSourceSize: null,
+      playbackGainSourceMtimeMs: null,
     };
   });
 }
@@ -123,6 +129,8 @@ async function createQuizInstance(
         playbackGainDb: selectedTrack.playbackGainDb,
         playStartSeconds: playback.playStartSeconds,
         maxPlaySeconds: playback.maxPlaySeconds,
+        playbackGainSourceSize: selectedTrack.playbackGainSourceSize,
+        playbackGainSourceMtimeMs: selectedTrack.playbackGainSourceMtimeMs,
       };
     }),
   };
@@ -155,6 +163,8 @@ export async function getQuizInstance(
     playbackGainDb: tracks.playbackGainDb,
     playStartSeconds: tracks.playStartSeconds,
     maxPlaySeconds: tracks.maxPlaySeconds,
+    playbackGainSourceSize: tracks.playbackGainSourceSize,
+    playbackGainSourceMtimeMs: tracks.playbackGainSourceMtimeMs,
   }).from(quizInstanceTracks)
     .leftJoin(tracks, eq(tracks.id, quizInstanceTracks.trackId))
     .where(eq(quizInstanceTracks.quizInstanceId, instance.id))

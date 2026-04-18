@@ -42,4 +42,8 @@ export interface QuizTrackPayload {
   playStartSeconds: number;
   /** Resolved max clip length in seconds (includes fade-in/out). */
   maxPlaySeconds: number;
+  /** Byte size of the audio file when gain was last computed or fingerprint seeded. */
+  playbackGainSourceSize: number | null;
+  /** mtime of the audio file in ms since epoch; null if unknown. */
+  playbackGainSourceMtimeMs: number | null;
 }
