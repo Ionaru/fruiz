@@ -30,12 +30,31 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
     if (props.status === "correct") {
       const canvas = canvasRef.value;
       if (canvas) {
+        // Unique id per mount: tsparticles caches Container by canvas id in a
+        // module-level Map. Reusing the default "confetti" id on remount
+        // returns a stale Container tied to the prior detached canvas, so no
+        // particles render the second time.
+        canvas.id = `guess-confetti-${crypto.randomUUID()}`;
         void confetti.create(canvas, {}).then((fire) => {
           void fire({ count: 150, spread: 360, position: { x: 50, y: 50 } });
         });
       }
     }
-    return () => dialog.close();
+    return () => {
+      dialog.close();
+      // Destroy any lingering tsparticles containers. Each `confetti.create`
+      // allocates a Container with its own requestAnimationFrame loop; the
+      // library never destroys them, so they accumulate across mounts. Detached
+      // canvas + throttled rAF during tab idle + a new mount on return can
+      // stall the main thread. The modal is the only confetti consumer, so
+      // destroying every known container is safe.
+      const engine = (globalThis as {
+        tsParticles?: {
+          dom(): Array<{ destroy(remove?: boolean): void }>;
+        };
+      }).tsParticles;
+      engine?.dom().forEach((container) => container.destroy(false));
+    };
   });
 
   // Auto-dismiss for incorrect guesses.
