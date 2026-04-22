@@ -168,6 +168,8 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
                     class={optionClass}
                     onPointerDown={(event) => {
                       event.preventDefault();
+                    }}
+                    onClick={() => {
                       selectAt(index);
                     }}
                     onPointerEnter={() => {
