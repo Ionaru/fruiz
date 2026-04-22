@@ -37,3 +37,9 @@ Deno.test("guessMatchesSuggestionPool: duplicate pool titles still match", () =>
 Deno.test("guessMatchesSuggestionPool: empty suggestions list", () => {
   assertEquals(guessMatchesSuggestionPool("Anything", []), false);
 });
+
+Deno.test("guessMatchesSuggestionPool: diacritic-insensitive", () => {
+  assertEquals(guessMatchesSuggestionPool("pokemon", ["Pokémon"]), true);
+  assertEquals(guessMatchesSuggestionPool("Pokémon", ["Pokemon"]), true);
+  assertEquals(guessMatchesSuggestionPool("beyonce", ["Beyoncé"]), true);
+});

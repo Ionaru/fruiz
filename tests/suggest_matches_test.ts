@@ -67,3 +67,12 @@ Deno.test("suggestMatches: duplicate titles are both returned (filtering is not 
 Deno.test("suggestMatches: empty suggestions pool returns []", () => {
   assertEquals(suggestMatches("anything", [], 20), []);
 });
+
+Deno.test("suggestMatches: diacritic-insensitive", () => {
+  assertEquals(suggestMatches("poke", ["Pokémon", "Poker Face"], 20), [
+    "Pokémon",
+    "Poker Face",
+  ]);
+  assertEquals(suggestMatches("pokemon", ["Pokémon"], 20), ["Pokémon"]);
+  assertEquals(suggestMatches("amélie", ["Amelie"], 20), ["Amelie"]);
+});
