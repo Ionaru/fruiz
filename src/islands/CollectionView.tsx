@@ -1,15 +1,18 @@
 import { useComputed, useSignal } from "@preact/signals";
 import { CollectionTrackItem } from "../components/collection/CollectionTrackItem.tsx";
-import type { CollectionTrack } from "../routes/collection.tsx";
+import type { CategoryCount, CollectionTrack } from "../routes/collection.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
 
 const FULL_PLAY_MAX = 86400;
 
 interface Props {
   tracks: CollectionTrack[];
+  categoryCounts: Record<string, CategoryCount>;
 }
 
-export default function CollectionView({ tracks }: Readonly<Props>) {
+export default function CollectionView(
+  { tracks, categoryCounts }: Readonly<Props>,
+) {
   const activeCategory = useSignal<string | null>(null);
 
   const allCategories = useComputed(() => {
@@ -26,6 +29,18 @@ export default function CollectionView({ tracks }: Readonly<Props>) {
     return tracks.filter((track) => track.categories.includes(cat));
   });
 
+  const allTotals = useComputed(() => {
+    let collected = 0;
+    let total = 0;
+    for (const name of allCategories.value) {
+      const count = categoryCounts[name];
+      if (!count) continue;
+      collected += count.collected;
+      total += count.total;
+    }
+    return { collected, total };
+  });
+
   return (
     <div class="flex flex-col gap-4">
       {allCategories.value.length > 1 && (
@@ -39,22 +54,27 @@ export default function CollectionView({ tracks }: Readonly<Props>) {
               activeCategory.value = null;
             }}
           >
-            All
+            All ({allTotals.value.collected}/{allTotals.value.total})
           </button>
-          {allCategories.value.map((category) => (
-            <button
-              key={category}
-              type="button"
-              class={`plateau rounded-full px-4 py-2 text-sm whitespace-nowrap min-h-10 ${
-                activeCategory.value === category ? "font-bold" : ""
-              }`}
-              onClick={() => {
-                activeCategory.value = category;
-              }}
-            >
-              {category}
-            </button>
-          ))}
+          {allCategories.value.map((category) => {
+            const count = categoryCounts[category];
+            return (
+              <button
+                key={category}
+                type="button"
+                class={`plateau rounded-full px-4 py-2 text-sm whitespace-nowrap min-h-10 ${
+                  activeCategory.value === category ? "font-bold" : ""
+                }`}
+                onClick={() => {
+                  activeCategory.value = category;
+                }}
+              >
+                {count
+                  ? `${category} (${count.collected}/${count.total})`
+                  : category}
+              </button>
+            );
+          })}
         </nav>
       )}
       <p class="text-sm opacity-80">

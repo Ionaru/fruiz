@@ -28,10 +28,17 @@ import QuizTrackNav from "./QuizTrackNav.tsx";
 import { QuizResults } from "../components/quiz/QuizResults.tsx";
 import { SettingsGate } from "../components/quiz/SettingsGate.tsx";
 
+interface CategoryProgress {
+  categoryName: string;
+  collected: number;
+  total: number;
+}
+
 interface PopupResult {
   status: "correct" | "incorrect";
   newCollectionAdd: boolean;
   trackTitle: string;
+  progress: CategoryProgress | null;
 }
 
 interface Props {
@@ -244,17 +251,38 @@ export default function QuizController(props: Readonly<Props>) {
       status: isCorrect ? "correct" : "incorrect",
       newCollectionAdd: false,
       trackTitle: track.title,
+      progress: null,
     };
 
     if (isCorrect && props.loggedIn) {
-      void fetch(`/api/collection/${activeTrackId}`, { method: "POST" })
-        .then((response) => {
-          if (response.status === 201 && popupResult.value !== null) {
-            popupResult.value = {
-              ...popupResult.value,
-              newCollectionAdd: true,
-            };
-          }
+      const collectionUrl = `/api/collection/${
+        encodeURIComponent(activeTrackId)
+      }?categorySlug=${encodeURIComponent(props.identity.categorySlug)}`;
+      void fetch(collectionUrl, { method: "POST" })
+        .then(async (response) => {
+          if (response.status !== 201 || popupResult.value === null) return;
+          let progress: CategoryProgress | null = null;
+          try {
+            const body = await response.json();
+            if (
+              body && typeof body === "object" && body.progress &&
+              typeof body.progress.categoryName === "string" &&
+              typeof body.progress.collected === "number" &&
+              typeof body.progress.total === "number"
+            ) {
+              progress = {
+                categoryName: body.progress.categoryName,
+                collected: body.progress.collected,
+                total: body.progress.total,
+              };
+            }
+          } catch { /* ignore malformed body, still show basic add line */ }
+          if (popupResult.value === null) return;
+          popupResult.value = {
+            ...popupResult.value,
+            newCollectionAdd: true,
+            progress,
+          };
         })
         .catch(() => {/* silent */});
     }
@@ -456,6 +484,7 @@ export default function QuizController(props: Readonly<Props>) {
           status={popupResult.value.status}
           newCollectionAdd={popupResult.value.newCollectionAdd}
           trackTitle={popupResult.value.trackTitle}
+          progress={popupResult.value.progress}
           onDismiss={onDismissPopup}
         />
       )}

@@ -12,6 +12,11 @@ export interface GuessResultModalProps {
   status: GuessResultStatus;
   newCollectionAdd: boolean;
   trackTitle: string;
+  progress: {
+    categoryName: string;
+    collected: number;
+    total: number;
+  } | null;
   onDismiss: () => void;
 }
 
@@ -124,6 +129,7 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
         isCorrect={isCorrect}
         trackTitle={props.trackTitle}
         newCollectionAdd={props.newCollectionAdd}
+        progress={props.progress}
         onDismiss={props.onDismiss}
       />
     </dialog>

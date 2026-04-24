@@ -6,6 +6,7 @@ import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import CollectionView from "../islands/CollectionView.tsx";
 import { HomeButton } from "../components/ui/HomeButton.tsx";
 import { AccountButton } from "../components/ui/AccountButton.tsx";
+import { getCollectionStatsByCategory } from "../lib/collections.ts";
 
 export interface CollectionTrack {
   id: string;
@@ -17,6 +18,11 @@ export interface CollectionTrack {
   playbackGainSourceMtimeMs: number | null;
 }
 
+export interface CategoryCount {
+  collected: number;
+  total: number;
+}
+
 export const handler = define.handlers({
   async GET(ctx) {
     const user = ctx.state.session.user;
@@ -24,23 +30,26 @@ export const handler = define.handlers({
       return ctx.redirect("/account");
     }
 
-    const rows = await db.query.collectedTracks.findMany({
-      where: { userId: user.id },
-      orderBy: { collectedAt: "desc" },
-      with: {
-        track: {
-          columns: {
-            id: true,
-            title: true,
-            audioUrl: true,
-            playbackGainDb: true,
-            playbackGainSourceSize: true,
-            playbackGainSourceMtimeMs: true,
+    const [rows, stats] = await Promise.all([
+      db.query.collectedTracks.findMany({
+        where: { userId: user.id },
+        orderBy: { collectedAt: "desc" },
+        with: {
+          track: {
+            columns: {
+              id: true,
+              title: true,
+              audioUrl: true,
+              playbackGainDb: true,
+              playbackGainSourceSize: true,
+              playbackGainSourceMtimeMs: true,
+            },
+            with: { categories: { columns: { name: true } } },
           },
-          with: { categories: { columns: { name: true } } },
         },
-      },
-    });
+      }),
+      getCollectionStatsByCategory(db, user.id),
+    ]);
 
     const collectionTracks: CollectionTrack[] = [];
     for (const row of rows) {
@@ -56,7 +65,15 @@ export const handler = define.handlers({
       });
     }
 
-    return { data: { tracks: collectionTracks } };
+    const categoryCounts: Record<string, CategoryCount> = {};
+    for (const stat of stats) {
+      categoryCounts[stat.categoryName] = {
+        collected: stat.collected,
+        total: stat.total,
+      };
+    }
+
+    return { data: { tracks: collectionTracks, categoryCounts } };
   },
 });
 
@@ -84,7 +101,12 @@ export default define.page<typeof handler>(({ data }) => (
             </p>
           </PlateauCard>
         )
-        : <CollectionView tracks={data.tracks} />}
+        : (
+          <CollectionView
+            tracks={data.tracks}
+            categoryCounts={data.categoryCounts}
+          />
+        )}
     </div>
   </PageShell>
 ));
