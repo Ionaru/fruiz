@@ -15,6 +15,7 @@ import {
   resolveMaxPlaySeconds,
   resolvePlayStartSeconds,
 } from "../lib/quizPlayback.ts";
+import { FaPlay, FaSpinner, FaStop } from "react-icons/fa6";
 
 export enum PlayState {
   Idle = "idle",
@@ -426,7 +427,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
               disabled={props.disabled || playState.value === PlayState.Loading}
               onClick={play}
             >
-              Play
+              <FaPlay />
             </Button>
           )}
         {playState.value === PlayState.Loading && loadingUiVisible.value && (
@@ -436,7 +437,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
             id={`listen-loading-${props.audioId}`}
             disabled
           >
-            Loading...
+            <FaSpinner />
           </Button>
         )}
         {playState.value === PlayState.Playing && (
@@ -446,7 +447,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
             id={`listen-stop-${props.audioId}`}
             onClick={stop}
           >
-            Stop
+            <FaStop />
           </Button>
         )}
       </div>

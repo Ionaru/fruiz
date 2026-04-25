@@ -1,6 +1,6 @@
 import type { Signal } from "@preact/signals";
 import { useSignal, useSignalEffect } from "@preact/signals";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { Button } from "../components/Button.tsx";
 import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { variantForStatus } from "../lib/quiz_ui.ts";

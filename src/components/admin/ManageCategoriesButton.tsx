@@ -1,4 +1,4 @@
-import { FaList } from "react-icons/fa";
+import { FaList } from "react-icons/fa6";
 import { PillLink } from "../ui/PillLink.tsx";
 
 export function ManageCategoriesButton() {

@@ -1,9 +1,9 @@
-import { FaHome } from "react-icons/fa";
+import { FaHouse } from "react-icons/fa6";
 import { PillLink } from "./PillLink.tsx";
 
 export function HomeButton() {
   return (
-    <PillLink href="/" icon={FaHome}>
+    <PillLink href="/" icon={FaHouse}>
       Home
     </PillLink>
   );

@@ -1,4 +1,4 @@
-import { FaUser } from "react-icons/fa";
+import { FaUser } from "react-icons/fa6";
 import { PillLink } from "./PillLink.tsx";
 
 export function AccountButton() {

@@ -4,7 +4,7 @@ import {
   type CategoryCollectionProgress,
   formatCategoryProgressLine,
 } from "../../lib/collectionProgress.ts";
-import { FaTrophy } from "react-icons/fa";
+import { FaTrophy } from "react-icons/fa6";
 import { PillLink } from "../ui/PillLink.tsx";
 
 export const GUESS_RESULT_HEADLINE_ID = "guess-result-headline";
