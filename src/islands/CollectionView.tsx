@@ -8,10 +8,11 @@ const FULL_PLAY_MAX = 86400;
 interface Props {
   tracks: CollectionTrack[];
   categoryCounts: Record<string, CategoryCount>;
+  allTotals: { collected: number; total: number };
 }
 
 export default function CollectionView(
-  { tracks, categoryCounts }: Readonly<Props>,
+  { tracks, categoryCounts, allTotals }: Readonly<Props>,
 ) {
   const activeCategory = useSignal<string | null>(null);
 
@@ -29,18 +30,6 @@ export default function CollectionView(
     return tracks.filter((track) => track.categories.includes(cat));
   });
 
-  const allTotals = useComputed(() => {
-    let collected = 0;
-    let total = 0;
-    for (const name of allCategories.value) {
-      const count = categoryCounts[name];
-      if (!count) continue;
-      collected += count.collected;
-      total += count.total;
-    }
-    return { collected, total };
-  });
-
   return (
     <div class="flex flex-col gap-4">
       {allCategories.value.length > 1 && (
@@ -54,7 +43,7 @@ export default function CollectionView(
               activeCategory.value = null;
             }}
           >
-            All ({allTotals.value.collected}/{allTotals.value.total})
+            All ({allTotals.collected}/{allTotals.total})
           </button>
           {allCategories.value.map((category) => {
             const count = categoryCounts[category];

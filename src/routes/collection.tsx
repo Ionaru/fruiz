@@ -6,7 +6,10 @@ import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import CollectionView from "../islands/CollectionView.tsx";
 import { HomeButton } from "../components/ui/HomeButton.tsx";
 import { AccountButton } from "../components/ui/AccountButton.tsx";
-import { getCollectionStatsByCategory } from "../lib/collections.ts";
+import {
+  getCategorizedTrackCount,
+  getCollectionStatsByCategory,
+} from "../lib/collections.ts";
 
 export interface CollectionTrack {
   id: string;
@@ -30,7 +33,7 @@ export const handler = define.handlers({
       return ctx.redirect("/account");
     }
 
-    const [rows, stats] = await Promise.all([
+    const [rows, stats, totalTracks] = await Promise.all([
       db.query.collectedTracks.findMany({
         where: { userId: user.id },
         orderBy: { collectedAt: "desc" },
@@ -49,6 +52,7 @@ export const handler = define.handlers({
         },
       }),
       getCollectionStatsByCategory(db, user.id),
+      getCategorizedTrackCount(db),
     ]);
 
     const collectionTracks: CollectionTrack[] = [];
@@ -73,7 +77,12 @@ export const handler = define.handlers({
       };
     }
 
-    return { data: { tracks: collectionTracks, categoryCounts } };
+    const allTotals = {
+      collected: collectionTracks.length,
+      total: totalTracks,
+    };
+
+    return { data: { tracks: collectionTracks, categoryCounts, allTotals } };
   },
 });
 
@@ -105,6 +114,7 @@ export default define.page<typeof handler>(({ data }) => (
           <CollectionView
             tracks={data.tracks}
             categoryCounts={data.categoryCounts}
+            allTotals={data.allTotals}
           />
         )}
     </div>

@@ -74,3 +74,12 @@ export async function getCollectionStatsByCategory(
     }))
     .filter((row) => row.collected > 0);
 }
+
+export async function getCategorizedTrackCount(db: DB): Promise<number> {
+  const rows = await db
+    .select({
+      total: sql<number>`count(distinct ${trackCategories.trackId})`,
+    })
+    .from(trackCategories);
+  return Number(rows[0]?.total ?? 0);
+}
