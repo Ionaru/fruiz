@@ -125,6 +125,20 @@ export async function getCategoryBySlug(
   return { id: row.id, name: row.name, slug: row.slug };
 }
 
+/** Resolve a category by its slug, falling back to its id (UUID). */
+export async function getCategoryBySlugOrId(
+  db: DB,
+  key: string,
+): Promise<CategoryRow | null> {
+  const bySlug = await getCategoryBySlug(db, key);
+  if (bySlug) return bySlug;
+  const row = await db.query.categories.findFirst({
+    where: { id: key },
+  });
+  if (!row) return null;
+  return { id: row.id, name: row.name, slug: row.slug };
+}
+
 export async function getTracksForCategory(
   db: DB,
   categoryId: string,
@@ -175,6 +189,26 @@ export async function getDistinctTitlesForCategory(
     .orderBy(tracks.title);
 
   return rows.map((row) => row.title);
+}
+
+/** All tracks in a category as `{ title, difficulty }`, ordered by difficulty then title. */
+export async function getTrackTitlesWithDifficultyForCategory(
+  db: DB,
+  categoryId: string,
+): Promise<{ title: string; difficulty: "easy" | "hard" }[]> {
+  const category = await db.query.categories.findFirst({
+    where: { id: categoryId },
+    with: {
+      tracks: {
+        columns: { title: true, difficulty: true },
+        orderBy: (trackRow, { asc }) => [
+          asc(trackRow.difficulty),
+          asc(trackRow.title),
+        ],
+      },
+    },
+  });
+  return category?.tracks ?? [];
 }
 
 /**
