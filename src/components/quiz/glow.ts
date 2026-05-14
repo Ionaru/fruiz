@@ -22,3 +22,13 @@ export const resultGlowClass: Record<"correct" | "incorrect", string> = {
   correct: "glow glow-strong glow-green",
   incorrect: "glow glow-strong glow-red",
 };
+
+export type RgbTriplet = readonly [number, number, number];
+
+export const difficultyAccentRgb: Record<DifficultyMode, RgbTriplet> = {
+  easy: [34, 197, 94],
+  mixed: [234, 179, 8],
+  hard: [239, 68, 68],
+};
+
+export const NEUTRAL_ACCENT_RGB: RgbTriplet = [148, 163, 184];

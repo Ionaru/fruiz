@@ -3,6 +3,8 @@ import { useSignalRef } from "@preact/signals/utils";
 import { buildListenSrc } from "../lib/audioListenUrl.ts";
 
 import { Button } from "../components/Button.tsx";
+import { AudioVisualizer } from "./AudioVisualizer.tsx";
+import type { DifficultyMode } from "../lib/types.ts";
 import {
   clampPlaybackGainDb,
   playbackGainDbToLinear,
@@ -16,6 +18,9 @@ import {
   resolvePlayStartSeconds,
 } from "../lib/quizPlayback.ts";
 import { FaPlay, FaSpinner, FaStop } from "react-icons/fa6";
+
+const VISUALIZER_FFT_SIZE = 64;
+const VISUALIZER_SMOOTHING = 0.8;
 
 export enum PlayState {
   Idle = "idle",
@@ -135,6 +140,8 @@ interface AudioPlayerProps {
   playbackGainSourceSize?: number | null;
   /** mtime of the audio file in ms since epoch — used to cache-bust the listen URL. */
   playbackGainSourceMtimeMs?: number | null;
+  /** When set, visualizer bars use the matching difficulty color; otherwise neutral. */
+  accentDifficulty?: DifficultyMode;
 }
 
 export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
@@ -158,7 +165,11 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
   const formPlaybackError = useSignal<string | null>(null);
 
   const graphSig = useSignal<
-    { gainNode: GainNode; el: HTMLMediaElement } | null
+    {
+      gainNode: GainNode;
+      analyserNode: AnalyserNode;
+      el: HTMLMediaElement;
+    } | null
   >(null);
 
   const clipStopTimerId = useSignal<number | undefined>(undefined);
@@ -194,10 +205,14 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     if (!existing || existing.el !== el) {
       const ctx = getSharedAudioContext();
       const source = ctx.createMediaElementSource(el);
+      const analyserNode = ctx.createAnalyser();
+      analyserNode.fftSize = VISUALIZER_FFT_SIZE;
+      analyserNode.smoothingTimeConstant = VISUALIZER_SMOOTHING;
       const gainNode = ctx.createGain();
       gainNode.gain.value = 0;
-      source.connect(gainNode).connect(ctx.destination);
-      graphSig.value = { gainNode, el };
+      source.connect(analyserNode);
+      analyserNode.connect(gainNode).connect(ctx.destination);
+      graphSig.value = { gainNode, analyserNode, el };
     } else if (playState.value === PlayState.Idle) {
       const linear = targetLinearFromPlaybackGainDb(playbackGainSig.value);
       existing.gainNode.gain.value = linear;
@@ -405,8 +420,8 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       )}
       <div
         class={props.compact
-          ? "flex flex-wrap gap-2 items-center"
-          : "flex flex-wrap gap-4 py-2 items-center"}
+          ? "flex flex-wrap gap-2 items-center justify-center"
+          : "flex gap-3 py-2 items-center justify-center w-full"}
       >
         <audio
           ref={audioRef}
@@ -417,39 +432,48 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           })}
           preload="metadata"
         />
-        {(playState.value === PlayState.Idle ||
-          (playState.value === PlayState.Loading && !loadingUiVisible.value)) &&
-          (
+        <AudioVisualizer
+          enabled={!props.compact}
+          active={playState.value === PlayState.Playing}
+          analyserNode={graphSig.value?.analyserNode ?? null}
+          accentDifficulty={props.accentDifficulty}
+        >
+          {(playState.value === PlayState.Idle ||
+            (playState.value === PlayState.Loading &&
+              !loadingUiVisible.value)) &&
+            (
+              <Button
+                class={pad}
+                variant="success"
+                id={`listen-play-${props.audioId}`}
+                disabled={props.disabled ||
+                  playState.value === PlayState.Loading}
+                onClick={play}
+              >
+                <FaPlay />
+              </Button>
+            )}
+          {playState.value === PlayState.Loading && loadingUiVisible.value && (
             <Button
               class={pad}
-              variant="success"
-              id={`listen-play-${props.audioId}`}
-              disabled={props.disabled || playState.value === PlayState.Loading}
-              onClick={play}
+              variant="info"
+              id={`listen-loading-${props.audioId}`}
+              disabled
             >
-              <FaPlay />
+              <FaSpinner />
             </Button>
           )}
-        {playState.value === PlayState.Loading && loadingUiVisible.value && (
-          <Button
-            class={pad}
-            variant="info"
-            id={`listen-loading-${props.audioId}`}
-            disabled
-          >
-            <FaSpinner />
-          </Button>
-        )}
-        {playState.value === PlayState.Playing && (
-          <Button
-            class={pad}
-            variant="danger"
-            id={`listen-stop-${props.audioId}`}
-            onClick={stop}
-          >
-            <FaStop />
-          </Button>
-        )}
+          {playState.value === PlayState.Playing && (
+            <Button
+              class={pad}
+              variant="danger"
+              id={`listen-stop-${props.audioId}`}
+              onClick={stop}
+            >
+              <FaStop />
+            </Button>
+          )}
+        </AudioVisualizer>
       </div>
     </div>
   );
