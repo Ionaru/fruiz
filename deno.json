@@ -26,22 +26,22 @@
     "**/_fresh/*"
   ],
   "imports": {
-    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
+    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.1.2",
     "@preact/signals": "npm:@preact/signals@^2.9.0",
     "@simplewebauthn/browser": "jsr:@simplewebauthn/browser@^13.3.0",
     "@simplewebauthn/server": "jsr:@simplewebauthn/server@^13.3.0",
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
     "@std/http": "jsr:@std/http@^1.1.0",
-    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.2.4",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.3.0",
     "@tsparticles/confetti": "npm:@tsparticles/confetti@^3.9.1",
     "drizzle-kit": "npm:drizzle-kit@1.0.0-beta.23",
     "drizzle-orm": "npm:drizzle-orm@1.0.0-beta.23",
-    "fresh": "jsr:@fresh/core@^2.3.0",
+    "fresh": "jsr:@fresh/core@^2.3.3",
     "preact": "npm:preact@^10.29.1",
     "react-icons": "npm:react-icons@^5.6.0",
     "tailwindcss-neumorphism-ui": "npm:tailwindcss-neumorphism-ui@^2.0.0",
-    "tailwindcss": "npm:tailwindcss@^4.2.4",
+    "tailwindcss": "npm:tailwindcss@^4.3.0",
     "vite": "npm:vite@^7.3.2"
   },
   "compilerOptions": {
