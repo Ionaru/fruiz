@@ -1,6 +1,8 @@
-FROM denoland/deno:alpine-2.7.11
+FROM denoland/deno:debian-2.7.11
 
-RUN apk add --no-cache ffmpeg
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG FRUIZ_GIT_REVISION
 ENV DENO_DEPLOYMENT_ID=${FRUIZ_GIT_REVISION}
