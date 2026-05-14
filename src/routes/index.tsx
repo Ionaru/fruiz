@@ -8,22 +8,12 @@ import {
 } from "../lib/categories.ts";
 import type { DifficultyMode } from "../lib/types.ts";
 import { encodeSlug, generateShortCode } from "../lib/slug.ts";
-import { Button } from "../components/Button.tsx";
 import { PageShell } from "../components/layout/PageShell.tsx";
-import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import { StartNewQuizSection } from "../components/quiz/StartNewQuizSection.tsx";
 import InProgressQuizSection from "../islands/InProgressQuizSection.tsx";
 import { AccountButton } from "../components/ui/AccountButton.tsx";
 import { CollectionButton } from "../components/ui/CollectionButton.tsx";
 import { AdminButton } from "../components/ui/AdminButton.tsx";
-
-const difficultyGlowClass: Record<DifficultyMode, string> = {
-  easy:
-    "before:shadow-[0_0_16px_4px_rgb(34_197_94/0.75),0_0_36px_12px_rgb(34_197_94/0.35)]",
-  mixed:
-    "before:shadow-[0_0_16px_4px_rgb(234_179_8/0.75),0_0_36px_12px_rgb(234_179_8/0.35)]",
-  hard:
-    "before:shadow-[0_0_16px_4px_rgb(239_68_68/0.75),0_0_36px_12px_rgb(239_68_68/0.35)]",
-};
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -81,51 +71,7 @@ export default define.page<typeof handler>(({ data }) => (
         </p>
       )}
       <InProgressQuizSection />
-      <section class="space-y-3">
-        <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
-          Start new quiz
-        </h2>
-        {data.options.length === 0
-          ? (
-            <PlateauCard class="text-base-800 dark:text-base-100">
-              No quizzes available yet. Seed categories and at least 20 tracks
-              per difficulty mode.
-            </PlateauCard>
-          )
-          : (
-            <div class="flex flex-col gap-6">
-              {data.options.map((opt) => (
-                <PlateauCard key={opt.category.slug} padding="5">
-                  <form method="post" class="space-y-4">
-                    <input
-                      type="hidden"
-                      name="category"
-                      value={opt.category.slug}
-                    />
-                    <h3 class="text-xl font-medium text-base-900 dark:text-base-100">
-                      {opt.category.name}
-                    </h3>
-                    <div class="relative isolate flex flex-wrap gap-2">
-                      {opt.difficulties.map((d) => (
-                        <Button
-                          key={d}
-                          class={`relative px-6 capitalize before:content-[''] before:absolute before:inset-0 before:rounded-full before:pointer-events-none before:-z-10 ${
-                            difficultyGlowClass[d]
-                          }`}
-                          name="difficulty"
-                          value={d}
-                          type="submit"
-                        >
-                          {d}
-                        </Button>
-                      ))}
-                    </div>
-                  </form>
-                </PlateauCard>
-              ))}
-            </div>
-          )}
-      </section>
+      <StartNewQuizSection options={data.options} />
     </div>
   </PageShell>
 ));

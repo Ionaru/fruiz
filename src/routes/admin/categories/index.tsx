@@ -1,7 +1,7 @@
 import { Head } from "fresh/runtime";
+import { AdminCategoryListItem } from "../../../components/admin/AdminCategoryListItem.tsx";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
-import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
 import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { listAdminCategories } from "../../../lib/adminReads.ts";
@@ -34,20 +34,12 @@ export default define.page<typeof handler>(({ data }) => (
     />
     <ul class="flex flex-col gap-2">
       {data.categories.map((c) => (
-        <li key={c.id}>
-          <PlateauCard
-            padding="none"
-            class="rounded-xl px-4 py-3"
-          >
-            <a
-              href={`/admin/categories/${c.id}`}
-              class="flex justify-between gap-2 no-underline"
-            >
-              <span class="font-medium">{c.name}</span>
-              <span class="text-sm opacity-80">{c.slug}</span>
-            </a>
-          </PlateauCard>
-        </li>
+        <AdminCategoryListItem
+          key={c.id}
+          id={c.id}
+          name={c.name}
+          slug={c.slug}
+        />
       ))}
     </ul>
     {data.categories.length === 0 && (

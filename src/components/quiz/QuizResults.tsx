@@ -1,6 +1,6 @@
 import { Button } from "../Button.tsx";
+import { QuizResultRow } from "./QuizResultRow.tsx";
 import { scoreFromProgress } from "../../lib/quizProgress.ts";
-import { variantForStatus } from "../../lib/quiz_ui.ts";
 import type { QuizProgress, QuizTrackPayload } from "../../lib/types.ts";
 
 export interface QuizResultsProps {
@@ -51,21 +51,13 @@ export function QuizResults(props: Readonly<QuizResultsProps>) {
           if (!progressRow) {
             throw new Error(`Missing progress for track ${track.id}`);
           }
-          const rowVariant = variantForStatus(progressRow.status);
           return (
-            <li
+            <QuizResultRow
               key={track.id}
-              class={`plateau rounded-xl px-4 py-3 flex justify-between gap-2 font-bold ${
-                rowVariant ? ` ${rowVariant}` : ""
-              }`}
-            >
-              <span class="font-medium truncate">
-                {index + 1}: {track.title}
-              </span>
-              <span class="shrink-0 capitalize opacity-90">
-                {progressRow.status}
-              </span>
-            </li>
+              index={index}
+              title={track.title}
+              status={progressRow.status}
+            />
           );
         })}
       </ul>

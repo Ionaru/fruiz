@@ -1,4 +1,5 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
+import { AnswerSuggestionOption } from "../components/quiz/AnswerSuggestionOption.tsx";
 import { FieldGroup } from "../components/ui/FieldGroup.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
 import { suggestMatches } from "../lib/guess_match.ts";
@@ -152,34 +153,20 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
               aria-label="Title suggestions"
               class="absolute left-0 right-0 top-full mt-2 z-20 plateau rounded-xl p-1 max-h-60 overflow-y-auto overscroll-contain text-left"
             >
-              {matches.map((title, index) => {
-                const isActive = index === currentActive;
-                const optionClass = [
-                  "cursor-pointer select-none rounded-lg px-4 min-h-11",
-                  "flex items-center touch-manipulation",
-                  isActive ? "bg-base-300 dark:bg-base-700" : "",
-                ].filter(Boolean).join(" ");
-                return (
-                  <li
-                    key={`${title}-${index}`}
-                    id={optionId(index)}
-                    role="option"
-                    aria-selected={isActive}
-                    class={optionClass}
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                    }}
-                    onClick={() => {
-                      selectAt(index);
-                    }}
-                    onPointerEnter={() => {
-                      activeIndex.value = index;
-                    }}
-                  >
-                    {title}
-                  </li>
-                );
-              })}
+              {matches.map((title, index) => (
+                <AnswerSuggestionOption
+                  key={`${title}-${index}`}
+                  id={optionId(index)}
+                  title={title}
+                  isActive={index === currentActive}
+                  onSelect={() => {
+                    selectAt(index);
+                  }}
+                  onHoverActivate={() => {
+                    activeIndex.value = index;
+                  }}
+                />
+              ))}
             </ul>
           )}
         </div>

@@ -2,6 +2,8 @@ import type { Signal } from "@preact/signals";
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { Button } from "../components/Button.tsx";
+import { TrackGridButton } from "../components/quiz/TrackGridButton.tsx";
+import { TrackIndicatorButton } from "../components/quiz/TrackIndicatorButton.tsx";
 import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { variantForStatus } from "../lib/quiz_ui.ts";
 import type { QuizProgress, QuizTrackPayload } from "../lib/types.ts";
@@ -77,22 +79,16 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                 if (!progressRow) {
                   throw new Error(`Missing progress for track ${track.id}`);
                 }
-                const isActiveTrack = props.activeId.value === track.id;
                 return (
-                  <Button
+                  <TrackGridButton
                     key={track.id}
-                    class={`min-w-0 aspect-square p-2 text-sm font-medium rounded-xl! ${
-                      isActiveTrack
-                        ? "ring-2 ring-base-500 dark:ring-base-300"
-                        : ""
-                    }`}
+                    label={trackIndex + 1}
                     variant={variantForStatus(progressRow.status)}
-                    onClick={() => {
+                    isActive={props.activeId.value === track.id}
+                    onSelect={() => {
                       selectTrack(track.id);
                     }}
-                  >
-                    {trackIndex + 1}
-                  </Button>
+                  />
                 );
               })}
             </section>
@@ -123,19 +119,12 @@ export default function QuizTrackNav(props: Readonly<Props>) {
                   if (!progressRow) {
                     throw new Error(`Missing progress for track ${track.id}`);
                   }
-                  const isActiveTrack = props.activeId.value === track.id;
-                  const variant = variantForStatus(progressRow.status);
-                  const plateauVariant = variant ? ` ${variant}` : "";
                   return (
-                    <Button
+                    <TrackIndicatorButton
                       key={track.id}
-                      type="button"
-                      class={`h-12 p-0! m-0.25 xs:m-0.5 ${plateauVariant} ${
-                        isActiveTrack
-                          ? "ring-2 ring-base-500 dark:ring-base-300"
-                          : ""
-                      }`}
-                      onClick={() => {
+                      variant={variantForStatus(progressRow.status)}
+                      isActive={props.activeId.value === track.id}
+                      onSelect={() => {
                         selectTrack(track.id);
                       }}
                     />

@@ -1,4 +1,5 @@
 import { useComputed, useSignal } from "@preact/signals";
+import { CategoryFilterButton } from "../components/collection/CategoryFilterButton.tsx";
 import { CollectionTrackItem } from "../components/collection/CollectionTrackItem.tsx";
 import type { CategoryCount, CollectionTrack } from "../routes/collection.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
@@ -34,34 +35,27 @@ export default function CollectionView(
     <div class="flex flex-col gap-4">
       {allCategories.value.length > 1 && (
         <nav class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          <button
-            type="button"
-            class={`plateau rounded-full px-4 py-2 text-sm whitespace-nowrap min-h-10 ${
-              activeCategory.value === null ? "font-bold" : ""
-            }`}
-            onClick={() => {
+          <CategoryFilterButton
+            label={`All (${allTotals.collected}/${allTotals.total})`}
+            isActive={activeCategory.value === null}
+            onSelect={() => {
               activeCategory.value = null;
             }}
-          >
-            All ({allTotals.collected}/{allTotals.total})
-          </button>
+          />
           {allCategories.value.map((category) => {
             const count = categoryCounts[category];
+            const label = count
+              ? `${category} (${count.collected}/${count.total})`
+              : category;
             return (
-              <button
+              <CategoryFilterButton
                 key={category}
-                type="button"
-                class={`plateau rounded-full px-4 py-2 text-sm whitespace-nowrap min-h-10 ${
-                  activeCategory.value === category ? "font-bold" : ""
-                }`}
-                onClick={() => {
+                label={label}
+                isActive={activeCategory.value === category}
+                onSelect={() => {
                   activeCategory.value = category;
                 }}
-              >
-                {count
-                  ? `${category} (${count.collected}/${count.total})`
-                  : category}
-              </button>
+              />
             );
           })}
         </nav>
