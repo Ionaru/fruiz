@@ -84,7 +84,7 @@ export async function getAvailableQuizOptions(
   for (const { category, total, easy, hard } of map.values()) {
     const difficulties: DifficultyMode[] = [];
     for (
-      const difficultyMode of ["easy", "hard", "mixed"] as DifficultyMode[]
+      const difficultyMode of ["easy", "mixed", "hard"] as DifficultyMode[]
     ) {
       if (
         countForDifficulty(total, easy, hard, difficultyMode) >= MIN_TRACKS

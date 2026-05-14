@@ -16,6 +16,15 @@ import { AccountButton } from "../components/ui/AccountButton.tsx";
 import { CollectionButton } from "../components/ui/CollectionButton.tsx";
 import { AdminButton } from "../components/ui/AdminButton.tsx";
 
+const difficultyGlowClass: Record<DifficultyMode, string> = {
+  easy:
+    "before:shadow-[0_0_16px_4px_rgb(34_197_94/0.75),0_0_36px_12px_rgb(34_197_94/0.35)]",
+  mixed:
+    "before:shadow-[0_0_16px_4px_rgb(234_179_8/0.75),0_0_36px_12px_rgb(234_179_8/0.35)]",
+  hard:
+    "before:shadow-[0_0_16px_4px_rgb(239_68_68/0.75),0_0_36px_12px_rgb(239_68_68/0.35)]",
+};
+
 export const handler = define.handlers({
   async GET(ctx) {
     const options = await getAvailableQuizOptions(db);
@@ -96,12 +105,13 @@ export default define.page<typeof handler>(({ data }) => (
                     <h3 class="text-xl font-medium text-base-900 dark:text-base-100">
                       {opt.category.name}
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="relative isolate flex flex-wrap gap-2">
                       {opt.difficulties.map((d) => (
                         <Button
                           key={d}
-                          variant="info"
-                          class="px-6 capitalize"
+                          class={`relative px-6 capitalize before:content-[''] before:absolute before:inset-0 before:rounded-full before:pointer-events-none before:-z-10 ${
+                            difficultyGlowClass[d]
+                          }`}
                           name="difficulty"
                           value={d}
                           type="submit"
