@@ -2,15 +2,7 @@ import { Button } from "../Button.tsx";
 import { PlateauCard } from "../ui/PlateauCard.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
 import type { DifficultyMode } from "../../lib/types.ts";
-
-const difficultyGlowClass: Record<DifficultyMode, string> = {
-  easy:
-    "before:shadow-[0_0_16px_4px_rgb(34_197_94/0.75),0_0_36px_12px_rgb(34_197_94/0.35)]",
-  mixed:
-    "before:shadow-[0_0_16px_4px_rgb(234_179_8/0.75),0_0_36px_12px_rgb(234_179_8/0.35)]",
-  hard:
-    "before:shadow-[0_0_16px_4px_rgb(239_68_68/0.75),0_0_36px_12px_rgb(239_68_68/0.35)]",
-};
+import { difficultyGlowClass } from "./glow.ts";
 
 export interface QuizCategoryCardProps {
   category: CategoryRow;
@@ -31,9 +23,7 @@ export function QuizCategoryCard(
           {difficulties.map((d) => (
             <Button
               key={d}
-              class={`relative px-6 capitalize before:content-[''] before:absolute before:inset-0 before:rounded-full before:pointer-events-none before:-z-10 ${
-                difficultyGlowClass[d]
-              }`}
+              class={`px-6 capitalize ${difficultyGlowClass[d]}`}
               name="difficulty"
               value={d}
               type="submit"

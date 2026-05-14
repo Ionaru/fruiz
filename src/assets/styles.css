@@ -93,4 +93,60 @@
       @apply nm-dent-sm;
     }
   }
+
+  .glow {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -10;
+      box-shadow:
+        0 0 var(--glow-inner-blur) var(--glow-inner-spread)
+        color-mix(
+          in oklab,
+          var(--glow-color) var(--glow-inner-alpha),
+          transparent
+        ),
+        0 0 var(--glow-outer-blur) var(--glow-outer-spread)
+        color-mix(
+          in oklab,
+          var(--glow-color) var(--glow-outer-alpha),
+          transparent
+        );
+    }
+  }
+
+  .glow-strong {
+    --glow-inner-blur: 16px;
+    --glow-inner-spread: 4px;
+    --glow-inner-alpha: 75%;
+    --glow-outer-blur: 36px;
+    --glow-outer-spread: 12px;
+    --glow-outer-alpha: 35%;
+  }
+
+  .glow-soft {
+    --glow-inner-blur: 14px;
+    --glow-inner-spread: 3px;
+    --glow-inner-alpha: 40%;
+    --glow-outer-blur: 32px;
+    --glow-outer-spread: 10px;
+    --glow-outer-alpha: 18%;
+  }
+
+  .glow-green {
+    --glow-color: var(--color-green-500);
+  }
+
+  .glow-yellow {
+    --glow-color: var(--color-yellow-500);
+  }
+
+  .glow-red {
+    --glow-color: var(--color-red-500);
+  }
 }

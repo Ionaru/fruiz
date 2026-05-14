@@ -6,6 +6,7 @@ import {
 } from "../../lib/collectionProgress.ts";
 import { FaTrophy } from "react-icons/fa6";
 import { PillLink } from "../ui/PillLink.tsx";
+import { resultGlowClass } from "./glow.ts";
 
 export const GUESS_RESULT_HEADLINE_ID = "guess-result-headline";
 
@@ -20,10 +21,13 @@ export interface GuessResultContentProps {
 export function GuessResultContent(props: Readonly<GuessResultContentProps>) {
   const headline = props.isCorrect ? "Correct!" : "Incorrect";
   const variantClass = props.isCorrect ? "success" : "danger";
+  const glowClass = props.isCorrect
+    ? resultGlowClass.correct
+    : resultGlowClass.incorrect;
 
   return (
     <PlateauCard
-      class={`${variantClass} w-full max-w-sm space-y-4 text-center mx-4 z-50`}
+      class={`${variantClass} w-full max-w-sm space-y-4 text-center mx-4 z-50 isolate ${glowClass}`}
     >
       <div class="space-y-4">
         <h2
