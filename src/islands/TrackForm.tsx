@@ -1,3 +1,5 @@
+import { useSignal } from "@preact/signals";
+import { FaSpinner } from "react-icons/fa6";
 import TrackAudioPick from "./TrackAudioPick.tsx";
 import TrackTitleInput from "./TrackTitleInput.tsx";
 import CheckboxGroupField from "./CheckboxGroupField.tsx";
@@ -47,6 +49,7 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
     !props.audioChoices.some((value) =>
       normalizedPath(value) === defaultAudioUrl
     );
+  const submitting = useSignal(false);
 
   return (
     <PlateauCard class="w-full" padding="5">
@@ -55,6 +58,9 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
         method={props.method ?? "post"}
         action={props.action}
         class="space-y-4"
+        onSubmit={() => {
+          submitting.value = true;
+        }}
       >
         <FieldGroup label="Title" htmlFor="tr-title">
           <TrackTitleInput
@@ -132,8 +138,22 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
           }))}
           initialValues={(props.selectedCategoryIds ?? []).map(String)}
         />
-        <Button type="submit" variant="success" class="w-full">
-          {props.submitLabel}
+        <Button
+          type="submit"
+          variant="success"
+          class="w-full flex items-center justify-center gap-2"
+          disabled={submitting.value}
+        >
+          {submitting.value
+            ? (
+              <>
+                <span class="animate-spin">
+                  <FaSpinner />
+                </span>{" "}
+                Analyzing loudness…
+              </>
+            )
+            : props.submitLabel}
         </Button>
       </form>
     </PlateauCard>
