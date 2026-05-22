@@ -14,8 +14,10 @@ vendor/
 *.db
 data/music
 
+
 # AI
 /.claude
 /.cursor
 /.junie
 /.kiro
+/.playwright-mcp

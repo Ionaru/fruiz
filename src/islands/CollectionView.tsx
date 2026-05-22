@@ -79,6 +79,7 @@ export default function CollectionView(
               playbackGainSourceSize={track.playbackGainSourceSize}
               playbackGainSourceMtimeMs={track.playbackGainSourceMtimeMs}
               compact
+              lazyLoad
             />
           </CollectionTrackItem>
         ))}

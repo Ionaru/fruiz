@@ -62,6 +62,7 @@ export default define.page<typeof handler>(({ data }) => (
             })}
             playbackGainSourceSize={track.playbackGainSourceSize}
             playbackGainSourceMtimeMs={track.playbackGainSourceMtimeMs}
+            lazyLoad
           />
         </AdminTrackListItem>
       ))}

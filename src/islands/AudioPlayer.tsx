@@ -142,6 +142,12 @@ interface AudioPlayerProps {
   playbackGainSourceMtimeMs?: number | null;
   /** When set, visualizer bars use the matching difficulty color; otherwise neutral. */
   accentDifficulty?: DifficultyMode;
+  /**
+   * When true, no audio request is made until the user first clicks play (no
+   * eager metadata fetch). Use on list pages that render many players. Defaults
+   * to false: eager `preload="metadata"`, current behavior.
+   */
+  lazyLoad?: boolean;
 }
 
 export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
@@ -291,9 +297,18 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     };
   });
 
+  const listenSrc = buildListenSrc({
+    id: props.audioId,
+    playbackGainSourceSize: props.playbackGainSourceSize ?? null,
+    playbackGainSourceMtimeMs: props.playbackGainSourceMtimeMs ?? null,
+  });
+
   const play = () => {
     const el = audioRef.value;
     if (!el) return;
+    if (props.lazyLoad && !el.getAttribute("src")) {
+      el.src = listenSrc;
+    }
     formPlaybackError.value = null;
     clearClipStopTimer();
     silenceGainNow();
@@ -423,15 +438,9 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           ? "flex flex-wrap gap-2 items-center justify-center"
           : "flex gap-3 py-2 items-center justify-center w-full"}
       >
-        <audio
-          ref={audioRef}
-          src={buildListenSrc({
-            id: props.audioId,
-            playbackGainSourceSize: props.playbackGainSourceSize ?? null,
-            playbackGainSourceMtimeMs: props.playbackGainSourceMtimeMs ?? null,
-          })}
-          preload="metadata"
-        />
+        {props.lazyLoad
+          ? <audio ref={audioRef} preload="none" />
+          : <audio ref={audioRef} src={listenSrc} preload="metadata" />}
         <AudioVisualizer
           enabled={!props.compact}
           active={playState.value === PlayState.Playing}
