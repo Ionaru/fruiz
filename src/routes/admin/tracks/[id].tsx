@@ -151,7 +151,7 @@ export const handler = define.handlers({
     }
     await analyzeAndStorePlaybackGainForTrack(db, id, audioUrl);
     return Response.redirect(
-      new URL(`/admin/tracks/${id}`, ctx.req.url).href,
+      new URL(`/admin/tracks`, ctx.req.url).href,
       302,
     );
   },
