@@ -1,5 +1,6 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { confetti } from "@tsparticles/confetti";
+import { tsParticles } from "@tsparticles/engine";
 import {
   GUESS_RESULT_HEADLINE_ID,
   GuessResultContent,
@@ -53,12 +54,9 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
       // canvas + throttled rAF during tab idle + a new mount on return can
       // stall the main thread. The modal is the only confetti consumer, so
       // destroying every known container is safe.
-      const engine = (globalThis as {
-        tsParticles?: {
-          dom(): Array<{ destroy(remove?: boolean): void }>;
-        };
-      }).tsParticles;
-      engine?.dom().forEach((container) => container.destroy(false));
+      for (const container of tsParticles.items) {
+        container.destroy(false);
+      }
     };
   });
 
