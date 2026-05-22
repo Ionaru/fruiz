@@ -1,4 +1,4 @@
-FROM denoland/deno:debian-2.7.11
+FROM denoland/deno:debian-2.8.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
@@ -10,7 +10,7 @@ ENV DENO_DEPLOYMENT_ID=${FRUIZ_GIT_REVISION}
 WORKDIR /app
 
 COPY deno.json deno.lock .
-RUN deno install --frozen
+RUN deno ci
 
 COPY drizzle.config.ts vite.config.ts .
 COPY tools ./tools

@@ -1,4 +1,4 @@
-name: Deals CD
+name: Fruiz CD
 
 on:
   workflow_dispatch:
@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  DENO_VERSION: 2.8.0
+
 jobs:
   audit:
     name: Audit dependencies
@@ -16,6 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
       - run: deno audit
 
   get_sha:
@@ -35,7 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
-      - run: deno install --frozen
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - run: deno ci
       - run: deno task check
 
   test:
@@ -45,7 +52,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
-      - run: deno install --frozen
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - run: deno ci
       - run: mkdir data
       - run: deno task db:sync
       - run: deno task test

@@ -13,7 +13,12 @@
   },
   "lint": {
     "rules": {
-      "include": ["no-non-null-assertion", "eqeqeq"],
+      "include": [
+        "no-non-null-assertion",
+        "eqeqeq",
+        "no-process-global",
+        "no-node-globals"
+      ],
       "tags": [
         "fresh",
         "jsx",
