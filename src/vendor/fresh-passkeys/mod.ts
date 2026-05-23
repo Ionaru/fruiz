@@ -8,4 +8,3 @@ export type {
   StoredPasskey,
   VerifiedRegistration,
 } from "./types.ts";
-</content>

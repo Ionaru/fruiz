@@ -225,4 +225,3 @@ export async function finishAuthentication(
   );
   return { userId: stored.userId };
 }
-</content>

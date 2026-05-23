@@ -22,4 +22,3 @@ Deno.test("challenge store: unknown id returns null", () => {
   const store = new DrizzlePasskeyStore();
   assertEquals(store.takeChallenge(crypto.randomUUID()), null);
 });
-</content>

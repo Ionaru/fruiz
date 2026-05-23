@@ -68,4 +68,3 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
     },
   };
 }
-</content>

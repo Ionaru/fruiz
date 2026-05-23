@@ -84,4 +84,3 @@ export interface PasskeyConfig<S> {
     state: S,
   ) => Promise<Response>;
 }
-</content>

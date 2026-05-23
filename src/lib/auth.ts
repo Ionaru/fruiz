@@ -10,4 +10,3 @@ export function validateUsername(username: string): string | null {
   }
   return null;
 }
-</content>

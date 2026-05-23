@@ -174,4 +174,3 @@ export function passkeyAuth<S>(
 
   return app;
 }
-</content>

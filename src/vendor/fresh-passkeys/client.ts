@@ -89,4 +89,3 @@ export async function addPasskey(
   }
   return await finish.json() as { credentialId: string };
 }
-</content>

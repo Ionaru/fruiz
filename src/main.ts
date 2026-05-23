@@ -18,4 +18,3 @@ passkeyAuth(app, buildPasskeyConfig());
 
 // Include file-system based routes here
 app.fsRoutes();
-</content>
