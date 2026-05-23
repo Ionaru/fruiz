@@ -1,4 +1,4 @@
-import type { App } from "fresh";
+import { type App, createDefine } from "fresh";
 
 import {
   beginAddPasskey,
@@ -46,6 +46,7 @@ export function passkeyAuth<S>(
   app: App<S>,
   config: PasskeyConfig<S>,
 ): App<S> {
+  const define = createDefine<S>();
   const base = config.basePath ?? "/api/auth";
   const opts: CeremonyOptions = {
     rpId: config.rpId,
@@ -57,7 +58,7 @@ export function passkeyAuth<S>(
     return req.headers.get("origin") ?? new URL(req.url).origin;
   };
 
-  app.use(async (ctx) => {
+  app.use(define.middleware(async (ctx) => {
     const route = `${ctx.req.method} ${ctx.url.pathname}`;
 
     if (route === `GET ${base}/register-public`) {
@@ -169,7 +170,7 @@ export function passkeyAuth<S>(
     }
 
     return ctx.next();
-  });
+  }));
 
   return app;
 }
