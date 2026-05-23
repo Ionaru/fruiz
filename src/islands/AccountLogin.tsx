@@ -1,11 +1,8 @@
-import {
-  type PublicKeyCredentialRequestOptionsJSON,
-  startAuthentication,
-} from "@simplewebauthn/browser";
 import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import { loginPasskey } from "../vendor/fresh-passkeys/client.ts";
 
 export default function AccountLogin() {
   const status = useSignal("");
@@ -13,36 +10,7 @@ export default function AccountLogin() {
   const login = async () => {
     status.value = "";
     try {
-      const optionsResponse = await fetch("/api/auth/authenticate");
-      if (!optionsResponse.ok) {
-        const errorBody = await optionsResponse.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = errorBody.error ??
-          `Login failed (${optionsResponse.status})`;
-        return;
-      }
-      const { challengeId, options } = await optionsResponse.json() as {
-        challengeId: string;
-        options: unknown;
-      };
-      const credential = await startAuthentication({
-        optionsJSON: options as PublicKeyCredentialRequestOptionsJSON,
-      });
-      const verifyResponse = await fetch("/api/auth/authenticate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ challengeId, credential }),
-      });
-      if (!verifyResponse.ok) {
-        const errorBody = await verifyResponse.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = errorBody.error ??
-          `Verify failed (${verifyResponse.status})`;
-        return;
-      }
+      await loginPasskey();
       globalThis.location.href = "/account";
     } catch (error) {
       status.value = error instanceof Error ? error.message : "Login error";

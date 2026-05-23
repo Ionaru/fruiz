@@ -1,12 +1,11 @@
-import {
-  type PublicKeyCredentialCreationOptionsJSON,
-  startRegistration,
-} from "@simplewebauthn/browser";
 import { useSignal } from "@preact/signals";
 import { AccountInfo } from "../components/account/AccountInfo.tsx";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
+import {
+  addPasskey as addPasskeyRequest,
+} from "../vendor/fresh-passkeys/client.ts";
 
 type Props = { username: string; isAdmin?: boolean };
 
@@ -16,36 +15,7 @@ export default function AccountManage({ username, isAdmin }: Props) {
   const addPasskey = async () => {
     status.value = "";
     try {
-      const optRes = await fetch("/api/auth/register-add-passkey", {
-        credentials: "same-origin",
-      });
-      if (!optRes.ok) {
-        const err = await optRes.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = err.error ?? `Could not start (${optRes.status})`;
-        return;
-      }
-      const { challengeId, options } = await optRes.json() as {
-        challengeId: string;
-        options: unknown;
-      };
-      const credential = await startRegistration({
-        optionsJSON: options as PublicKeyCredentialCreationOptionsJSON,
-      });
-      const finishRes = await fetch("/api/auth/register-add-passkey", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ challengeId, credential }),
-      });
-      if (!finishRes.ok) {
-        const err = await finishRes.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = err.error ?? `Add passkey failed (${finishRes.status})`;
-        return;
-      }
+      await addPasskeyRequest();
       status.value = "Passkey added.";
     } catch (e) {
       status.value = e instanceof Error ? e.message : "Add passkey error";

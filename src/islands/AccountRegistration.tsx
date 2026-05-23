@@ -1,13 +1,10 @@
-import {
-  type PublicKeyCredentialCreationOptionsJSON,
-  startRegistration,
-} from "@simplewebauthn/browser";
 import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { FieldGroup } from "../components/ui/FieldGroup.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
+import { registerPasskey } from "../vendor/fresh-passkeys/client.ts";
 
 export default function AccountRegistration() {
   const username = useSignal("");
@@ -21,38 +18,7 @@ export default function AccountRegistration() {
       return;
     }
     try {
-      const optRes = await fetch(
-        `/api/auth/register-public?username=${encodeURIComponent(name)}`,
-      );
-      if (!optRes.ok) {
-        const err = await optRes.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = err.error ??
-          `Could not start registration (${optRes.status})`;
-        return;
-      }
-      const { challengeId, options } = await optRes.json() as {
-        challengeId: string;
-        options: unknown;
-      };
-      const credential = await startRegistration({
-        optionsJSON: options as PublicKeyCredentialCreationOptionsJSON,
-      });
-      const finishRes = await fetch("/api/auth/register-public", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ challengeId, username: name, credential }),
-      });
-      if (!finishRes.ok) {
-        const err = await finishRes.json().catch(() => ({})) as {
-          error?: string;
-        };
-        status.value = err.error ??
-          `Registration failed (${finishRes.status})`;
-        return;
-      }
+      await registerPasskey(name);
       globalThis.location.href = "/account";
     } catch (e) {
       status.value = e instanceof Error ? e.message : "Registration error";
