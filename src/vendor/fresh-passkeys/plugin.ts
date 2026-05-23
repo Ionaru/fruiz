@@ -9,7 +9,7 @@ import {
   verifyAddPasskey,
   verifyPublicRegistration,
 } from "./ceremonies.ts";
-import type { PasskeyConfig } from "./types.ts";
+import type { PasskeyConfig, PasskeyRequestContext } from "./types.ts";
 
 function json(data: unknown, status = 200, headers?: Headers): Response {
   return Response.json(data, headers ? { status, headers } : { status });
@@ -37,8 +37,10 @@ async function readJson(
 }
 
 /**
- * Registers the passkey ceremony endpoints on a Fresh 2.x app. Call before
- * `app.fsRoutes()`. Identity and sessions are delegated to the config hooks.
+ * Registers the passkey ceremony endpoints on a Fresh 2.x app as a single
+ * dispatch middleware (via `app.use`). Call before `app.fsRoutes()`, and after
+ * whatever middleware populates the session the hooks read. Identity and
+ * sessions are delegated to the config hooks.
  */
 export function passkeyAuth<S>(
   app: App<S>,
@@ -50,123 +52,123 @@ export function passkeyAuth<S>(
     rpName: config.rpName,
     store: config.store,
   };
-  const originOf = (ctx: { req: Request; url: URL }): string => {
+  const originOf = (ctx: PasskeyRequestContext<S>): string => {
     if (config.expectedOrigin) return config.expectedOrigin(ctx.req);
     return ctx.req.headers.get("origin") ?? ctx.url.origin;
   };
 
-  app.get(`${base}/register-public`, async (ctx) => {
-    const username = ctx.url.searchParams.get("username") ?? "";
-    const err = config.validateUsername?.(username);
-    if (err) return json({ error: err }, 400);
-    try {
-      return json(await beginPublicRegistration(opts, username));
-    } catch (e) {
-      return json({ error: message(e) }, 500);
-    }
-  });
+  app.use(async (ctx) => {
+    const route = `${ctx.req.method} ${ctx.url.pathname}`;
 
-  app.post(`${base}/register-public`, async (ctx) => {
-    const body = await readJson(ctx.req);
-    if (!body) return json({ error: "Invalid JSON body" }, 400);
-    if (
-      !body.challengeId || body.credential === undefined ||
-      body.username === undefined
-    ) {
-      return json(
-        { error: "challengeId, username, and credential are required" },
-        400,
-      );
-    }
-    const username = String(body.username);
-    const uerr = config.validateUsername?.(username);
-    if (uerr) return json({ error: uerr }, 400);
-    try {
-      const verified = await verifyPublicRegistration(
-        opts,
-        String(body.challengeId),
-        body.credential,
-        originOf(ctx),
-      );
-      if (verified.username !== username.trim()) {
-        return json({ error: "Username does not match registration" }, 400);
+    if (route === `GET ${base}/register-public`) {
+      const username = ctx.url.searchParams.get("username") ?? "";
+      const err = config.validateUsername?.(username);
+      if (err) return json({ error: err }, 400);
+      try {
+        return json(await beginPublicRegistration(opts, username));
+      } catch (e) {
+        return json({ error: message(e) }, 500);
       }
-      return await config.onRegistered(verified, ctx);
-    } catch (e) {
-      const msg = message(e);
-      return json({ error: msg }, finishStatus(msg));
     }
-  });
 
-  app.get(`${base}/register-add-passkey`, async (ctx) => {
-    const userId = config.getSessionUserId(ctx);
-    if (!userId) return json({ error: "Unauthorized" }, 401);
-    try {
-      return json(await beginAddPasskey(opts, userId));
-    } catch (e) {
-      return json({ error: message(e) }, 500);
-    }
-  });
-
-  app.post(`${base}/register-add-passkey`, async (ctx) => {
-    const userId = config.getSessionUserId(ctx);
-    if (!userId) return json({ error: "Unauthorized" }, 401);
-    const body = await readJson(ctx.req);
-    if (!body) return json({ error: "Invalid JSON body" }, 400);
-    if (!body.challengeId || body.credential === undefined) {
-      return json(
-        { error: "challengeId and credential are required" },
-        400,
-      );
-    }
-    try {
-      const { credentialId } = await verifyAddPasskey(
-        opts,
-        String(body.challengeId),
-        body.credential,
-        originOf(ctx),
-        userId,
-      );
-      return json({ ok: true, credentialId }, 201);
-    } catch (e) {
-      const msg = message(e);
-      return json({ error: msg }, finishStatus(msg));
-    }
-  });
-
-  app.get(`${base}/authenticate`, async (_ctx) => {
-    try {
-      return json(await beginAuthentication(opts));
-    } catch (e) {
-      const msg = message(e);
-      if (msg.includes("No passkeys")) {
-        return json({ error: "No passkeys registered" }, 404);
+    if (route === `POST ${base}/register-public`) {
+      const body = await readJson(ctx.req);
+      if (!body) return json({ error: "Invalid JSON body" }, 400);
+      if (
+        !body.challengeId || body.credential === undefined ||
+        body.username === undefined
+      ) {
+        return json(
+          { error: "challengeId, username, and credential are required" },
+          400,
+        );
       }
-      return json({ error: msg }, 500);
+      const username = String(body.username);
+      const uerr = config.validateUsername?.(username);
+      if (uerr) return json({ error: uerr }, 400);
+      try {
+        const verified = await verifyPublicRegistration(
+          opts,
+          String(body.challengeId),
+          body.credential,
+          originOf(ctx),
+        );
+        if (verified.username !== username.trim()) {
+          return json({ error: "Username does not match registration" }, 400);
+        }
+        return await config.onRegistered(verified, ctx);
+      } catch (e) {
+        const msg = message(e);
+        return json({ error: msg }, finishStatus(msg));
+      }
     }
-  });
 
-  app.post(`${base}/authenticate`, async (ctx) => {
-    const body = await readJson(ctx.req);
-    if (!body) return json({ error: "Invalid JSON body" }, 400);
-    if (!body.challengeId || body.credential === undefined) {
-      return json(
-        { error: "challengeId and credential are required" },
-        400,
-      );
+    if (route === `GET ${base}/register-add-passkey`) {
+      const userId = config.getSessionUserId(ctx);
+      if (!userId) return json({ error: "Unauthorized" }, 401);
+      try {
+        return json(await beginAddPasskey(opts, userId));
+      } catch (e) {
+        return json({ error: message(e) }, 500);
+      }
     }
-    try {
-      const { userId } = await finishAuthentication(
-        opts,
-        String(body.challengeId),
-        body.credential,
-        originOf(ctx),
-      );
-      return await config.onAuthenticated(userId, ctx);
-    } catch (e) {
-      const msg = message(e);
-      return json({ error: msg }, finishStatus(msg));
+
+    if (route === `POST ${base}/register-add-passkey`) {
+      const userId = config.getSessionUserId(ctx);
+      if (!userId) return json({ error: "Unauthorized" }, 401);
+      const body = await readJson(ctx.req);
+      if (!body) return json({ error: "Invalid JSON body" }, 400);
+      if (!body.challengeId || body.credential === undefined) {
+        return json({ error: "challengeId and credential are required" }, 400);
+      }
+      try {
+        const { credentialId } = await verifyAddPasskey(
+          opts,
+          String(body.challengeId),
+          body.credential,
+          originOf(ctx),
+          userId,
+        );
+        return json({ ok: true, credentialId }, 201);
+      } catch (e) {
+        const msg = message(e);
+        return json({ error: msg }, finishStatus(msg));
+      }
     }
+
+    if (route === `GET ${base}/authenticate`) {
+      try {
+        return json(await beginAuthentication(opts));
+      } catch (e) {
+        const msg = message(e);
+        if (msg.includes("No passkeys")) {
+          return json({ error: "No passkeys registered" }, 404);
+        }
+        return json({ error: msg }, 500);
+      }
+    }
+
+    if (route === `POST ${base}/authenticate`) {
+      const body = await readJson(ctx.req);
+      if (!body) return json({ error: "Invalid JSON body" }, 400);
+      if (!body.challengeId || body.credential === undefined) {
+        return json({ error: "challengeId and credential are required" }, 400);
+      }
+      try {
+        const { userId } = await finishAuthentication(
+          opts,
+          String(body.challengeId),
+          body.credential,
+          originOf(ctx),
+        );
+        return await config.onAuthenticated(userId, ctx);
+      } catch (e) {
+        const msg = message(e);
+        return json({ error: msg }, finishStatus(msg));
+      }
+    }
+
+    return ctx.next();
   });
 
   return app;

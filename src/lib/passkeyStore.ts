@@ -13,7 +13,15 @@ import type {
 // specs/90-roadmap.md. The adapter boundary makes that a drop-in swap.
 const challenges = new Map<string, ChallengeEntry>();
 
-function toStored(row: typeof passkeys.$inferSelect): StoredPasskey {
+type PasskeyRow = {
+  userId: string;
+  credentialId: string;
+  publicKey: string;
+  counter: number;
+  transports: string | null;
+};
+
+function toStored(row: PasskeyRow): StoredPasskey {
   return {
     userId: row.userId,
     credentialId: row.credentialId,
