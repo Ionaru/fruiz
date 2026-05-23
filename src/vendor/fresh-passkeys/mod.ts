@@ -4,7 +4,6 @@ export { passkeyAuth } from "./plugin.ts";
 export type {
   ChallengeEntry,
   PasskeyConfig,
-  PasskeyRequestContext,
   PasskeyStore,
   StoredPasskey,
   VerifiedRegistration,

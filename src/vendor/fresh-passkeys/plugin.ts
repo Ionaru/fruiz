@@ -9,7 +9,7 @@ import {
   verifyAddPasskey,
   verifyPublicRegistration,
 } from "./ceremonies.ts";
-import type { PasskeyConfig, PasskeyRequestContext } from "./types.ts";
+import type { PasskeyConfig } from "./types.ts";
 
 function json(data: unknown, status = 200, headers?: Headers): Response {
   return Response.json(data, headers ? { status, headers } : { status });
@@ -52,9 +52,9 @@ export function passkeyAuth<S>(
     rpName: config.rpName,
     store: config.store,
   };
-  const originOf = (ctx: PasskeyRequestContext<S>): string => {
-    if (config.expectedOrigin) return config.expectedOrigin(ctx.req);
-    return ctx.req.headers.get("origin") ?? ctx.url.origin;
+  const originOf = (req: Request): string => {
+    if (config.expectedOrigin) return config.expectedOrigin(req);
+    return req.headers.get("origin") ?? new URL(req.url).origin;
   };
 
   app.use(async (ctx) => {
@@ -91,12 +91,12 @@ export function passkeyAuth<S>(
           opts,
           String(body.challengeId),
           body.credential,
-          originOf(ctx),
+          originOf(ctx.req),
         );
         if (verified.username !== username.trim()) {
           return json({ error: "Username does not match registration" }, 400);
         }
-        return await config.onRegistered(verified, ctx);
+        return await config.onRegistered(verified, ctx.state);
       } catch (e) {
         const msg = message(e);
         return json({ error: msg }, finishStatus(msg));
@@ -104,7 +104,7 @@ export function passkeyAuth<S>(
     }
 
     if (route === `GET ${base}/register-add-passkey`) {
-      const userId = config.getSessionUserId(ctx);
+      const userId = config.getSessionUserId(ctx.state);
       if (!userId) return json({ error: "Unauthorized" }, 401);
       try {
         return json(await beginAddPasskey(opts, userId));
@@ -114,7 +114,7 @@ export function passkeyAuth<S>(
     }
 
     if (route === `POST ${base}/register-add-passkey`) {
-      const userId = config.getSessionUserId(ctx);
+      const userId = config.getSessionUserId(ctx.state);
       if (!userId) return json({ error: "Unauthorized" }, 401);
       const body = await readJson(ctx.req);
       if (!body) return json({ error: "Invalid JSON body" }, 400);
@@ -126,7 +126,7 @@ export function passkeyAuth<S>(
           opts,
           String(body.challengeId),
           body.credential,
-          originOf(ctx),
+          originOf(ctx.req),
           userId,
         );
         return json({ ok: true, credentialId }, 201);
@@ -159,9 +159,9 @@ export function passkeyAuth<S>(
           opts,
           String(body.challengeId),
           body.credential,
-          originOf(ctx),
+          originOf(ctx.req),
         );
-        return await config.onAuthenticated(userId, ctx);
+        return await config.onAuthenticated(userId, ctx.state);
       } catch (e) {
         const msg = message(e);
         return json({ error: msg }, finishStatus(msg));

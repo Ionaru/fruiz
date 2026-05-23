@@ -56,19 +56,10 @@ export interface PasskeyStore {
 }
 
 /**
- * Minimal request context the hooks receive. Structural on purpose: the host's
- * full Fresh context satisfies it without the plugin forcing a `State` shape.
- */
-export interface PasskeyRequestContext<S> {
-  req: Request;
-  url: URL;
-  state: S;
-}
-
-/**
  * Plugin configuration. The plugin owns ceremonies + challenge lifecycle +
  * counter updates; identity, the user model and sessions stay host-side and are
- * reached through the hooks below.
+ * reached through the hooks below. The hooks receive the host's request state
+ * (`ctx.state`) so the plugin never forces a context shape on the host.
  */
 export interface PasskeyConfig<S> {
   rpId: string;
@@ -81,16 +72,16 @@ export interface PasskeyConfig<S> {
   /** Host-owned username policy; runs before public registration begins. */
   validateUsername?: (username: string) => string | null;
   /** Identity hook: the current user id, or null when unauthenticated. */
-  getSessionUserId: (ctx: PasskeyRequestContext<S>) => string | null;
+  getSessionUserId: (state: S) => string | null;
   /** Host persists user + passkey + session and returns the HTTP response. */
   onRegistered: (
     verified: VerifiedRegistration,
-    ctx: PasskeyRequestContext<S>,
+    state: S,
   ) => Promise<Response>;
   /** Host creates its session for `userId` and returns the HTTP response. */
   onAuthenticated: (
     userId: string,
-    ctx: PasskeyRequestContext<S>,
+    state: S,
   ) => Promise<Response>;
 }
 </content>

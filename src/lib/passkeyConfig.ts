@@ -30,7 +30,7 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
     rpName: getRpName(),
     store: new DrizzlePasskeyStore(),
     validateUsername,
-    getSessionUserId: (ctx) => ctx.state.session.user?.id ?? null,
+    getSessionUserId: (state) => state.session.user?.id ?? null,
 
     onRegistered: (verified) => {
       const sessionId = insertUserPasskeyAndSession(verified);
@@ -44,8 +44,8 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
       );
     },
 
-    onAuthenticated: async (userId, ctx) => {
-      const priorSessionId = ctx.state.session.id;
+    onAuthenticated: async (userId, state) => {
+      const priorSessionId = state.session.id;
       if (priorSessionId) {
         await deleteDbSession(priorSessionId).catch(() => {});
       }
