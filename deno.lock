@@ -8,6 +8,7 @@
     "jsr:@fresh/core@2": "2.3.3",
     "jsr:@fresh/core@^2.3.3": "2.3.3",
     "jsr:@fresh/plugin-vite@^1.1.2": "1.1.2",
+    "jsr:@ionaru/fresh-passkeys@1": "1.0.0",
     "jsr:@simplewebauthn/browser@^13.3.0": "13.3.0",
     "jsr:@simplewebauthn/server@^13.3.0": "13.3.0",
     "jsr:@std/assert@^1.0.19": "1.0.19",
@@ -137,6 +138,15 @@
         "npm:@types/babel__core",
         "npm:rollup",
         "npm:vite@^7.1.4"
+      ]
+    },
+    "@ionaru/fresh-passkeys@1.0.0": {
+      "integrity": "dd694f7aa23d40f310b1f84af515da3efb0f20bbfeb5730c2cc15b9ff18ad096",
+      "dependencies": [
+        "jsr:@fresh/core@^2.3.3",
+        "jsr:@simplewebauthn/browser",
+        "jsr:@simplewebauthn/server",
+        "jsr:@std/encoding"
       ]
     },
     "@simplewebauthn/browser@13.3.0": {
@@ -1948,6 +1958,7 @@
     "dependencies": [
       "jsr:@fresh/core@^2.3.3",
       "jsr:@fresh/plugin-vite@^1.1.2",
+      "jsr:@ionaru/fresh-passkeys@1",
       "jsr:@simplewebauthn/browser@^13.3.0",
       "jsr:@simplewebauthn/server@^13.3.0",
       "jsr:@std/assert@^1.0.19",

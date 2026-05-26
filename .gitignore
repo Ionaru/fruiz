@@ -10,6 +10,8 @@ _fresh/
 # npm + other dependencies
 node_modules/
 vendor/
+# PoC: vendored passkey plugin stand-in (not a Deno-vendored dependency)
+!src/vendor/
 
 *.db
 data/music

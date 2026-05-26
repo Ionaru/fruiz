@@ -20,7 +20,7 @@ export function InlineAlert(props: Readonly<InlineAlertProps>) {
   const classes = [variantClass[variant], className].filter(Boolean).join(" ");
   return (
     <p class={classes} role={role}>
-      {children}
+      Error: {children}
     </p>
   );
 }

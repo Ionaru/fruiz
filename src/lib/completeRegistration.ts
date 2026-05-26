@@ -1,6 +1,6 @@
 import { db } from "../db/db.ts";
 import { passkeys, sessions, users } from "../db/schema.ts";
-import type { VerifiedRegistration } from "./auth.ts";
+import type { VerifiedRegistration } from "@ionaru/fresh-passkeys/server";
 import { SESSION_TTL_MS } from "./session.ts";
 
 /** Transaction: `users` + `passkeys` + `sessions`; returns new session id for Set-Cookie. */
