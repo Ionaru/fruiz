@@ -3,9 +3,7 @@ import { AccountInfo } from "../components/account/AccountInfo.tsx";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
-import {
-  addPasskey as addPasskeyRequest,
-} from "../vendor/fresh-passkeys/client.ts";
+import { passkeyClient, passkeyErrorMessage } from "../lib/passkeyClient.ts";
 
 type Props = { username: string; isAdmin?: boolean };
 
@@ -15,10 +13,10 @@ export default function AccountManage({ username, isAdmin }: Props) {
   const addPasskey = async () => {
     status.value = "";
     try {
-      await addPasskeyRequest();
+      await passkeyClient.addPasskey();
       status.value = "Passkey added.";
     } catch (e) {
-      status.value = e instanceof Error ? e.message : "Add passkey error";
+      status.value = passkeyErrorMessage(e, "Add passkey error");
     }
   };
 

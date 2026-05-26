@@ -1,6 +1,6 @@
 // Host-owned username policy. WebAuthn ceremonies, the challenge lifecycle and
-// counter updates now live in the vendored passkey plugin
-// (src/vendor/fresh-passkeys/), wired up via src/lib/passkeyConfig.ts.
+// counter updates now live in the `fresh-passkeys` plugin, wired up via
+// src/lib/passkeyConfig.ts.
 
 /** Returns `null` if valid, otherwise a user-facing error message. */
 export function validateUsername(username: string): string | null {

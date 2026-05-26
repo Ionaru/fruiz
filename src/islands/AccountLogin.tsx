@@ -2,7 +2,7 @@ import { useSignal } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
-import { loginPasskey } from "../vendor/fresh-passkeys/client.ts";
+import { passkeyClient, passkeyErrorMessage } from "../lib/passkeyClient.ts";
 
 export default function AccountLogin() {
   const status = useSignal("");
@@ -10,10 +10,10 @@ export default function AccountLogin() {
   const login = async () => {
     status.value = "";
     try {
-      await loginPasskey();
+      await passkeyClient.login();
       globalThis.location.href = "/account";
     } catch (error) {
-      status.value = error instanceof Error ? error.message : "Login error";
+      status.value = passkeyErrorMessage(error, "Login error");
     }
   };
 

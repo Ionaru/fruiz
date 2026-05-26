@@ -4,7 +4,7 @@ import { FieldGroup } from "../components/ui/FieldGroup.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
-import { registerPasskey } from "../vendor/fresh-passkeys/client.ts";
+import { passkeyClient, passkeyErrorMessage } from "../lib/passkeyClient.ts";
 
 export default function AccountRegistration() {
   const username = useSignal("");
@@ -18,10 +18,10 @@ export default function AccountRegistration() {
       return;
     }
     try {
-      await registerPasskey(name);
+      await passkeyClient.register(name);
       globalThis.location.href = "/account";
     } catch (e) {
-      status.value = e instanceof Error ? e.message : "Registration error";
+      status.value = passkeyErrorMessage(e, "Registration error");
     }
   };
 

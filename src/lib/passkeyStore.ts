@@ -6,7 +6,7 @@ import type {
   ChallengeEntry,
   PasskeyStore,
   StoredPasskey,
-} from "../vendor/fresh-passkeys/mod.ts";
+} from "@ionaru/fresh-passkeys/server";
 
 // In-memory challenge map: single-process only. A horizontally-scaled deploy
 // must back this with a shared store (Redis or a `challenges` table) — see
@@ -33,7 +33,7 @@ function toStored(row: PasskeyRow): StoredPasskey {
 
 /** Drizzle/SQLite implementation of the plugin's storage port. */
 export class DrizzlePasskeyStore implements PasskeyStore {
-  putChallenge(id: string, entry: ChallengeEntry): void {
+  saveChallenge(id: string, entry: ChallengeEntry): void {
     challenges.set(id, entry);
   }
 
@@ -57,7 +57,7 @@ export class DrizzlePasskeyStore implements PasskeyStore {
     return rows.map(toStored);
   }
 
-  async savePasskey(passkey: StoredPasskey): Promise<void> {
+  async createPasskey(passkey: StoredPasskey): Promise<void> {
     await db.insert(passkeys).values({
       userId: passkey.userId,
       credentialId: passkey.credentialId,
@@ -68,7 +68,7 @@ export class DrizzlePasskeyStore implements PasskeyStore {
     });
   }
 
-  async bumpCounter(credentialId: string, counter: number): Promise<void> {
+  async setCounter(credentialId: string, counter: number): Promise<void> {
     await db
       .update(passkeys)
       .set({ counter })
@@ -80,7 +80,7 @@ export class DrizzlePasskeyStore implements PasskeyStore {
     return rows.length > 0;
   }
 
-  async getUsername(userId: string): Promise<string | null> {
+  async findUsername(userId: string): Promise<string | null> {
     const user = await db.query.users.findFirst({ where: { id: userId } });
     return user?.username ?? null;
   }

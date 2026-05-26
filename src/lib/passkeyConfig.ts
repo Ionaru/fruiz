@@ -1,5 +1,5 @@
 import { db } from "../db/db.ts";
-import type { PasskeyConfig } from "../vendor/fresh-passkeys/mod.ts";
+import type { PasskeyConfig } from "@ionaru/fresh-passkeys/server";
 import type { State } from "../utils.ts";
 import { validateUsername } from "./auth.ts";
 import { insertUserPasskeyAndSession } from "./completeRegistration.ts";
@@ -45,6 +45,13 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
     },
 
     onAuthenticated: async (userId, state) => {
+      // Reject an orphaned credential (passkey row whose user is gone) before
+      // minting a session — verifying the ceremony is not enough to log in.
+      const user = await db.query.users.findFirst({ where: { id: userId } });
+      if (!user) {
+        return Response.json({ error: "User not found" }, { status: 401 });
+      }
+
       const priorSessionId = state.session.id;
       if (priorSessionId) {
         await deleteDbSession(priorSessionId).catch(() => {});
@@ -53,15 +60,10 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
       const headers = new Headers();
       appendSessionCookie(headers, sessionId);
 
-      const user = await db.query.users.findFirst({ where: { id: userId } });
       return Response.json(
         {
           ok: true,
-          user: {
-            id: userId,
-            username: user?.username ?? "",
-            admin: user?.admin ?? false,
-          },
+          user: { id: userId, username: user.username, admin: user.admin },
         },
         { status: 200, headers },
       );
