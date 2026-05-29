@@ -11,158 +11,142 @@ This subsystem owns:
 
 - The `users`, `passkeys`, and `sessions` tables and the helpers that create /
   read / delete rows in them.
-- WebAuthn ceremonies for public registration, adding a second passkey, and
-  discoverable login.
+- The integration of the external `@ionaru/fresh-passkeys` plugin: the storage
+  adapter for its port and the hooks that translate ceremony results into user,
+  passkey, and session writes.
 - The signed session cookie (`fruiz_session`, opaque UUID) and the request-time
   helpers that read / write / clear it.
 - The `requireAdminSessionOrRedirect` helper that gates `/admin/*` on
   `users.admin === true`.
-- The account management UI: `/account` hub, `/account/login`,
+- The account management UI: the `/account` hub, `/account/login`,
   `/account/register`, and the logout action.
 
 The session middleware that hydrates `ctx.state.session` on every request lives
 in spec 10. Admin CRUD that the admin gate protects lives in spec 09.
 
+## Plugin boundary
+
+The WebAuthn ceremonies themselves — option generation and signature
+verification, single-use challenge storage, and credential counter updates —
+live in the `@ionaru/fresh-passkeys` package. Fruiz wires it in at app boot and
+supplies two things:
+
+- **A storage adapter** that persists challenges, credentials, and counter
+  bumps. The adapter keeps the challenge map in process memory (a known
+  single-process limitation tracked in `90-roadmap.md`) and persists everything
+  else via Drizzle.
+- **Identity and session hooks.** A "current user id" reader for the
+  authenticated add-passkey ceremony, an `onRegistered` hook that runs the
+  atomic user + passkey + session transaction and sets the cookie, and an
+  `onAuthenticated` hook that mints a session for an already-known user.
+  Username validation also stays host-side.
+
+The plugin registers a single dispatch middleware that serves the
+`/api/auth/register-public`, `/api/auth/register-add-passkey`, and
+`/api/auth/authenticate` endpoints. The host does not implement those routes
+itself; the cookie, the user record, and the transaction live entirely in the
+host through the hooks.
+
 ## Behavior
 
 ### Registration (public)
 
-[`src/routes/api/auth/register-public.ts`](../src/routes/api/auth/register-public.ts)
-implements the two-step ceremony.
-
-1. **Begin (`beginPublicRegistration(username)`):**
-   - Validate the username with `validateUsername`: trimmed length must be 3–24
-     characters. The spec deliberately stops short of uniqueness and
-     character-set rules — internal user ids distinguish accounts.
-   - Generate a `pendingUserId` (UUID) used as the WebAuthn `user.id` byte
-     array.
-   - Call `@simplewebauthn/server.generateRegistrationOptions` with
-     `residentKey: "required"` and `userVerification: "preferred"`.
-   - Store the challenge entry (challenge string, expiry, pending user id,
-     username) in the in-memory `challenges` map under a UUID `challengeId`. TTL
-     is **5 minutes**.
-2. **Finish
-   (`verifyPublicRegistration(challengeId, credential,
-   expectedOrigin)`):**
-   - `takeChallenge` reads-and-deletes the entry (single-use) and enforces TTL.
-   - `verifyRegistrationResponse` checks the attestation. Failure throws.
-   - Extract `credentialId`, `publicKey`, `counter`, and `transports` from the
-     verification result. Both binary values are base64url encoded.
-3. **Persist (`insertUserPasskeyAndSession`** in
-   [`src/lib/completeRegistration.ts`](../src/lib/completeRegistration.ts)
-   **):**
-   - One synchronous Drizzle transaction inserts the `users` row (admin: false),
-     the `passkeys` row, and an active `sessions` row.
-   - Returns the new `sessionId` for the response handler to `Set-Cookie` via
-     `appendSessionCookie`.
+1. **Begin.** The host validates the username (trimmed length 3–24; the spec
+   deliberately stops short of uniqueness and character-set rules — internal
+   user ids distinguish accounts). The plugin generates a fresh provisional user
+   id, requests a discoverable credential (`residentKey: "required"`,
+   `userVerification: "preferred"`), and stores the challenge entry for **5
+   minutes** under a single-use challenge id.
+2. **Finish.** The plugin reads-and-deletes the challenge (TTL enforced) and
+   verifies the attestation. On success it hands the verified credential to the
+   host, which runs one synchronous Drizzle transaction inserting the `users`
+   row (admin: false), the `passkeys` row, and an active `sessions` row, then
+   sets the session cookie.
 
 ### Discoverable login
 
-[`src/routes/api/auth/authenticate.ts`](../src/routes/api/auth/authenticate.ts)
-implements two stages.
-
-1. **Begin (`beginAuthentication`):**
-   - Refuses if no passkeys are registered in the DB (no possible login).
-   - Generates
-     `generateAuthenticationOptions({ userVerification:
-     "preferred" })`
-     with no `allowCredentials` — the browser surfaces a device picker over
-     resident credentials.
-   - Stores the challenge with a 5-minute TTL.
-2. **Finish (`finishAuthentication`):**
-   - Looks up the asserted `credentialId` via Drizzle (`passkeys` with
-     `with: { user: true }`).
-   - `verifyAuthenticationResponse` validates the assertion against the stored
-     public key and current counter.
-   - On success, updates `passkeys.counter` with the new counter to keep replay
-     detection valid.
-   - Returns `{ userId, username, admin }`.
-3. **Session creation:** `createDbSession(userId)` inserts a `sessions` row with
-   a `crypto.randomUUID()` id and `expiresAt = now + 7 days`.
-   `appendSessionCookie` attaches it.
+1. **Begin.** If no passkeys are registered at all the begin endpoint refuses,
+   so the UI can surface a "no passkeys" message without launching the prompt.
+   Otherwise the plugin produces authentication options with no
+   `allowCredentials` — the browser surfaces a device picker over resident
+   credentials — and stores a 5-minute challenge.
+2. **Finish.** The plugin looks up the asserted credential, validates the
+   assertion against the stored public key and counter, and updates the counter
+   to the new value to keep replay detection valid. It then hands the resolved
+   user id to the host.
+3. **Session creation.** The host re-checks that the user row still exists
+   (verifying the ceremony is not enough to log in — an orphaned credential
+   whose user is gone must not mint a session), deletes any prior session that
+   arrived on the request, inserts a new `sessions` row with
+   `expires_at = now + 7 days`, and sets the cookie.
 
 ### Add a second passkey
 
-[`src/routes/api/auth/register-add-passkey.ts`](../src/routes/api/auth/register-add-passkey.ts)
-implements the authenticated "add passkey" ceremony.
-
-1. **Begin (`beginAddPasskey(userId)`):**
-   - Looks up the existing user; rejects unknown ids.
-   - Builds `excludeCredentials` from the user's current passkeys so the same
-     device can't re-register itself.
-   - Stores the challenge with `addPasskeyUserId` populated.
-2. **Finish (`verifyAddPasskey`):**
-   - Re-verifies that the challenge's `addPasskeyUserId` matches the
-     authenticated caller (defense against challenge swap).
-   - Inserts the new `passkeys` row.
-
-There is no maximum number of passkeys per account.
+The authenticated "add passkey" ceremony excludes the user's existing
+credentials so the same device cannot re-register itself, and re-checks that the
+challenge's bound user id matches the authenticated caller before persisting the
+new credential. There is no maximum number of passkeys per account.
 
 ### Logout
 
-[`src/routes/api/auth/logout.ts`](../src/routes/api/auth/logout.ts):
-
-1. Reads the current session id from `ctx.state.session.id`. Guests no-op (the
-   cookie clear is still appended for cleanup).
-2. `deleteDbSession(sessionId)` removes the row.
-3. `appendClearSessionCookie` writes a `max-age=0` cookie with the same
-   attributes the live cookie carries (`HttpOnly`, `SameSite=Strict`, `Secure`
-   when `FRUIZ_SECURE_COOKIES === "1"`).
-4. The control is rendered only on `/account`, not on `/admin/*`. The admin
-   shell deliberately has no logout affordance so the logout path cannot be
-   bypassed via the admin UI.
+The logout endpoint deletes the session row (guests no-op) and appends a
+`max-age=0` `fruiz_session` cookie with the same attributes the live cookie
+carries (`HttpOnly`, `SameSite=Strict`, `Secure` when
+`FRUIZ_SECURE_COOKIES === "1"`). The logout control is rendered only on
+`/account`, not on `/admin/*` — the admin shell deliberately has no logout
+affordance so the logout path cannot be bypassed via the admin UI.
 
 ### Admin gate
 
-[`src/lib/adminSession.ts`](../src/lib/adminSession.ts):
-
-```ts
-requireAdminSessionOrRedirect(ctx);
-```
+`requireAdminSessionOrRedirect`:
 
 - Guest → redirect to `/account/login` (302).
 - Logged-in non-admin user → redirect to `/account` (302).
-- Logged-in admin → returns the `AdminRouteSession` object.
+- Logged-in admin → returns the admin route session.
 
-The `admin` flag is read from the loaded `users` row on every request (via the
-session middleware). No long-lived stale admin access. The application **never**
-assigns or revokes admin — provisioning happens out-of-band (SQL or a setup
-script).
+The `admin` flag is read from the loaded `users` row on every request through
+the session middleware. No long-lived stale admin access. The application
+**never** assigns or revokes admin — provisioning happens out-of-band (SQL or a
+setup script).
 
 ### Account hub
 
-`/account` (handler in
-[`src/routes/account/index.tsx`](../src/routes/account/index.tsx)) is the single
-management surface. Logged-in users see their username, can add a second
-passkey, and can log out. Guests see entry points to register and login. The
-home page links to this hub through the `AccountTopNav` layout component so
-SC-004 ("at most two clicks from home") holds.
+`/account` is the single management surface. Logged-in users see their username,
+can add a second passkey, and can log out. Guests see entry points to register
+and login. The home page links to this hub so SC-004 ("at most two clicks from
+home") holds. `/account/login` and `/account/register` host the WebAuthn
+islands.
 
-`/account/login` and `/account/register` are dedicated routes that host the
-WebAuthn islands (`AccountLogin`, `AccountRegistration`, `AccountManage`).
+Browser code reaches the plugin only through a small host-owned passkey client.
+The islands never import `@simplewebauthn` or the plugin's client directly. The
+client surface also rewrites two common WebAuthn failures into user-friendly
+copy: a cancelled or timed-out OS prompt, and an attempt to add a passkey on a
+device that already has one for the account. Other errors fall through with the
+underlying message.
 
 ### Edge cases
 
 - **Username validation failure:** the begin endpoint returns an error before
   any WebAuthn call so the user sees the message before they invoke their
   authenticator.
-- **Challenge expired (5 minutes):** `takeChallenge` returns `null`; the finish
-  endpoint surfaces a clear error and the user re-runs the flow.
-- **Concurrent same-credential add:** `passkeys.credentialId` is unique on the
+- **Challenge expired (5 minutes):** the finish endpoint surfaces a clear error
+  and the user re-runs the flow.
+- **Concurrent same-credential add:** `passkeys.credential_id` is unique on the
   schema; the second insert raises and the user is told to use the existing
   passkey.
-- **Login with no registered passkeys:** `beginAuthentication` throws before any
+- **Login with no registered passkeys:** the begin endpoint throws before any
   options are returned. The UI surfaces a "no passkeys" message.
-- **Session expired:** `loadActiveSession` deletes the expired row and returns
-  `null`. The session middleware then clears the cookie on the outgoing response
-  (spec 10).
+- **Orphaned credential:** a `passkeys` row whose user has been deleted passes
+  ceremony verification but is rejected by the session-minting hook with a 401,
+  and no cookie is set.
+- **Session expired:** the session middleware deletes the expired row and treats
+  the request as guest; the cookie is cleared on the outgoing response (spec
+  10).
 - **Admin flag flipped while logged in:** the next request loads the fresh
   `users.admin` value through the session middleware; the change takes effect
-  immediately on the next request.
+  immediately.
 
 ## Data model
-
-[`src/db/schema.ts`](../src/db/schema.ts):
 
 - **`users`** — `id` (UUID), `username`, `admin` (boolean, default `false`),
   `created_at`.
@@ -172,59 +156,6 @@ WebAuthn islands (`AccountLogin`, `AccountRegistration`, `AccountManage`).
 - **`sessions`** — `id` (UUID, also the cookie value), `user_id` (FK, cascade
   delete), `data` (optional JSON for session-scoped server state), `expires_at`,
   `created_at`, `updated_at`.
-
-Application types:
-
-- `AuthenticatedUser` (`src/lib/auth.ts`) — return shape of
-  `finishAuthentication`.
-- `SessionUser`, `LoadedSession` (`src/lib/session.ts`) — session-load result.
-- `AdminRouteSession` (`src/lib/adminSession.ts`).
-- `VerifiedRegistration` (`src/lib/auth.ts`) — verification result shape passed
-  to `insertUserPasskeyAndSession`.
-
-## Key files
-
-- **Server-only**
-  - [`src/lib/auth.ts`](../src/lib/auth.ts) — challenge map, all WebAuthn
-    ceremonies, username validation.
-  - [`src/lib/session.ts`](../src/lib/session.ts) — cookie name, TTL, DB session
-    CRUD, cookie read / append / clear.
-  - [`src/lib/completeRegistration.ts`](../src/lib/completeRegistration.ts) —
-    one-transaction registration writes.
-  - [`src/lib/adminSession.ts`](../src/lib/adminSession.ts) — admin gate helper.
-- **Routes**
-  - [`src/routes/api/auth/register-public.ts`](../src/routes/api/auth/register-public.ts)
-    — public registration (begin + finish).
-  - [`src/routes/api/auth/register-add-passkey.ts`](../src/routes/api/auth/register-add-passkey.ts)
-    — add-passkey ceremony.
-  - [`src/routes/api/auth/register.ts`](../src/routes/api/auth/register.ts) —
-    legacy admin-passkey route (kept for the `/admin/login` flow).
-  - [`src/routes/api/auth/authenticate.ts`](../src/routes/api/auth/authenticate.ts)
-    — discoverable login (begin + finish).
-  - [`src/routes/api/auth/logout.ts`](../src/routes/api/auth/logout.ts) — delete
-    session + clear cookie.
-  - [`src/routes/account/index.tsx`](../src/routes/account/index.tsx),
-    [`src/routes/account/login.tsx`](../src/routes/account/login.tsx),
-    [`src/routes/account/register.tsx`](../src/routes/account/register.tsx) —
-    account hub and entry pages.
-  - [`src/routes/admin/login.tsx`](../src/routes/admin/login.tsx) — admin login
-    redirect / shell.
-- **Islands (client)**
-  - [`src/islands/AccountLogin.tsx`](../src/islands/AccountLogin.tsx).
-  - [`src/islands/AccountRegistration.tsx`](../src/islands/AccountRegistration.tsx).
-  - [`src/islands/AccountManage.tsx`](../src/islands/AccountManage.tsx).
-- **Components (SSR)**
-  - [`src/components/account/AccountInfo.tsx`](../src/components/account/AccountInfo.tsx).
-  - [`src/components/layout/AccountTopNav.tsx`](../src/components/layout/AccountTopNav.tsx).
-- **Tests**
-  - [`tests/unit/lib/auth_test.ts`](../tests/unit/lib/auth_test.ts) — username
-    validation, challenge store TTL.
-  - [`tests/integration/routes/admin_auth_test.ts`](../tests/integration/routes/admin_auth_test.ts)
-    — full admin gate behavior across guest / non-admin / admin sessions.
-  - [`tests/admin_gate_test.ts`](../tests/admin_gate_test.ts) — focused redirect
-    behavior of `requireAdminSessionOrRedirect`.
-  - [`tests/session_logout_test.ts`](../tests/session_logout_test.ts) — logout
-    deletes the row and clears the cookie.
 
 ## Constraints and invariants
 
@@ -243,38 +174,47 @@ Application types:
   request through the session middleware (spec 10), not cached across requests.
 - **Logout lives on `/account` only.** Admin pages MUST NOT expose a logout
   control.
+- **Verification alone never authorizes a session.** The authentication hook
+  MUST re-check that the user row still exists before issuing a cookie.
+- **Islands stay at arm's length from the plugin.** Browser code goes through
+  the host's passkey client; the plugin and `@simplewebauthn` MUST NOT be
+  imported from islands.
 
 ## Verification approach
 
-- **Unit:** `auth_test.ts` covers `validateUsername` and challenge TTL.
-- **Integration:** `admin_auth_test.ts` exercises guest → redirect to login,
-  logged-in non-admin → redirect to `/account`, logged-in admin → render.
-  `session_logout_test.ts` exercises the cookie-clear path. `admin_gate_test.ts`
-  covers `requireAdminSessionOrRedirect` directly.
+- **Unit:** username validation; the in-memory challenge store's single-use read
+  and TTL expiry; the friendly mapping of cancelled-prompt and
+  already-registered errors.
+- **Integration:** guest → redirect to login, logged-in non-admin → redirect to
+  `/account`, logged-in admin → render; logout deletes the row and clears the
+  cookie.
 - **Manual:**
   - Register a new account on a passkey-capable device; confirm the session
     cookie is set with the right attributes and the new `/account` page shows
     the username.
   - Add a second passkey; log out; log in with each passkey alternately five
     times.
+  - Manually delete a real account's `users` row, then replay the login ceremony
+    with the orphaned credential — the response MUST be a 401 and no cookie MUST
+    be set.
   - Set `users.admin = 1` via SQL and confirm `/admin` renders; flip it back and
     confirm the next request redirects.
   - Confirm `/admin/*` pages have no logout control and `/account` does.
 
 ## Open questions and known risks
 
-- **Challenge store is in-memory.** Single-process today; a horizontally-scaled
-  deploy would need a shared store (Redis, DB table). Document in
-  `90-roadmap.md`.
+- **Challenge store is in-memory.** Single-process today; the adapter boundary
+  makes a horizontally-scaled deploy a drop-in swap to a shared store (Redis, DB
+  table). Tracked in `90-roadmap.md`.
 - **Username uniqueness.** Intentionally not required. If duplicate usernames
   become a UX problem, add a check at registration _and_ a migration plan for
   existing duplicates.
 - **No recovery path.** Losing every registered passkey is unrecoverable by
   design. Production deployments MUST allow operators to insert a new passkey
   row via SQL when a real user gets locked out.
-- **No rate limiting.** Both registration begin and authentication begin are
-  unauthenticated and could be abused. The deployment is expected to apply rate
-  limiting at the edge.
+- **No rate limiting.** Both the registration begin and the authentication begin
+  endpoints are unauthenticated and could be abused. The deployment is expected
+  to apply rate limiting at the edge.
 - **`/admin/login` legacy route.** Kept as a thin entry point for the `/admin/*`
   flow; today it shares the public login UI. If kept indefinitely, fold it into
   `/account/login` and redirect.
