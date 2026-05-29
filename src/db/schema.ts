@@ -112,6 +112,29 @@ export const collectedTracks = sqliteTable(
   ],
 );
 
+export const trackSuggestions = sqliteTable("track_suggestions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull().references(() => users.id, {
+    onDelete: "cascade",
+  }),
+  categoryId: text("category_id").notNull().references(() => categories.id, {
+    onDelete: "cascade",
+  }),
+  title: text("title").notNull(),
+  youtubeUrl: text("youtube_url").notNull(),
+  status: text("status", { enum: ["pending", "approved", "denied"] })
+    .notNull()
+    .default("pending"),
+  /** Reviewer feedback shown to the player; null until reviewed (or left blank). */
+  adminNote: text("admin_note"),
+  /** Admin who reviewed; null until reviewed. `set null` keeps the suggestion if the admin is deleted. */
+  reviewedByUserId: text("reviewed_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const passkeys = sqliteTable("passkeys", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => users.id, {
