@@ -45,6 +45,7 @@ export const handler = define.handlers({
     const titleSuggestions = await getDistinctTitlesForCategory(
       db,
       category.id,
+      difficulty,
     );
     const tracksPayload = quizInstance.tracks;
     const quizPath = `/quiz/${categorySlug}/${slugParam}`;
