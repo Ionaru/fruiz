@@ -66,11 +66,11 @@ difficulty, and code.
 The current single-process server has two state stores that block horizontal
 scale:
 
-- **WebAuthn challenge map** (spec 08). The passkey plugin reaches its
-  challenge store through a host-supplied adapter, so swapping the
-  in-memory map for a shared store (Redis or a `challenges` table) is a
-  drop-in implementation change rather than a rewrite. Required before
-  running more than one server instance.
+- **WebAuthn challenge map** (spec 08). The passkey plugin reaches its challenge
+  store through a host-supplied adapter, so swapping the in-memory map for a
+  shared store (Redis or a `challenges` table) is a drop-in implementation
+  change rather than a rewrite. Required before running more than one server
+  instance.
 - **`AudioContext` lifecycle in islands** (spec 06). Module-scoped context
   survives client-side navigation; revisit if a SPA shell lands.
 
