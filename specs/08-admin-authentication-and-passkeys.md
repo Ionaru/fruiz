@@ -100,9 +100,9 @@ affordance so the logout path cannot be bypassed via the admin UI.
 
 A signed-in player can permanently delete their own account from `/account`. The
 delete control requires an explicit confirmation step — clicking "Delete
-account" opens a native browser confirmation dialog, and the request is only
-sent if the player accepts — satisfying Principle IV's requirement that
-destructive operations confirm before removing data. The
+account" opens an in-page modal `<dialog>` whose own "Delete account" button
+sends the request, while "Cancel" or Escape dismisses it — satisfying Principle
+IV's requirement that destructive operations confirm before removing data. The
 `POST /api/account/delete` endpoint requires an authenticated session (guests
 receive a `401`), deletes the player's `users` row, and clears the
 `fruiz_session` cookie with the same attributes logout uses. Deleting the

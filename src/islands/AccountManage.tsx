@@ -1,4 +1,4 @@
-import { useSignal } from "@preact/signals";
+import { useSignal, useSignalEffect } from "@preact/signals";
 import { AccountInfo } from "../components/account/AccountInfo.tsx";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
@@ -7,12 +7,20 @@ import { passkeyClient, passkeyErrorMessage } from "../lib/passkeyClient.ts";
 
 type Props = { username: string; isAdmin?: boolean };
 
-const DELETE_CONFIRMATION_PROMPT =
-  "Permanently delete your account? This removes your passkeys and collected " +
-  "tracks and cannot be undone.";
-
 export default function AccountManage({ username, isAdmin }: Props) {
   const status = useSignal("");
+  const confirmOpen = useSignal(false);
+  const dialogRef = useSignal<HTMLDialogElement | null>(null);
+
+  useSignalEffect(() => {
+    const dialog = dialogRef.value;
+    if (!dialog) return;
+    if (confirmOpen.value && !dialog.open) {
+      dialog.showModal();
+    } else if (!confirmOpen.value && dialog.open) {
+      dialog.close();
+    }
+  });
 
   const addPasskey = async () => {
     status.value = "";
@@ -43,9 +51,7 @@ export default function AccountManage({ username, isAdmin }: Props) {
   };
 
   const deleteAccount = async () => {
-    if (!globalThis.confirm(DELETE_CONFIRMATION_PROMPT)) {
-      return;
-    }
+    confirmOpen.value = false;
     status.value = "";
     try {
       const res = await fetch("/api/account/delete", {
@@ -101,11 +107,44 @@ export default function AccountManage({ username, isAdmin }: Props) {
           type="button"
           variant="danger"
           class="w-full min-h-11"
-          onClick={() => void deleteAccount()}
+          onClick={() => confirmOpen.value = true}
         >
           Delete account
         </Button>
       </div>
+      <dialog
+        ref={dialogRef}
+        class="backdrop:bg-base-950/70 bg-transparent p-0 max-w-md w-[92vw] m-auto"
+        onClose={() => confirmOpen.value = false}
+      >
+        <PlateauCard class="space-y-4">
+          <h2 class="text-lg font-semibold text-red-900 dark:text-red-200">
+            Delete your account?
+          </h2>
+          <p class="text-sm text-base-800 dark:text-base-100">
+            This permanently removes your account, passkeys, and collected
+            tracks. It cannot be undone.
+          </p>
+          <div class="flex flex-col gap-3">
+            <Button
+              type="button"
+              variant="danger"
+              class="w-full min-h-11"
+              onClick={() => void deleteAccount()}
+            >
+              Delete account
+            </Button>
+            <Button
+              type="button"
+              variant="neutral"
+              class="w-full min-h-11"
+              onClick={() => confirmOpen.value = false}
+            >
+              Cancel
+            </Button>
+          </div>
+        </PlateauCard>
+      </dialog>
     </PlateauCard>
   );
 }
