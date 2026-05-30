@@ -99,12 +99,13 @@ affordance so the logout path cannot be bypassed via the admin UI.
 ### Account deletion
 
 A signed-in player can permanently delete their own account from `/account`. The
-delete control requires an explicit confirmation step — the player types
-`DELETE` into a danger-zone field, which is the only way to enable the button —
-satisfying Principle IV's requirement that destructive operations confirm before
-removing data. The `POST /api/account/delete` endpoint requires an authenticated
-session (guests receive a `401`), deletes the player's `users` row, and clears
-the `fruiz_session` cookie with the same attributes logout uses. Deleting the
+delete control requires an explicit confirmation step — clicking "Delete
+account" opens a native browser confirmation dialog, and the request is only
+sent if the player accepts — satisfying Principle IV's requirement that
+destructive operations confirm before removing data. The
+`POST /api/account/delete` endpoint requires an authenticated session (guests
+receive a `401`), deletes the player's `users` row, and clears the
+`fruiz_session` cookie with the same attributes logout uses. Deleting the
 `users` row is sufficient to remove all of the player's data: `passkeys`,
 `sessions`, and `collected_tracks` all carry an `onDelete: "cascade"` foreign
 key on `users.id`, so the current session and every credential and collection

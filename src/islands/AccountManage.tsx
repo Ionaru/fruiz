@@ -3,16 +3,16 @@ import { AccountInfo } from "../components/account/AccountInfo.tsx";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
-import { TextInput } from "../components/ui/TextInput.tsx";
 import { passkeyClient, passkeyErrorMessage } from "../lib/passkeyClient.ts";
 
 type Props = { username: string; isAdmin?: boolean };
 
-const DELETE_CONFIRMATION = "DELETE";
+const DELETE_CONFIRMATION_PROMPT =
+  "Permanently delete your account? This removes your passkeys and collected " +
+  "tracks and cannot be undone.";
 
 export default function AccountManage({ username, isAdmin }: Props) {
   const status = useSignal("");
-  const confirmText = useSignal("");
 
   const addPasskey = async () => {
     status.value = "";
@@ -43,6 +43,9 @@ export default function AccountManage({ username, isAdmin }: Props) {
   };
 
   const deleteAccount = async () => {
+    if (!globalThis.confirm(DELETE_CONFIRMATION_PROMPT)) {
+      return;
+    }
     status.value = "";
     try {
       const res = await fetch("/api/account/delete", {
@@ -94,22 +97,10 @@ export default function AccountManage({ username, isAdmin }: Props) {
           This permanently removes your account, passkeys, and collected tracks.
           It cannot be undone.
         </p>
-        <label class="block text-sm space-y-2">
-          <span>
-            Type <code>{DELETE_CONFIRMATION}</code> to confirm
-          </span>
-          <TextInput
-            name="confirm"
-            autocomplete="off"
-            value={confirmText.value}
-            onInput={(event) => confirmText.value = event.currentTarget.value}
-          />
-        </label>
         <Button
           type="button"
           variant="danger"
           class="w-full min-h-11"
-          disabled={confirmText.value !== DELETE_CONFIRMATION}
           onClick={() => void deleteAccount()}
         >
           Delete account
