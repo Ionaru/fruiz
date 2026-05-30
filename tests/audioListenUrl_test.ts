@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { buildListenSrc } from "./audioListenUrl.ts";
+import { buildListenSrc } from "../src/lib/audioListenUrl.ts";
 
 Deno.test("buildListenSrc — both null → no query string", () => {
   assertEquals(
