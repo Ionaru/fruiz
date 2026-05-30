@@ -113,7 +113,9 @@ export default function AccountManage({ username, isAdmin }: Props) {
         </Button>
       </div>
       <dialog
-        ref={dialogRef}
+        ref={(element) => {
+          dialogRef.value = element;
+        }}
         class="backdrop:bg-base-950/70 bg-transparent p-0 max-w-md w-[92vw] m-auto"
         onClose={() => confirmOpen.value = false}
       >
@@ -136,7 +138,6 @@ export default function AccountManage({ username, isAdmin }: Props) {
             </Button>
             <Button
               type="button"
-              variant="neutral"
               class="w-full min-h-11"
               onClick={() => confirmOpen.value = false}
             >
