@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
@@ -180,12 +180,21 @@ export async function getTracksForCategory(
 export async function getDistinctTitlesForCategory(
   db: DB,
   categoryId: string,
+  difficulty?: DifficultyMode,
 ): Promise<string[]> {
+  // Easy mode narrows the suggestion pool to easy-difficulty titles only, so the
+  // autocomplete is genuinely easier. "hard"/"mixed" (and the unspecified case)
+  // keep the full-category pool that deliberately hides which titles are in play.
+  const categoryFilter = eq(trackCategories.categoryId, categoryId);
+  const where = difficulty === "easy"
+    ? and(categoryFilter, eq(tracks.difficulty, "easy"))
+    : categoryFilter;
+
   const rows = await db
     .selectDistinct({ title: tracks.title })
     .from(tracks)
     .innerJoin(trackCategories, eq(trackCategories.trackId, tracks.id))
-    .where(eq(trackCategories.categoryId, categoryId))
+    .where(where)
     .orderBy(tracks.title);
 
   return rows.map((row) => row.title);
