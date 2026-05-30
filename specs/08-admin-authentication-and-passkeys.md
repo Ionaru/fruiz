@@ -112,7 +112,10 @@ key on `users.id`, so the current session and every credential and collection
 entry are removed in the same operation. On success the JSON caller is
 redirected to the home page by the island; a non-JSON request receives a `302`
 to `/`. Deletion is irreversible and, like losing every passkey, has no recovery
-path.
+path. The passkey records on the server are removed, but the credentials
+themselves live on the player's own devices and password managers; the
+confirmation dialog tells the player they must delete the fruiz passkey from
+each device themselves.
 
 ### Admin gate
 

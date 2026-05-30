@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import { DB, db } from "../db/db.ts";
+import type { DB } from "../db/db.ts";
 import { users } from "../db/schema.ts";
 
 /**
@@ -13,7 +13,7 @@ import { users } from "../db/schema.ts";
  */
 export async function deleteUserAccount(
   userId: string,
-  runner: DB = db,
+  database: DB,
 ): Promise<void> {
-  await runner.delete(users).where(eq(users.id, userId));
+  await database.delete(users).where(eq(users.id, userId));
 }

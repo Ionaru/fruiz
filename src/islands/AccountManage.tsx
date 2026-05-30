@@ -1,5 +1,7 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { AccountInfo } from "../components/account/AccountInfo.tsx";
+import { DeleteAccountDialogContent } from "../components/account/DeleteAccountDialogContent.tsx";
+import { DeleteAccountSection } from "../components/account/DeleteAccountSection.tsx";
 import { Button } from "../components/Button.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
@@ -95,23 +97,7 @@ export default function AccountManage({ username, isAdmin }: Props) {
           {status.value}
         </InlineAlert>
       )}
-      <div class="plateau w-full rounded-2xl p-5 space-y-3 border border-red-900/20">
-        <p class="text-sm font-medium text-red-900 dark:text-red-200">
-          Delete account
-        </p>
-        <p class="text-sm text-base-800 dark:text-base-100">
-          This permanently removes your account, passkeys, and collected tracks.
-          It cannot be undone.
-        </p>
-        <Button
-          type="button"
-          variant="danger"
-          class="w-full min-h-11"
-          onClick={() => confirmOpen.value = true}
-        >
-          Delete account
-        </Button>
-      </div>
+      <DeleteAccountSection onRequestDelete={() => confirmOpen.value = true} />
       <dialog
         ref={(element) => {
           dialogRef.value = element;
@@ -119,32 +105,10 @@ export default function AccountManage({ username, isAdmin }: Props) {
         class="backdrop:bg-base-950/70 bg-transparent p-0 max-w-md w-[92vw] m-auto"
         onClose={() => confirmOpen.value = false}
       >
-        <PlateauCard class="space-y-4">
-          <h2 class="text-lg font-semibold text-red-900 dark:text-red-200">
-            Delete your account?
-          </h2>
-          <p class="text-sm text-base-800 dark:text-base-100">
-            This permanently removes your account, passkeys, and collected
-            tracks. It cannot be undone.
-          </p>
-          <div class="flex flex-col gap-3">
-            <Button
-              type="button"
-              variant="danger"
-              class="w-full min-h-11"
-              onClick={() => void deleteAccount()}
-            >
-              Delete account
-            </Button>
-            <Button
-              type="button"
-              class="w-full min-h-11"
-              onClick={() => confirmOpen.value = false}
-            >
-              Cancel
-            </Button>
-          </div>
-        </PlateauCard>
+        <DeleteAccountDialogContent
+          onConfirm={() => void deleteAccount()}
+          onCancel={() => confirmOpen.value = false}
+        />
       </dialog>
     </PlateauCard>
   );
