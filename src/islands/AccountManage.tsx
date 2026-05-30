@@ -42,12 +42,6 @@ export default function AccountManage({ username, isAdmin }: Props) {
     <PlateauCard class="space-y-6 max-w-md mx-auto">
       <AccountInfo username={username} isAdmin={isAdmin} />
       <div class="flex flex-col gap-3">
-        <a
-          href="/suggest"
-          class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-        >
-          Suggest a track
-        </a>
         <Button
           type="button"
           variant="info"
