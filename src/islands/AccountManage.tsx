@@ -72,9 +72,9 @@ export default function AccountManage({ username, isAdmin }: Props) {
   };
 
   return (
-    <PlateauCard class="space-y-6 max-w-md mx-auto">
+    <PlateauCard class="flex flex-col gap-6 max-w-md mx-auto">
       <AccountInfo username={username} isAdmin={isAdmin} />
-      <div class="flex flex-col gap-3">
+      <div class="space-y-3">
         <Button
           type="button"
           variant="info"

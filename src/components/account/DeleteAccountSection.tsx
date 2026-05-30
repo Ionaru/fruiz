@@ -10,7 +10,7 @@ export function DeleteAccountSection(
   props: Readonly<DeleteAccountSectionProps>,
 ) {
   return (
-    <PlateauCard variant="danger" padding="5" class="w-full space-y-3">
+    <PlateauCard class="w-full space-y-3">
       <p class="text-sm font-medium text-red-900 dark:text-red-200">
         Delete account
       </p>

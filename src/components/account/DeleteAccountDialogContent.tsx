@@ -11,7 +11,7 @@ export function DeleteAccountDialogContent(
   props: Readonly<DeleteAccountDialogContentProps>,
 ) {
   return (
-    <PlateauCard variant="danger" class="space-y-4">
+    <PlateauCard class="space-y-4">
       <h2 class="text-lg font-semibold text-red-900 dark:text-red-200">
         Delete your account?
       </h2>
@@ -21,10 +21,10 @@ export function DeleteAccountDialogContent(
       </p>
       <p class="text-sm text-base-800 dark:text-base-100">
         Your passkeys live on your own devices, not on fruiz. Deleting your
-        account does not remove them — you'll need to delete the fruiz passkey
+        account does not remove them, you'll need to delete the fruiz passkey
         from each device and password manager yourself.
       </p>
-      <div class="flex flex-col gap-3">
+      <div class="space-y-3">
         <Button
           type="button"
           variant="danger"
