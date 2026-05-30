@@ -19,7 +19,7 @@ This subsystem owns:
 - The `requireAdminSessionOrRedirect` helper that gates `/admin/*` on
   `users.admin === true`.
 - The account management UI: the `/account` hub, `/account/login`,
-  `/account/register`, and the logout action.
+  `/account/register`, the logout action, and self-service account deletion.
 
 The session middleware that hydrates `ctx.state.session` on every request lives
 in spec 10. Admin CRUD that the admin gate protects lives in spec 09.
@@ -95,6 +95,27 @@ carries (`HttpOnly`, `SameSite=Strict`, `Secure` when
 `FRUIZ_SECURE_COOKIES === "1"`). The logout control is rendered only on
 `/account`, not on `/admin/*` — the admin shell deliberately has no logout
 affordance so the logout path cannot be bypassed via the admin UI.
+
+### Account deletion
+
+A signed-in player can permanently delete their own account from `/account`. The
+delete control requires an explicit confirmation step — clicking "Delete
+account" opens an in-page modal `<dialog>` whose own "Delete account" button
+sends the request, while "Cancel" or Escape dismisses it — satisfying Principle
+IV's requirement that destructive operations confirm before removing data. The
+`POST /api/account/delete` endpoint requires an authenticated session (guests
+receive a `401`), deletes the player's `users` row, and clears the
+`fruiz_session` cookie with the same attributes logout uses. Deleting the
+`users` row is sufficient to remove all of the player's data: `passkeys`,
+`sessions`, and `collected_tracks` all carry an `onDelete: "cascade"` foreign
+key on `users.id`, so the current session and every credential and collection
+entry are removed in the same operation. On success the JSON caller is
+redirected to the home page by the island; a non-JSON request receives a `302`
+to `/`. Deletion is irreversible and, like losing every passkey, has no recovery
+path. The passkey records on the server are removed, but the credentials
+themselves live on the player's own devices and password managers; the
+confirmation dialog tells the player they must delete the fruiz passkey from
+each device themselves.
 
 ### Admin gate
 
@@ -187,7 +208,9 @@ underlying message.
   already-registered errors.
 - **Integration:** guest → redirect to login, logged-in non-admin → redirect to
   `/account`, logged-in admin → render; logout deletes the row and clears the
-  cookie.
+  cookie; account deletion removes the `users` row and cascades to the player's
+  `passkeys`, `sessions`, and `collected_tracks`
+  (`tests/integration/routes/account_delete_test.ts`).
 - **Manual:**
   - Register a new account on a passkey-capable device; confirm the session
     cookie is set with the right attributes and the new `/account` page shows
