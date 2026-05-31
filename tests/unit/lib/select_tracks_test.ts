@@ -8,6 +8,7 @@ const pool: SelectableTrack[] = Array.from({ length: 40 }, (_, index) => ({
   audioUrl: `a${index}`,
   difficulty: index % 2 === 0 ? "easy" : "hard",
   playbackGainDb: null,
+  clipPlaybackGainDb: null,
   playStartSeconds: null,
   maxPlaySeconds: null,
   playbackGainSourceSize: null,

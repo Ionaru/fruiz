@@ -10,7 +10,8 @@ export interface ButtonProps extends ButtonHTMLAttributes {
 
 export function Button(props: Readonly<ButtonProps>) {
   const { variant, class: className, type, ...rest } = props;
-  const baseClasses = "plateau rounded-full p-4";
+  const baseClasses =
+    "plateau rounded-full p-4 flex items-center justify-center";
   const disabledClasses = "opacity-50 pointer-events-none";
 
   const classes = [

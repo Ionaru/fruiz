@@ -29,6 +29,7 @@ export interface SnapshotTrackRow {
   audioUrl: string | null;
   difficulty: "easy" | "hard" | null;
   playbackGainDb: number | null;
+  clipPlaybackGainDb: number | null;
   playStartSeconds: number | null;
   maxPlaySeconds: number | null;
   playbackGainSourceSize: number | null;
@@ -54,6 +55,7 @@ export function toSnapshotQuizPayload(
         difficulty,
         unavailable: false,
         playbackGainDb: snapshotRow.playbackGainDb,
+        clipPlaybackGainDb: snapshotRow.clipPlaybackGainDb,
         playStartSeconds: playback.playStartSeconds,
         maxPlaySeconds: playback.maxPlaySeconds,
         playbackGainSourceSize: snapshotRow.playbackGainSourceSize,
@@ -68,6 +70,7 @@ export function toSnapshotQuizPayload(
       difficulty: "easy",
       unavailable: true,
       playbackGainDb: null,
+      clipPlaybackGainDb: null,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
       playbackGainSourceSize: null,
@@ -127,6 +130,7 @@ async function createQuizInstance(
         difficulty: selectedTrack.difficulty,
         unavailable: false,
         playbackGainDb: selectedTrack.playbackGainDb,
+        clipPlaybackGainDb: selectedTrack.clipPlaybackGainDb,
         playStartSeconds: playback.playStartSeconds,
         maxPlaySeconds: playback.maxPlaySeconds,
         playbackGainSourceSize: selectedTrack.playbackGainSourceSize,
@@ -161,6 +165,7 @@ export async function getQuizInstance(
     audioUrl: tracks.audioUrl,
     difficulty: tracks.difficulty,
     playbackGainDb: tracks.playbackGainDb,
+    clipPlaybackGainDb: tracks.clipPlaybackGainDb,
     playStartSeconds: tracks.playStartSeconds,
     maxPlaySeconds: tracks.maxPlaySeconds,
     playbackGainSourceSize: tracks.playbackGainSourceSize,

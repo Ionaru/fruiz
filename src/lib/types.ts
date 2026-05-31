@@ -46,8 +46,10 @@ export interface QuizTrackPayload {
   audioUrl: string | null;
   difficulty: "easy" | "hard";
   unavailable: boolean;
-  /** dB toward ~-16 LUFS; null if not measured. */
+  /** Full-track dB toward ~-16 LUFS; null if not measured. */
   playbackGainDb: number | null;
+  /** Clip-window dB toward ~-16 LUFS; null if not measured. The quiz applies this. */
+  clipPlaybackGainDb: number | null;
   /** Resolved start offset in seconds (>= 0). */
   playStartSeconds: number;
   /** Resolved max clip length in seconds (includes fade-in/out). */

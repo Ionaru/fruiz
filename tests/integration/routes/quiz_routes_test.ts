@@ -13,6 +13,7 @@ Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
     audioUrl: `u${index}`,
     difficulty: "easy",
     playbackGainDb: null,
+    clipPlaybackGainDb: null,
     playStartSeconds: null,
     maxPlaySeconds: null,
     playbackGainSourceSize: null,

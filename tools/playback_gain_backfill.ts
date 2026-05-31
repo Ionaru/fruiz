@@ -41,12 +41,12 @@ for (const row of rows) {
     case "measured": {
       const after = await db.query.tracks.findFirst({
         where: { id: row.id },
-        columns: { playbackGainDb: true },
+        columns: { playbackGainDb: true, clipPlaybackGainDb: true },
       });
-      if (after !== undefined && after.playbackGainDb !== null) {
+      if (after !== undefined) {
         measured++;
         console.log(
-          `Measured "${row.title}" (${row.id}): ${after.playbackGainDb} dB`,
+          `Measured "${row.title}" (${row.id}): full ${after.playbackGainDb} dB, clip ${after.clipPlaybackGainDb} dB`,
         );
       }
       break;

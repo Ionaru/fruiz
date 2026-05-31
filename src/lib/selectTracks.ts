@@ -8,6 +8,7 @@ export interface SelectableTrack {
   audioUrl: string;
   difficulty: "easy" | "hard";
   playbackGainDb: number | null;
+  clipPlaybackGainDb: number | null;
   playStartSeconds: number | null;
   maxPlaySeconds: number | null;
   playbackGainSourceSize: number | null;
@@ -61,6 +62,7 @@ export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
       difficulty: track.difficulty,
       unavailable: false,
       playbackGainDb: track.playbackGainDb,
+      clipPlaybackGainDb: track.clipPlaybackGainDb,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
       playbackGainSourceSize: track.playbackGainSourceSize,
