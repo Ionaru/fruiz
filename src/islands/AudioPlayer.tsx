@@ -17,7 +17,8 @@ import {
   resolveMaxPlaySeconds,
   resolvePlayStartSeconds,
 } from "../lib/quizPlayback.ts";
-import { FaPlay, FaSpinner, FaStop } from "react-icons/fa6";
+import { FaPlay, FaStop } from "react-icons/fa6";
+import { SpinningIcon } from "../components/ui/SpinningIcon.tsx";
 
 const VISUALIZER_FFT_SIZE = 64;
 const VISUALIZER_SMOOTHING = 0.8;
@@ -469,7 +470,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
               id={`listen-loading-${props.audioId}`}
               disabled
             >
-              <FaSpinner />
+              <SpinningIcon />
             </Button>
           )}
           {playState.value === PlayState.Playing && (

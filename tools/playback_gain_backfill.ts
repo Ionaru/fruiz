@@ -14,6 +14,8 @@ const rows = await db.query.tracks.findMany({
   columns: { id: true, audioUrl: true, title: true },
 });
 
+const total = rows.length;
+
 let cacheHit = 0;
 let seeded = 0;
 let measured = 0;
@@ -21,7 +23,8 @@ let ffmpegFailed = 0;
 let invalidPath = 0;
 let fileNotFound = 0;
 
-for (const row of rows) {
+for (const [i, row] of rows.entries()) {
+  const progress = `(${i + 1}/${total})`;
   const outcome = await analyzeAndStorePlaybackGainForTrack(
     db,
     row.id,
@@ -31,22 +34,23 @@ for (const row of rows) {
   switch (outcome) {
     case "cache_hit":
       cacheHit++;
+      console.log(`${progress} cache hit "${row.title}" (${row.id})`);
       break;
     case "seeded_fingerprint":
       seeded++;
       console.log(
-        `Seeded fingerprint (existing gain): "${row.title}" (${row.id})`,
+        `${progress} Seeded fingerprint (existing gain): "${row.title}" (${row.id})`,
       );
       break;
     case "measured": {
       const after = await db.query.tracks.findFirst({
         where: { id: row.id },
-        columns: { playbackGainDb: true },
+        columns: { playbackGainDb: true, clipPlaybackGainDb: true },
       });
-      if (after !== undefined && after.playbackGainDb !== null) {
+      if (after !== undefined) {
         measured++;
         console.log(
-          `Measured "${row.title}" (${row.id}): ${after.playbackGainDb} dB`,
+          `${progress} Measured "${row.title}" (${row.id}): full ${after.playbackGainDb} dB, clip ${after.clipPlaybackGainDb} dB`,
         );
       }
       break;
@@ -54,19 +58,19 @@ for (const row of rows) {
     case "ffmpeg_failed":
       ffmpegFailed++;
       console.warn(
-        `Skipped "${row.title}" (${row.id}) — ffmpeg failed or not installed`,
+        `${progress} Skipped "${row.title}" (${row.id}) — ffmpeg failed or not installed`,
       );
       break;
     case "invalid_audio_url":
       invalidPath++;
       console.warn(
-        `Skipped "${row.title}" (${row.id}) — invalid audio URL`,
+        `${progress} Skipped "${row.title}" (${row.id}) — invalid audio URL`,
       );
       break;
     case "file_not_found":
       fileNotFound++;
       console.warn(
-        `Skipped "${row.title}" (${row.id}) — audio file not found`,
+        `${progress} Skipped "${row.title}" (${row.id}) — audio file not found`,
       );
       break;
     default: {
@@ -76,7 +80,6 @@ for (const row of rows) {
   }
 }
 
-const total = rows.length;
 console.log(
   `Done. total: ${total}, cache_hit: ${cacheHit}, seeded_fingerprint: ${seeded}, measured: ${measured}, ffmpeg_failed: ${ffmpegFailed}, invalid_url: ${invalidPath}, file_not_found: ${fileNotFound}${
     force ? " (force)" : ""

@@ -150,3 +150,18 @@
     --glow-color: var(--color-red-500);
   }
 }
+
+@layer utilities {
+  .animate-spin {
+    animation: spin 2s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+  from {
+    transform: rotate(0deg);
+  }
+}

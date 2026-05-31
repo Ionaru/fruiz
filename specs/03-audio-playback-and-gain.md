@@ -10,8 +10,10 @@ This subsystem owns:
 
 - Resolving a track's stored `audio_url` to a real file path on disk.
 - Streaming audio bytes over HTTP (full responses and `Range` requests).
-- Per-track loudness measurement (`ffmpeg loudnorm`) and clamped gain storage,
-  including a fingerprint cache so unchanged files are not re-measured.
+- Per-track loudness measurement (`ffmpeg loudnorm`) and clamped gain storage —
+  two gains per track: a **full-track** gain (collection listening) and a
+  **clip-window** gain (quiz + admin preview) — including a fingerprint cache so
+  unchanged files and unchanged clip windows are not re-measured.
 - Clip windowing constants and clamping helpers (start, max length, fade-in /
   fade-out, minimum playable window).
 - The cache-busting `?v=…` query parameter on listen URLs.
@@ -100,15 +102,30 @@ implements measurement:
 - `storedFingerprintMatchesFile(...)` is the cache-hit check.
 - `hasCompleteStoredFingerprint(...)` distinguishes legacy gain-only rows from
   fingerprinted rows.
-- `measurePlaybackGainDb(absolutePath)` shells out to a system `ffmpeg` binary
-  (ffmpeg.wasm is not a fit for server-side Deno — see
+- `measurePlaybackGainDb(absolutePath, window?)` shells out to a system `ffmpeg`
+  binary (ffmpeg.wasm is not a fit for server-side Deno — see
   ffmpegwasm/ffmpeg.wasm#110) and parses `input_i` from `loudnorm` JSON output,
   then computes `PLAYBACK_TARGET_LUFS - input_i` and runs it through
-  `clampPlaybackGainDb`.
-- The orchestrating `analyzePlaybackGainForTrack` (rest of the file) records one
+  `clampPlaybackGainDb`. With a `PlaybackGainWindow`, `buildLoudnormArgs` adds
+  input seeking (`-ss`/`-t`) so only the quiz clip window is analyzed.
+  `measureClipGainDb(path, start, max)` is the clip-window wrapper.
+- `decideGainRecompute({ force, fullGainDb, clipGainDb, fingerprintStale,
+  boundsChanged })`
+  is the pure invalidation rule: the full gain is recomputed on `force` /
+  never-measured / file change; the clip gain additionally recomputes when the
+  resolved clip window shifts.
+- The orchestrating `analyzeAndStorePlaybackGainForTrack` reads both gains,
+  their fingerprint, and the resolved clip bounds, recomputes full and clip
+  **independently** (up to two `ffmpeg` passes, each guarded), and records one
   of these outcomes: `invalid_audio_url`, `file_not_found`, `cache_hit`,
-  `seeded_fingerprint`, `measured`, `ffmpeg_failed`. A `force` option bypasses
-  the cache.
+  `seeded_fingerprint`, `measured` (either gain ran), `ffmpeg_failed`. A `force`
+  option bypasses the cache.
+- The admin track-edit preview can recompute the clip gain for an unsaved window
+  via the admin-only endpoint
+  [`src/routes/api/admin/tracks/[id]/clip-gain.ts`](../src/routes/api/admin/tracks/[id]/clip-gain.ts),
+  which measures the given `start`/`max` window and returns
+  `{ clipPlaybackGainDb }` **without writing to the DB** (persistence happens on
+  save).
 
 A background task at `deno task playback-gain:backfill` walks every track and
 runs the analyzer. The tool entrypoint is `tools/playback_gain_backfill.ts`.
@@ -117,18 +134,23 @@ runs the analyzer. The tool entrypoint is `tools/playback_gain_backfill.ts`.
 
 Fields on `tracks` (Drizzle, `src/db/schema.ts`):
 
-| Column                          | Type | Notes                                                                    |
-| ------------------------------- | ---- | ------------------------------------------------------------------------ |
-| `audio_url`                     | text | Repo-relative POSIX path; resolved via `absolutePathFromTracksAudioUrl`. |
-| `playback_gain_db`              | real | dB toward `-16 LUFS`, clamped to ±12; `null` when unmeasured.            |
-| `playback_gain_source_size`     | int  | File size at measurement time. `null` for legacy rows.                   |
-| `playback_gain_source_mtime_ms` | int  | File mtime in ms since epoch at measurement time. `null` if unknown.     |
-| `play_start_seconds`            | real | Start offset; `null` → default `0`.                                      |
-| `max_play_seconds`              | real | Max clip length including fades; `null` → `DEFAULT_MAX_PLAY_SECONDS`.    |
+| Column                             | Type | Notes                                                                     |
+| ---------------------------------- | ---- | ------------------------------------------------------------------------- |
+| `audio_url`                        | text | Repo-relative POSIX path; resolved via `absolutePathFromTracksAudioUrl`.  |
+| `playback_gain_db`                 | real | Full-track dB toward `-16 LUFS`, clamped to ±12; `null` when unmeasured.  |
+| `playback_gain_source_size`        | int  | File size at measurement time. `null` for legacy rows.                    |
+| `playback_gain_source_mtime_ms`    | int  | File mtime in ms since epoch at measurement time. `null` if unknown.      |
+| `play_start_seconds`               | real | Start offset; `null` → default `0`.                                       |
+| `max_play_seconds`                 | real | Max clip length including fades; `null` → `DEFAULT_MAX_PLAY_SECONDS`.     |
+| `clip_playback_gain_db`            | real | Clip-window dB toward `-16 LUFS`, clamped to ±12; `null` when unmeasured. |
+| `clip_playback_gain_start_seconds` | real | Resolved clip start the clip gain was measured at (invalidation).         |
+| `clip_playback_gain_max_seconds`   | real | Resolved clip max length the clip gain was measured at (invalidation).    |
 
 `QuizTrackPayload` (see `src/lib/types.ts`) carries the resolved (`null`-free)
-`playStartSeconds` and `maxPlaySeconds`, plus the raw `playbackGainDb` and
-source fingerprint fields, to the browser.
+`playStartSeconds` and `maxPlaySeconds`, the source fingerprint fields, and both
+`playbackGainDb` (full track) and `clipPlaybackGainDb` (clip) to the browser.
+The quiz applies `clipPlaybackGainDb` (falling back to `playbackGainDb`); the
+collection applies the full `playbackGainDb`.
 
 ## Key files
 
@@ -139,8 +161,8 @@ source fingerprint fields, to the browser.
     set, `contentTypeForAudioPath`.
   - [`src/lib/audioListenUrl.ts`](../src/lib/audioListenUrl.ts) —
     `buildListenSrc`.
-  - [`src/lib/audioListenUrl_test.ts`](../src/lib/audioListenUrl_test.ts) —
-    inline tests for the cache-bust URL builder.
+  - [`tests/audioListenUrl_test.ts`](../tests/audioListenUrl_test.ts) — tests
+    for the cache-bust URL builder.
   - [`src/lib/quizPlayback.ts`](../src/lib/quizPlayback.ts) — clip windowing
     constants, `resolvePlayStartSeconds`, `resolveMaxPlaySeconds`,
     `clampStartAndMaxToDuration`, `parseTrackPlaybackFormFields`.
@@ -150,6 +172,8 @@ source fingerprint fields, to the browser.
     fingerprinting, `measurePlaybackGainDb`, orchestration.
 - **Routes**
   - [`src/routes/api/listen/[id].ts`](../src/routes/api/listen/[id].ts).
+  - [`src/routes/api/admin/tracks/[id]/clip-gain.ts`](../src/routes/api/admin/tracks/[id]/clip-gain.ts)
+    — admin-only clip-gain recalc for the track-edit preview (no DB write).
 - **Tools / tasks**
   - `tools/playback_gain_backfill.ts` (entry for
     `deno task playback-gain:backfill`).
@@ -176,6 +200,12 @@ source fingerprint fields, to the browser.
   `playback_gain_db` set but `null` fingerprint columns is treated as a _seeded_
   row and is eligible for re-measurement; only a row with both fingerprint
   columns matching the live file is a cache hit.
+- **Clip gain tracks the clip window.** The clip gain is invalidated by the file
+  fingerprint AND by a change to the resolved clip window — `boundsChanged`
+  compares `clip_playback_gain_start_seconds` / `clip_playback_gain_max_seconds`
+  against the resolved `play_start_seconds` / `max_play_seconds`, so editing the
+  window forces a clip-only recompute on the next analyze (which the admin save
+  triggers).
 
 ## Verification approach
 
@@ -191,7 +221,11 @@ source fingerprint fields, to the browser.
   - Replace a track's audio file in-place — check that the next listen URL has a
     different `?v=` and that the player picks up the new file on reload.
   - Run `deno task playback-gain:backfill` against a small dataset; verify rows
-    update `playback_gain_db` and both fingerprint columns.
+    update `playback_gain_db`, `clip_playback_gain_db`, and both fingerprint
+    columns. Re-run without `--force` → all `cache_hit`.
+  - On the admin track-edit page, change the start / max-length fields: the
+    "outdated" badge appears, "Recalculate loudness" updates the preview, and
+    Save persists a clip gain matching the saved window (badge gone on reload).
 
 ## Open questions and known risks
 

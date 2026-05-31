@@ -149,6 +149,7 @@ export async function getTracksForCategory(
     audioUrl: string;
     difficulty: "easy" | "hard";
     playbackGainDb: number | null;
+    clipPlaybackGainDb: number | null;
     playStartSeconds: number | null;
     maxPlaySeconds: number | null;
     playbackGainSourceSize: number | null;
@@ -170,6 +171,7 @@ export async function getTracksForCategory(
     audioUrl: t.audioUrl,
     difficulty: t.difficulty,
     playbackGainDb: t.playbackGainDb,
+    clipPlaybackGainDb: t.clipPlaybackGainDb,
     playStartSeconds: t.playStartSeconds,
     maxPlaySeconds: t.maxPlaySeconds,
     playbackGainSourceSize: t.playbackGainSourceSize,

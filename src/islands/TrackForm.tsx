@@ -1,5 +1,4 @@
 import { useSignal } from "@preact/signals";
-import { FaSpinner } from "react-icons/fa6";
 import TrackAudioPick from "./TrackAudioPick.tsx";
 import TrackTitleInput from "./TrackTitleInput.tsx";
 import CheckboxGroupField from "./CheckboxGroupField.tsx";
@@ -11,6 +10,7 @@ import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
 import { DEFAULT_MAX_PLAY_SECONDS } from "../lib/quizPlayback.ts";
 import type { CategoryRow } from "../lib/categories.ts";
+import { SpinningIcon } from "../components/ui/SpinningIcon.tsx";
 
 const DIFFICULTY_OPTIONS = [
   { value: "easy", label: "easy" },
@@ -147,10 +147,7 @@ export default function TrackForm(props: Readonly<TrackFormProps>) {
           {submitting.value
             ? (
               <>
-                <span class="animate-spin">
-                  <FaSpinner />
-                </span>{" "}
-                Analyzing loudness…
+                <SpinningIcon /> Analyzing loudness…
               </>
             )
             : props.submitLabel}

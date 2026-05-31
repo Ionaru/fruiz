@@ -25,7 +25,10 @@ function seedDb(): DB {
       playback_gain_source_size INTEGER,
       playback_gain_source_mtime_ms INTEGER,
       play_start_seconds REAL,
-      max_play_seconds REAL
+      max_play_seconds REAL,
+      clip_playback_gain_db REAL,
+      clip_playback_gain_start_seconds REAL,
+      clip_playback_gain_max_seconds REAL
     )
   `);
   db.run(sql`

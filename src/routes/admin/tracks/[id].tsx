@@ -19,10 +19,14 @@ import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { DangerZoneDeleteForm } from "../../../components/admin/DangerZoneDeleteForm.tsx";
 import { InlineAlert } from "../../../components/ui/InlineAlert.tsx";
 import { PlateauCard } from "../../../components/ui/PlateauCard.tsx";
-import { AudioPlayer } from "../../../islands/AudioPlayer.tsx";
+import { ClipGainPreview } from "../../../islands/ClipGainPreview.tsx";
 import TrackForm from "../../../islands/TrackForm.tsx";
 
 const TRACK_EDIT_FORM_ID = "track-edit-form";
+
+function formatGainDb(db: number | null): string {
+  return db === null ? "n/a" : `${db.toFixed(1)} dB`;
+}
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -123,12 +127,20 @@ export const handler = define.handlers({
           playbackGainSourceSize: fp?.size ?? null,
           playbackGainSourceMtimeMs: fp?.mtimeMs ?? null,
           playbackGainDb: null,
+          // The clip gain was measured against the old file/window — invalidate
+          // it too so analyze re-measures it (not just the full-track gain).
+          clipPlaybackGainDb: null,
+          clipPlaybackGainStartSeconds: null,
+          clipPlaybackGainMaxSeconds: null,
         };
       } catch {
         return {
           playbackGainSourceSize: null,
           playbackGainSourceMtimeMs: null,
           playbackGainDb: null,
+          clipPlaybackGainDb: null,
+          clipPlaybackGainStartSeconds: null,
+          clipPlaybackGainMaxSeconds: null,
         };
       }
     })();
@@ -179,11 +191,12 @@ export default define.page<typeof handler>(({ data }) => (
     )}
     <div class="mx-auto flex w-full flex-col gap-6">
       <p class="text-sm opacity-80">
-        {data.track.playbackGainDb === null
+        {data.track.playbackGainDb === null &&
+            data.track.clipPlaybackGainDb === null
           ? "Playback loudness not measured yet. Saving this track runs analysis when ffmpeg is on PATH; or run `deno task playback-gain:backfill`."
-          : `Playback gain (toward -16 LUFS): ${
-            data.track.playbackGainDb.toFixed(1)
-          } dB`}
+          : `Playback gain toward -16 LUFS — full track: ${
+            formatGainDb(data.track.playbackGainDb)
+          }; quiz clip: ${formatGainDb(data.track.clipPlaybackGainDb)}`}
       </p>
       <TrackForm
         action={`/admin/tracks/${data.track.id}`}
@@ -206,9 +219,10 @@ export default define.page<typeof handler>(({ data }) => (
           Play uses the playback start and max length fields in the form above,
           including changes you have not saved yet.
         </p>
-        <AudioPlayer
+        <ClipGainPreview
           audioId={data.track.id}
-          playbackGainDb={data.track.playbackGainDb}
+          initialClipGainDb={data.track.clipPlaybackGainDb}
+          fullPlaybackGainDb={data.track.playbackGainDb}
           {...resolvedPlaybackFromDbFields({
             playStartSeconds: data.track.playStartSeconds,
             maxPlaySeconds: data.track.maxPlaySeconds,
@@ -216,6 +230,9 @@ export default define.page<typeof handler>(({ data }) => (
           playbackGainSourceSize={data.track.playbackGainSourceSize}
           playbackGainSourceMtimeMs={data.track.playbackGainSourceMtimeMs}
           syncPlaybackFromFormId={TRACK_EDIT_FORM_ID}
+          recalcUrl={`/api/admin/tracks/${data.track.id}/clip-gain`}
+          measuredStartSeconds={data.track.clipPlaybackGainStartSeconds}
+          measuredMaxSeconds={data.track.clipPlaybackGainMaxSeconds}
         />
       </PlateauCard>
       <DangerZoneDeleteForm

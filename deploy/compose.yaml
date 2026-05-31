@@ -14,8 +14,15 @@ services:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     restart: unless-stopped
     healthcheck:
-      test: "wget --spider -q 127.0.0.1:8000"
+      test:
+        - CMD
+        - deno
+        - eval
+        - "if (!(await fetch('http://127.0.0.1:8000/')).ok) Deno.exit(1)"
       start_period: 120s
+      interval: 15s
+      timeout: 10s
+      retries: 5
     # Backfill skips unchanged files (size+mtime fingerprint); use `playback-gain:backfill -- --force` for full re-measure.
     command:
       - /bin/sh
