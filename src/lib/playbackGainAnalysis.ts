@@ -119,14 +119,29 @@ export function buildLoudnormArgs(
 }
 
 /**
- * Measures integrated loudness via ffmpeg `loudnorm` and returns gain in dB toward
- * {@link PLAYBACK_TARGET_LUFS}, clamped. Pass a {@link PlaybackGainWindow} to measure
- * only the quiz clip window. Returns `null` if ffmpeg is missing or analysis fails.
+ * Outcome of a single ffmpeg `loudnorm` pass:
+ * - `measured`: ffmpeg ran and produced an integrated-loudness reading.
+ * - `no_audio`: ffmpeg ran but the window had nothing to measure (e.g. a start
+ *   past end-of-file). The pass succeeded — the result is cacheable.
+ * - `failed`: ffmpeg could not run at all (missing binary / spawn error). This
+ *   is transient, so callers must not cache and should retry on the next analyze.
  */
-export async function measurePlaybackGainDb(
+export type LoudnormResult =
+  | { status: "measured"; gainDb: number }
+  | { status: "no_audio" }
+  | { status: "failed" };
+
+/**
+ * Runs one ffmpeg `loudnorm` pass and classifies the outcome. Pass a
+ * {@link PlaybackGainWindow} to measure only the quiz clip window. The only
+ * `failed` signal is ffmpeg failing to execute (the `catch`); a clean run that
+ * yields no `input_i` is `no_audio`, not a failure — that distinction is what
+ * lets callers cache an unmeasurable window without caching a transient outage.
+ */
+export async function runLoudnorm(
   absoluteAudioPath: string,
   window?: PlaybackGainWindow,
-): Promise<number | null> {
+): Promise<LoudnormResult> {
   const args = buildLoudnormArgs(absoluteAudioPath, window);
   let stderrText: string;
   try {
@@ -138,12 +153,27 @@ export async function measurePlaybackGainDb(
     const { stderr } = await command.output();
     stderrText = new TextDecoder().decode(stderr);
   } catch {
-    return null;
+    return { status: "failed" };
   }
   const inputI = parseLoudnormInputI(stderrText);
-  if (inputI === null) return null;
-  const rawGainDb = PLAYBACK_TARGET_LUFS - inputI;
-  return clampPlaybackGainDb(rawGainDb);
+  if (inputI === null) return { status: "no_audio" };
+  return {
+    status: "measured",
+    gainDb: clampPlaybackGainDb(PLAYBACK_TARGET_LUFS - inputI),
+  };
+}
+
+/**
+ * Measures integrated loudness via ffmpeg `loudnorm` and returns gain in dB toward
+ * {@link PLAYBACK_TARGET_LUFS}, clamped. Pass a {@link PlaybackGainWindow} to measure
+ * only the quiz clip window. Returns `null` if ffmpeg is missing or analysis fails.
+ */
+export async function measurePlaybackGainDb(
+  absoluteAudioPath: string,
+  window?: PlaybackGainWindow,
+): Promise<number | null> {
+  const result = await runLoudnorm(absoluteAudioPath, window);
+  return result.status === "measured" ? result.gainDb : null;
 }
 
 /**
@@ -166,6 +196,25 @@ export function decideGainRecompute(params: {
     needFull: force || fullGainDb === null || fingerprintStale,
     needClip: force || clipGainDb === null || fingerprintStale || boundsChanged,
   };
+}
+
+/**
+ * Pure rule turning a clip {@link LoudnormResult} into the value to persist:
+ * - `failed` → `{ cache: false }`: a transient ffmpeg outage, so the clip gain
+ *   is left untouched and re-measured on the next analyze (no-cache-on-failure).
+ * - `no_audio` → cache the full-track fallback so an unmeasurable window does
+ *   not re-run ffmpeg every analyze (`{ cache: false }` only if no full gain
+ *   exists to fall back to).
+ * - `measured` → cache the measured clip gain.
+ */
+export function resolveClipGainToStore(
+  clip: LoudnormResult,
+  fallbackFullGainDb: number | null,
+): { cache: false } | { cache: true; gainDb: number } {
+  if (clip.status === "failed") return { cache: false };
+  const gainDb = clip.status === "measured" ? clip.gainDb : fallbackFullGainDb;
+  if (gainDb === null) return { cache: false };
+  return { cache: true, gainDb };
 }
 
 export async function analyzeAndStorePlaybackGainForTrack(
@@ -246,11 +295,14 @@ export async function analyzeAndStorePlaybackGainForTrack(
   }
 
   // Full and clip passes are independent — run them concurrently.
-  const [fullMeasured, clipMeasured] = await Promise.all([
+  const [fullMeasured, clipResult] = await Promise.all([
     needFull ? measurePlaybackGainDb(absolutePath) : Promise.resolve(undefined),
     needClip
-      ? measureClipGainDb(absolutePath, resolvedStart, resolvedMax)
-      : Promise.resolve(undefined),
+      ? runLoudnorm(absolutePath, {
+        startSeconds: resolvedStart,
+        maxSeconds: resolvedMax,
+      })
+      : Promise.resolve<LoudnormResult | undefined>(undefined),
   ]);
 
   const update: Partial<typeof tracks.$inferInsert> = {};
@@ -265,14 +317,16 @@ export async function analyzeAndStorePlaybackGainForTrack(
   }
 
   if (needClip) {
-    // The clip window alone can be unmeasurable (e.g. a start past end-of-file)
-    // even when the whole file measures fine. Fall back to the full-track gain
-    // so the clip still caches — otherwise needClip stays true and ffmpeg
-    // re-runs on every analyze. This also persists a successful full pass
-    // instead of discarding it when only the clip pass fails.
-    const clipGainDb = clipMeasured ?? effectiveFullGainDb;
-    if (clipGainDb === null) return "ffmpeg_failed";
-    update.clipPlaybackGainDb = clipGainDb;
+    // `clipResult` is defined whenever needClip is true (see Promise.all). A
+    // failed pass means ffmpeg could not run — leave the clip gain untouched and
+    // retry next analyze rather than caching a stale full-track fallback. A
+    // `no_audio` pass (window past end-of-file) caches the full-track fallback
+    // so it does not re-run every analyze; this also persists a successful full
+    // pass instead of discarding it when only the clip window is unmeasurable.
+    const clip = clipResult ?? { status: "failed" as const };
+    const decision = resolveClipGainToStore(clip, effectiveFullGainDb);
+    if (!decision.cache) return "ffmpeg_failed";
+    update.clipPlaybackGainDb = decision.gainDb;
     update.clipPlaybackGainStartSeconds = resolvedStart;
     update.clipPlaybackGainMaxSeconds = resolvedMax;
   }

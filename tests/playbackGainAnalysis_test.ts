@@ -3,6 +3,7 @@ import {
   decideGainRecompute,
   fingerprintFromFileInfo,
   hasCompleteStoredFingerprint,
+  resolveClipGainToStore,
   storedFingerprintMatchesFile,
 } from "../src/lib/playbackGainAnalysis.ts";
 import { assertEquals } from "@std/assert";
@@ -173,5 +174,33 @@ Deno.test("decideGainRecompute: force recomputes both", () => {
       boundsChanged: false,
     }),
     { needFull: true, needClip: true },
+  );
+});
+
+Deno.test("resolveClipGainToStore: a failed clip pass is not cached (retry next analyze)", () => {
+  assertEquals(
+    resolveClipGainToStore({ status: "failed" }, -3),
+    { cache: false },
+  );
+});
+
+Deno.test("resolveClipGainToStore: an unmeasurable window caches the full-track fallback", () => {
+  assertEquals(
+    resolveClipGainToStore({ status: "no_audio" }, -3),
+    { cache: true, gainDb: -3 },
+  );
+});
+
+Deno.test("resolveClipGainToStore: an unmeasurable window with no full gain is not cached", () => {
+  assertEquals(
+    resolveClipGainToStore({ status: "no_audio" }, null),
+    { cache: false },
+  );
+});
+
+Deno.test("resolveClipGainToStore: a measured clip caches its own gain, not the fallback", () => {
+  assertEquals(
+    resolveClipGainToStore({ status: "measured", gainDb: -1 }, -3),
+    { cache: true, gainDb: -1 },
   );
 });

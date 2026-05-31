@@ -82,7 +82,7 @@ User-facing controls:
 
 - A play button (FaPlay) with the difficulty-colored glow.
 - A stop button (FaStop) shown during playback.
-- A spinner (FaSpinner) shown during the loading window.
+- A spinner (SpinningIcon) shown during the loading window.
 - The play button is disabled when the parent passes `disabled={true}`
   (replay-limit reached, answer locked, or audio unavailable).
 - Stable DOM ids (`listen-play-${audioId}`, `listen-stop-${audioId}`) let
