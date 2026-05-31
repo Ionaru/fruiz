@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     healthcheck:
       test: "wget --spider -q 127.0.0.1:8000"
-      start_period: 30s
+      start_period: 120s
     # Backfill skips unchanged files (size+mtime fingerprint); use `playback-gain:backfill -- --force` for full re-measure.
     command:
       - /bin/sh
