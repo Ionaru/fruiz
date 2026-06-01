@@ -73,7 +73,12 @@ State and Web Audio graph:
   before a gesture.
 - On play: the `<audio>` element is connected to a `GainNode` (set through
   `playbackGainDbToLinear(clampPlaybackGainDb(db))`) → an `AnalyserNode`
-  (`fftSize = 64`, `smoothingTimeConstant = 0.8`) → the context destination.
+  (`fftSize = 1024`, `smoothingTimeConstant = 0.8`, `minDecibels = -90`,
+  `maxDecibels = -5`) → the context destination. The 1024-point FFT (512 bins)
+  gives the visualizer's log-spaced band mapping enough low-end resolution to
+  separate the bass. The analyser sits **before** the gain node, so it sees raw
+  full-scale audio; the widened dB window (default is `-100..-30`) stops loud
+  tracks from saturating every bar to full height.
 - The analyser is exposed to `AudioVisualizer` only while the clip is actively
   playing.
 
@@ -119,6 +124,18 @@ Pattern details worth knowing:
   the same color to every bar.
 - **Bar count is fixed at 24** (`BAR_COUNT`); slot width is `width / bars`, bar
   width is 60% of the slot, gap is the remaining 40%.
+- **Log-spaced bands + treble tilt.** Raw `getByteFrequencyData` bins are
+  _linear_ in Hz, so a direct bin → bar mapping pins the bass bars at full
+  height and flattens the high bars on every track. The pure helpers in
+  [`src/lib/audioSpectrum.ts`](../src/lib/audioSpectrum.ts) fix this: each bar
+  averages the bins inside a **log-spaced** bin-index band (≈ a constant pitch
+  ratio per bar, like octaves), and a per-bar **treble tilt** (`SPECTRUM_TILT`)
+  multiplies magnitudes up toward the high end to counter music's bass-heavy
+  spectral tilt. The top ~quarter of bins (`SPECTRUM_MAX_BIN_FRACTION`, ≈ 16 kHz
+  and up) is dropped because it carries almost no musical energy. Band edges
+  (`computeLogBandEdges`) and tilt weights (`computeTiltWeights`) are computed
+  once per effect; the per-frame `fillSpectrumBars` only averages bins into the
+  reused magnitude buffer (allocation-free).
 - **Centered geometry.** Each bar is centered on the vertical midline
   (`y = (height - barHeight) / 2`) and grows symmetrically up and down, so the
   visible energy lines up with the play/stop button and rising magnitudes expand
@@ -215,6 +232,8 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
     [`src/lib/playbackGainMath.ts`](../src/lib/playbackGainMath.ts),
     [`src/lib/audioListenUrl.ts`](../src/lib/audioListenUrl.ts) — see spec 03.
   - [`src/lib/keyboard.ts`](../src/lib/keyboard.ts) — `isInteractiveFocus`.
+  - [`src/lib/audioSpectrum.ts`](../src/lib/audioSpectrum.ts) — pure log-band +
+    treble-tilt FFT mapping for the visualizer bars.
 
 ## Constraints and invariants
 
@@ -239,8 +258,9 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
 ## Verification approach
 
 - **Unit / integration:** the islands are not directly unit-tested; pure helpers
-  they depend on (`quiz_playback_test.ts`, `audioListenUrl_test.ts`, gain
-  helpers) cover the math.
+  they depend on (`quiz_playback_test.ts`, `audioListenUrl_test.ts`,
+  `audioSpectrum_test.ts`, gain helpers) cover the math. The log-band/tilt
+  mapping is covered by `tests/unit/lib/audioSpectrum_test.ts`.
 - **Manual:**
   - Open a quiz on a mobile viewport in Chrome, Safari, and Firefox. Confirm a
     thin resting bar line is visible on the centerline before play. Press Play —
@@ -264,9 +284,14 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
   module-scoped. On client-side navigation between quizzes (today this is a full
   page load, but a future SPA shell would break this), the context would survive
   and accumulate gain / analyser nodes. Tear-down in a future refactor.
-- **Visualizer cost.** `fftSize = 64` (32 bins) → 24 bars is cheap, but if the
-  bar count or smoothing is increased, profile on a low-end phone before
-  shipping.
+- **Visualizer cost.** `fftSize = 1024` (512 bins) → 24 bars. The per-frame work
+  is one `getByteFrequencyData` plus averaging ≈ 384 bins (`fillSpectrumBars`),
+  still cheap, but if the bar count, FFT size, or smoothing is increased,
+  profile on a low-end phone before shipping.
+- **Visualizer tuning.** `SPECTRUM_TILT`, `SPECTRUM_MAX_BIN_FRACTION`, and
+  `SPECTRUM_MIN_BIN` in `src/lib/audioSpectrum.ts` are purely aesthetic dials.
+  Raising `SPECTRUM_TILT` makes the high bars livelier; lowering it toward `0`
+  gives a faithful, bass-dominant display.
 - **Color regression risk.** The glow halo colors in `glow.ts` / `styles.css`
   (`glow-green`, `glow-red`, and the `.glow-rainbow` conic-gradient stops) are
   hard-coded and must stay in sync with the Tailwind palette. If Tailwind colors

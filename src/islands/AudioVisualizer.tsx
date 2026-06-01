@@ -1,6 +1,14 @@
 import type { ComponentChildren } from "preact";
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { useSignalRef } from "@preact/signals/utils";
+import {
+  computeLogBandEdges,
+  computeTiltWeights,
+  fillSpectrumBars,
+  resolveMaxBin,
+  SPECTRUM_MIN_BIN,
+  SPECTRUM_TILT,
+} from "../lib/audioSpectrum.ts";
 
 const BAR_COUNT = 24;
 /** Bars never shrink below this fraction of canvas height, so a thin resting
@@ -145,9 +153,17 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
     if (activeSig.value && analyser) {
       isAnimating = true;
       const frequencyData = new Uint8Array(analyser.frequencyBinCount);
-      const magnitudes = new Float32Array(
-        Math.min(BAR_COUNT, frequencyData.length),
+      const magnitudes = new Float32Array(BAR_COUNT);
+      // Precompute the log-spaced band edges and treble tilt once per effect so
+      // the per-frame path only averages bins (see lib/audioSpectrum.ts for why
+      // linear bins are remapped). Raw bins would pin the low bars and flatten
+      // the high bars on every track.
+      const bandEdges = computeLogBandEdges(
+        BAR_COUNT,
+        SPECTRUM_MIN_BIN,
+        resolveMaxBin(frequencyData.length),
       );
+      const tiltWeights = computeTiltWeights(BAR_COUNT, SPECTRUM_TILT);
       // Expose the live buffer for the stop-collapse tween. The reference is
       // stable: renderFrame mutates it in place, and cleanup cancels the loop
       // before the idle branch reads it via peek(), so no per-frame copy is
@@ -166,9 +182,7 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
 
       const renderFrame = () => {
         analyser.getByteFrequencyData(frequencyData);
-        for (let i = 0; i < magnitudes.length; i++) {
-          magnitudes[i] = (frequencyData[i] ?? 0) / 255;
-        }
+        fillSpectrumBars(magnitudes, frequencyData, bandEdges, tiltWeights);
         drawPair(magnitudes);
         frameId = globalThis.requestAnimationFrame(renderFrame);
       };
