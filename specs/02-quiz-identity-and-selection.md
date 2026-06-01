@@ -29,11 +29,11 @@ The shareable path is `/quiz/{categorySlug}/{slug}`, where `slug` is:
 <difficulty-char><code>
 ```
 
-| Segment             | Source                                     | Values                                 |
-| ------------------- | ------------------------------------------ | -------------------------------------- |
-| `categorySlug`      | `categories.slug` (DB)                     | Free-form slug; created by admins.     |
-| `<difficulty-char>` | `DIFF_PREFIX` in `src/lib/slug.ts`         | `e` = easy · `h` = hard · `m` = mixed. |
-| `<code>`            | `generateShortCode()` in `src/lib/slug.ts` | Exactly 3 characters from `0-9A-Z`.    |
+| Segment             | Source                                     | Values                                                         |
+| ------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| `categorySlug`      | `categories.slug` (DB)                     | Free-form slug; created by admins.                             |
+| `<difficulty-char>` | `DIFF_PREFIX` in `src/lib/slug.ts`         | `e` = easy · `h` = hard. Legacy `m` (mixed) decodes to `hard`. |
+| `<code>`            | `generateShortCode()` in `src/lib/slug.ts` | Exactly 3 characters from `0-9A-Z`.                            |
 
 Decoding (`decodeSlug`) rejects any slug shorter than 2 characters, any unknown
 difficulty prefix, and any code that does not match `^[0-9A-Z]{3}$`.
@@ -51,7 +51,7 @@ For `(categorySlug, difficulty, code)`:
    since been deleted appear with `unavailable: true` and the snapshotted title
    suffixed `(Unavailable)`. The quiz is otherwise stable.
 4. **If not found:** fetch all tracks in the category, filter by difficulty
-   (`easy` / `hard` / no filter for `mixed`), then run
+   (`easy` → easy-only; `hard` → whole pool), then run
    `selectTracksDeterministic`:
    - Hash the `code` string to a 32-bit seed (djb2 in `seedStringToUint32`).
    - Seed `mulberry32` with that integer.
@@ -76,8 +76,8 @@ For `(categorySlug, difficulty, code)`:
 - **Category eligibility**: the home page only offers a
   `(category,
   difficulty)` pair when `loadCategoryTrackCounts` reports at
-  least 20 eligible tracks for that difficulty. `mixed` uses the full pool
-  count; `easy` / `hard` use the per-difficulty count.
+  least 20 eligible tracks for that difficulty. `hard` uses the full pool count;
+  `easy` uses the easy-label count.
 
 ### Determinism
 
@@ -99,16 +99,16 @@ For the same `(categorySlug, difficulty, code)` triple:
 - **`categories`** — `id`, `name`, `slug` (unique).
 - **`track_categories`** — many-to-many composite PK on
   `(track_id, category_id)`.
-- **`quiz_instances`** — `id`, `category_slug`, `difficulty` (`easy` / `hard` /
-  `mixed`), `code`, `created_at`. Unique index on
-  `(category_slug, difficulty, code)`.
+- **`quiz_instances`** — `id`, `category_slug`, `difficulty` (`easy` / `hard`),
+  `code`, `created_at`. Unique index on `(category_slug, difficulty, code)`.
 - **`quiz_instance_tracks`** — `(quiz_instance_id, position)` composite PK,
   `track_id` (no FK so deleted tracks remain representable),
   `track_title_snapshot`.
 
 ### Application types (`src/lib/types.ts`)
 
-- `DifficultyMode = "easy" | "hard" | "mixed"`.
+- `DifficultyMode = "easy" | "hard"` (player-facing quiz mode; `hard` spans the
+  whole pool).
 - `QuizIdentity = { categorySlug, difficulty, code }` — the path-encoded triple.
 - `QuizTrackPayload` — the per-round payload sent to the browser; includes the
   `unavailable: boolean` flag for deleted-track snapshots.

@@ -35,7 +35,7 @@ export const handler = define.handlers({
     const form = await ctx.req.formData();
     const category = String(form.get("category") ?? "");
     const difficulty = String(form.get("difficulty") ?? "") as DifficultyMode;
-    if (!category || !["easy", "hard", "mixed"].includes(difficulty)) {
+    if (!category || !["easy", "hard"].includes(difficulty)) {
       return Response.redirect(new URL("/", ctx.req.url).href, 302);
     }
     if (!await isQuizCombinationAvailable(db, category, difficulty)) {

@@ -1,4 +1,4 @@
-export type DifficultyMode = "easy" | "hard" | "mixed";
+export type DifficultyMode = "easy" | "hard";
 
 export interface InProgressQuizEntry {
   storageKey: string;

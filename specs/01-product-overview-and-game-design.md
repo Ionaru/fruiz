@@ -36,21 +36,21 @@ change the track list.
 
 ### Glossary
 
-| Term             | Definition                                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Player**       | A visitor taking a quiz.                                                                                            |
-| **User**         | An authenticated visitor with an account (may also be an admin).                                                    |
-| **Admin**        | A user whose `users.admin = true`; can manage tracks, categories, and audio uploads.                                |
-| **Track**        | A short audio fragment from a film, TV show, or game soundtrack.                                                    |
-| **Title**        | The name of the work a track is from. Multiple tracks may share a title.                                            |
-| **Category**     | A named group of tracks (e.g. Disney, Video Games). Tracks may belong to many categories.                           |
-| **Round**        | One step in a quiz: one track, one submitted guess.                                                                 |
-| **Quiz**         | A persisted sequence of 20 rounds determined by category + difficulty + 3-char code.                                |
-| **Code**         | The short string (3 characters from `0–9A-Z`) that identifies one quiz within a `(category, difficulty)` pair.      |
-| **Difficulty**   | A per-track label (`easy` / `hard`) chosen by admins. Players pick `easy`, `hard`, or `mixed` when starting a quiz. |
-| **Replay limit** | A player-local cap on how often a track can be replayed before the player must answer or skip. `0` means unlimited. |
-| **Collection**   | A user's personal saved set of tracks. Used to study or revisit specific titles.                                    |
-| **Passkey**      | A WebAuthn credential bound to the user's device. Used for both registration and discoverable (no-username) login.  |
+| Term             | Definition                                                                                                                                            |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Player**       | A visitor taking a quiz.                                                                                                                              |
+| **User**         | An authenticated visitor with an account (may also be an admin).                                                                                      |
+| **Admin**        | A user whose `users.admin = true`; can manage tracks, categories, and audio uploads.                                                                  |
+| **Track**        | A short audio fragment from a film, TV show, or game soundtrack.                                                                                      |
+| **Title**        | The name of the work a track is from. Multiple tracks may share a title.                                                                              |
+| **Category**     | A named group of tracks (e.g. Disney, Video Games). Tracks may belong to many categories.                                                             |
+| **Round**        | One step in a quiz: one track, one submitted guess.                                                                                                   |
+| **Quiz**         | A persisted sequence of 20 rounds determined by category + difficulty + 3-char code.                                                                  |
+| **Code**         | The short string (3 characters from `0–9A-Z`) that identifies one quiz within a `(category, difficulty)` pair.                                        |
+| **Difficulty**   | A per-track label (`easy` / `hard`) chosen by admins. Players pick `easy` (easy-labeled tracks only) or `hard` (the whole pool) when starting a quiz. |
+| **Replay limit** | A player-local cap on how often a track can be replayed before the player must answer or skip. `0` means unlimited.                                   |
+| **Collection**   | A user's personal saved set of tracks. Used to study or revisit specific titles.                                                                      |
+| **Passkey**      | A WebAuthn credential bound to the user's device. Used for both registration and discoverable (no-username) login.                                    |
 
 ### Product goals
 

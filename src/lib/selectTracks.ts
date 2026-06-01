@@ -25,11 +25,10 @@ export function selectTracksDeterministic(
   seed: string,
   take = 20,
 ): SelectableTrack[] {
+  // "easy" narrows to easy-labeled tracks; "hard" spans the whole pool.
   let filtered = pool;
   if (difficulty === "easy") {
     filtered = pool.filter((track) => track.difficulty === "easy");
-  } else if (difficulty === "hard") {
-    filtered = pool.filter((track) => track.difficulty === "hard");
   }
 
   const copy = [...filtered];

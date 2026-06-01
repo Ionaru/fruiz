@@ -34,11 +34,10 @@ button, and a header card. The header is the `PlateauCard` component with a
 difficulty-colored soft glow class from
 [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts):
 
-| Difficulty | Class                        | RGB triplet (visualizer accent) |
-| ---------- | ---------------------------- | ------------------------------- |
-| `easy`     | `glow glow-soft glow-green`  | `[34, 197, 94]`                 |
-| `mixed`    | `glow glow-soft glow-yellow` | `[234, 179, 8]`                 |
-| `hard`     | `glow glow-soft glow-red`    | `[239, 68, 68]`                 |
+| Difficulty | Class                       | RGB triplet (visualizer accent) |
+| ---------- | --------------------------- | ------------------------------- |
+| `easy`     | `glow glow-soft glow-green` | `[34, 197, 94]`                 |
+| `hard`     | `glow glow-soft glow-red`   | `[239, 68, 68]`                 |
 
 The same map drives:
 
