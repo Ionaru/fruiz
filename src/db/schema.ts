@@ -70,7 +70,7 @@ export const quizInstances = sqliteTable(
   {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     categorySlug: text("category_slug").notNull(),
-    difficulty: text("difficulty", { enum: ["easy", "hard", "mixed"] })
+    difficulty: text("difficulty", { enum: ["easy", "hard"] })
       .notNull(),
     code: text("code").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

@@ -4,7 +4,6 @@ import { buildListenSrc } from "../lib/audioListenUrl.ts";
 
 import { Button } from "../components/Button.tsx";
 import { AudioVisualizer } from "./AudioVisualizer.tsx";
-import type { DifficultyMode } from "../lib/types.ts";
 import {
   clampPlaybackGainDb,
   playbackGainDbToLinear,
@@ -141,8 +140,6 @@ interface AudioPlayerProps {
   playbackGainSourceSize?: number | null;
   /** mtime of the audio file in ms since epoch — used to cache-bust the listen URL. */
   playbackGainSourceMtimeMs?: number | null;
-  /** When set, visualizer bars use the matching difficulty color; otherwise neutral. */
-  accentDifficulty?: DifficultyMode;
   /**
    * When true, no audio request is made until the user first clicks play (no
    * eager metadata fetch). Use on list pages that render many players. Defaults
@@ -446,7 +443,6 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           enabled={!props.compact}
           active={playState.value === PlayState.Playing}
           analyserNode={graphSig.value?.analyserNode ?? null}
-          accentDifficulty={props.accentDifficulty}
         >
           {(playState.value === PlayState.Idle ||
             (playState.value === PlayState.Loading &&

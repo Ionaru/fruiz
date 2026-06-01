@@ -55,10 +55,10 @@ Consequences worth knowing:
 - Otherwise normalizes the input and returns `true` if at least one suggestion
   normalizes to the same string.
 
-For `hard` and `mixed` quizzes the suggestion pool is the **full category** —
-every distinct title in the category, including titles that are not in the
-current 20-track quiz. That breadth is deliberate: it prevents the autocomplete
-from hinting at which titles appear in the quiz.
+For `hard` quizzes the suggestion pool is the **full category** — every distinct
+title in the category, including titles that are not in the current 20-track
+quiz. That breadth is deliberate: it prevents the autocomplete from hinting at
+which titles appear in the quiz.
 
 **Easy mode is the exception.** Its suggestion pool is narrowed to
 easy-difficulty titles only

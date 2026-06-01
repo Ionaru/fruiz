@@ -414,7 +414,6 @@ export default function QuizController(props: Readonly<Props>) {
                   .playbackGainSourceMtimeMs}
                 disabled={answerLocked || replayBlocked(currentTrack.id)}
                 onPlayStart={() => onPlayStart(currentTrack.id)}
-                accentDifficulty={props.identity.difficulty}
               />
             )
             : (

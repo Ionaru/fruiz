@@ -76,10 +76,9 @@ Deno.test('getDistinctTitlesForCategory: "easy" returns only easy titles', async
   );
 });
 
-Deno.test("getDistinctTitlesForCategory: hard/mixed/omitted return full pool", async () => {
+Deno.test("getDistinctTitlesForCategory: hard/omitted return full pool", async () => {
   const db = seedDb();
   const full = ["Easy One", "Easy Two", "Hard One"];
   assertEquals(await getDistinctTitlesForCategory(db, "cat-1", "hard"), full);
-  assertEquals(await getDistinctTitlesForCategory(db, "cat-1", "mixed"), full);
   assertEquals(await getDistinctTitlesForCategory(db, "cat-1"), full);
 });

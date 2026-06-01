@@ -1,29 +1,15 @@
-import { assertEquals, assertExists } from "@std/assert";
-import { decodeSlug } from "../../../src/lib/slug.ts";
-import { selectTracksDeterministic } from "../../../src/lib/selectTracks.ts";
-import type { SelectableTrack } from "../../../src/lib/selectTracks.ts";
+import { assertEquals } from "@std/assert";
+import { decodeSlug, encodeSlug } from "../../../src/lib/slug.ts";
 
-Deno.test("quiz path slug decodes and yields 20 deterministic tracks", () => {
-  const decoded = decodeSlug("mA1Z");
-  assertEquals(decoded?.difficulty, "mixed");
-  assertExists(decoded);
-  const pool: SelectableTrack[] = Array.from({ length: 22 }, (_, index) => ({
-    id: `id-${index}`,
-    title: `T${index}`,
-    audioUrl: `u${index}`,
-    difficulty: "easy",
-    playbackGainDb: null,
-    clipPlaybackGainDb: null,
-    playStartSeconds: null,
-    maxPlaySeconds: null,
-    playbackGainSourceSize: null,
-    playbackGainSourceMtimeMs: null,
-  }));
-  const picked = selectTracksDeterministic(
-    pool,
-    decoded.difficulty,
-    decoded.code,
-    20,
-  );
-  assertEquals(picked.length, 20);
+Deno.test("decodeSlug maps legacy 'm' (mixed) slug to hard", () => {
+  const decoded = decodeSlug("mABC");
+  assertEquals(decoded?.difficulty, "hard");
+  assertEquals(decoded?.code, "ABC");
+});
+
+Deno.test("legacy 'm' slug canonicalizes to 'h' via encodeSlug", () => {
+  const decoded = decodeSlug("mABC");
+  if (!decoded) throw new Error("decode failed");
+  const encoded = encodeSlug(decoded.difficulty, decoded.code);
+  assertEquals(encoded, "hABC");
 });

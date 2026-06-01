@@ -3,13 +3,14 @@ import type { DifficultyMode } from "./types.ts";
 const DIFF_PREFIX: Record<DifficultyMode, string> = {
   easy: "e",
   hard: "h",
-  mixed: "m",
 };
 
 const PREFIX_TO_DIFF: Record<string, DifficultyMode> = {
   e: "easy",
   h: "hard",
-  m: "mixed",
+  // Legacy "mixed" links: "mixed" selected the whole pool, which is exactly
+  // what "hard" means now, so old `m…` slugs decode to the same 20 tracks.
+  m: "hard",
 };
 
 const CODE_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";

@@ -19,7 +19,7 @@ services:
         - deno
         - eval
         - "if (!(await fetch('http://127.0.0.1:8000/')).ok) Deno.exit(1)"
-      start_period: 120s
+      start_period: 600s
       interval: 15s
       timeout: 10s
       retries: 5

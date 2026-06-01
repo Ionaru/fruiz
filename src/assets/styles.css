@@ -149,6 +149,35 @@
   .glow-red {
     --glow-color: var(--color-red-500);
   }
+
+  .glow-rainbow::before {
+    /* Replace the single-color box-shadow halo with a blurred rainbow spectrum.
+       Reuses the glow-soft / glow-strong sizing vars. */
+    box-shadow: none;
+    background: conic-gradient(
+      from 0deg,
+      var(--color-red-500),
+      var(--color-yellow-500),
+      var(--color-green-500),
+      #06b6d4,
+      #6366f1,
+      #d946ef,
+      var(--color-red-500)
+    );
+    inset: calc(-1 * var(--glow-outer-spread));
+    filter: blur(var(--glow-outer-blur));
+    opacity: calc(var(--glow-outer-alpha, 0%) + 20%);
+  }
+
+  .glow-rainbow-animate::before {
+    animation: glow-rainbow-spin 6s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glow-rainbow-animate::before {
+      animation: none;
+    }
+  }
 }
 
 @layer utilities {
@@ -163,5 +192,15 @@
   }
   from {
     transform: rotate(0deg);
+  }
+}
+
+@keyframes glow-rainbow-spin {
+  /* Keep blur fixed so the halo size stays stable while the hue cycles. */
+  from {
+    filter: blur(var(--glow-outer-blur)) hue-rotate(0deg);
+  }
+  to {
+    filter: blur(var(--glow-outer-blur)) hue-rotate(360deg);
   }
 }

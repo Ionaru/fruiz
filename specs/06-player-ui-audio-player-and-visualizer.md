@@ -34,18 +34,27 @@ button, and a header card. The header is the `PlateauCard` component with a
 difficulty-colored soft glow class from
 [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts):
 
-| Difficulty | Class                        | RGB triplet (visualizer accent) |
-| ---------- | ---------------------------- | ------------------------------- |
-| `easy`     | `glow glow-soft glow-green`  | `[34, 197, 94]`                 |
-| `mixed`    | `glow glow-soft glow-yellow` | `[234, 179, 8]`                 |
-| `hard`     | `glow glow-soft glow-red`    | `[239, 68, 68]`                 |
+| Difficulty | Header (soft glow) class                           | Visualizer bars |
+| ---------- | -------------------------------------------------- | --------------- |
+| `easy`     | `glow glow-soft glow-green`                        | neutral gray    |
+| `hard`     | `glow glow-soft glow-rainbow glow-rainbow-animate` | neutral gray    |
 
-The same map drives:
+`hard` uses an animated rainbow halo (`.glow-rainbow` + `.glow-rainbow-animate`,
+defined in [`src/assets/styles.css`](../src/assets/styles.css)) instead of a
+single accent color. The rainbow is a blurred `conic-gradient` on the glow
+`::before`; `.glow-rainbow-animate` cycles the hue via `hue-rotate` and is
+disabled under `prefers-reduced-motion: reduce`. The category-select difficulty
+buttons (strong glow) keep `glow-red` for `hard`.
 
+The supporting maps:
+
+- `difficultyGlowClass` (strong) drives the category-select buttons; `hard`
+  stays `glow-red` there.
 - The strong glow on result modals (`resultGlowClass`) for correct vs incorrect.
-- The visualizer accent (`difficultyAccentRgb`).
-- A neutral fallback (`NEUTRAL_ACCENT_RGB = [148, 163, 184]`) used when no
-  difficulty is provided.
+- The visualizer bars are not difficulty-colored: they use the
+  `--color-base-400` token (a muted neutral gray, read via
+  `getComputedStyle(canvas).getPropertyValue("--color-base-400")`, falling back
+  to `#9A9A9E`), which reads on both the light and dark themes.
 
 The `QuizController` island renders inside the shell and provides the gameplay
 UI.
@@ -97,18 +106,41 @@ _mirror_ outward from the center child.
 Pattern details worth knowing:
 
 - **Signal-bridging.** Raw props are NOT reactive dependencies of
-  `useSignalEffect`. The island copies `analyserNode`, `active`, and
-  `accentDifficulty` into local signals every render so the effect re-runs when
-  the parent flips them.
+  `useSignalEffect`. The island copies `analyserNode` and `active` into local
+  signals every render so the effect re-runs when the parent flips them.
 - **`ResizeObserver`** tracks canvas size; per-frame DOM reads of `clientWidth`
   / `clientHeight` are avoided. Device-pixel-ratio scaling is recomputed in the
   observer callback.
 - **`getContext("2d")` is cached** at effect setup (`CanvasState`) so the
   per-frame path only calls `fillRect` and `clearRect`.
-- **`fillStyle` is pre-computed once per effect** from the accent triplet (or
-  the neutral triplet). The per-frame loop only iterates bars.
+- **Fill is resolved once per effect** as the `--color-base-400` token (a muted
+  neutral gray; `|| "#9A9A9E"` fallback so an unresolved/empty value still
+  yields a valid color); the per-frame loop sets `fillStyle` once and applies
+  the same color to every bar.
 - **Bar count is fixed at 24** (`BAR_COUNT`); slot width is `width / bars`, bar
   width is 60% of the slot, gap is the remaining 40%.
+- **Centered geometry.** Each bar is centered on the vertical midline
+  (`y = (height - barHeight) / 2`) and grows symmetrically up and down, so the
+  visible energy lines up with the play/stop button and rising magnitudes expand
+  in both directions. Magnitudes are normalized to `0..1` and floored to
+  `RESTING_FRACTION` (`0.08`) inside `drawBars`.
+- **Bars are always rendered.** When idle, all bars sit at `RESTING_FRACTION` —
+  a thin resting line on the centerline — instead of a blank canvas. The
+  `ResizeObserver` callback redraws the resting line when no animation loop owns
+  the canvas.
+- **Stop eases back to rest.** While playing, the live magnitude buffer is
+  exposed once via a `useSignal` and read later via `.peek()` (so the effect
+  never subscribes and the write doesn't re-trigger it; the buffer is mutated in
+  place each frame and stops mutating once the loop is cancelled). When `active`
+  flips false, a short `requestAnimationFrame` tween (`COLLAPSE_MS`,
+  ease-out-cubic, timestamps from the rAF argument) collapses the bars from the
+  snapshot down to the resting line. The playing render itself is unchanged.
+- **Restart flush.** When the live loop (re)starts, it momentarily sets the
+  analyser's `smoothingTimeConstant` to `0` for one throwaway
+  `getByteFrequencyData` read, then restores it. The analyser sits before the
+  gain node and freezes its smoothed buffer when audio pauses; without the
+  flush, smoothing blends that stale frame in and a restart visibly jumps to the
+  previous stop point.
 - **Two directions**: the right canvas draws `ltr` (bin 0 on the left edge →
   strongest bar nearest the center child); the left canvas draws `rtl` so the
   pair forms a symmetric, center-out display.
@@ -163,8 +195,7 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
   - [`src/islands/AudioPlayer.tsx`](../src/islands/AudioPlayer.tsx).
   - [`src/islands/AudioVisualizer.tsx`](../src/islands/AudioVisualizer.tsx).
   - [`src/islands/QuizController.tsx`](../src/islands/QuizController.tsx) —
-    parent that threads `accentDifficulty` and active state into the player and
-    visualizer.
+    parent that threads active state into the player and visualizer.
   - [`src/islands/QuizTrackNav.tsx`](../src/islands/QuizTrackNav.tsx).
   - [`src/islands/GuessResultModal.tsx`](../src/islands/GuessResultModal.tsx).
 - **Components (SSR)**
@@ -173,7 +204,7 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
   - [`src/components/quiz/AudioTrackPlayer.tsx`](../src/components/quiz/AudioTrackPlayer.tsx)
     — layout wrapper for the active track row.
   - [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts) — glow class
-    maps and accent RGB triplets.
+    maps.
   - [`src/components/quiz/TrackGridButton.tsx`](../src/components/quiz/TrackGridButton.tsx),
     [`src/components/quiz/TrackIndicatorButton.tsx`](../src/components/quiz/TrackIndicatorButton.tsx),
     [`src/components/quiz/QuizResults.tsx`](../src/components/quiz/QuizResults.tsx),
@@ -211,11 +242,16 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
   they depend on (`quiz_playback_test.ts`, `audioListenUrl_test.ts`, gain
   helpers) cover the math.
 - **Manual:**
-  - Open a quiz on a mobile viewport in Chrome, Safari, and Firefox. Press Play
-    — confirm playback starts within the loading window and the bars animate
-    symmetrically around the play button.
-  - Stop mid-clip — bars clear, button reverts to Play.
-  - Open a `hard` quiz — confirm header glow is red and visualizer bars are red.
+  - Open a quiz on a mobile viewport in Chrome, Safari, and Firefox. Confirm a
+    thin resting bar line is visible on the centerline before play. Press Play —
+    confirm playback starts within the loading window and the bars expand
+    symmetrically up and down from the centerline, in line with the button.
+  - Stop mid-clip — bars ease back down to the resting line (no blank flash),
+    button reverts to Play.
+  - Open a `hard` quiz — confirm the header glow is an animated rainbow (the
+    visualizer bars stay the neutral gray, not difficulty-colored). With OS
+    "reduce motion" on, the header rainbow stops animating (static). Confirm the
+    category-select `hard` button stays red.
   - Open an admin track edit page — confirm the preview player respects live
     `playStartSeconds` / `maxPlaySeconds` form values.
   - With keyboard focus outside the answer input, press Space — confirm the
@@ -231,7 +267,12 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
 - **Visualizer cost.** `fftSize = 64` (32 bins) → 24 bars is cheap, but if the
   bar count or smoothing is increased, profile on a low-end phone before
   shipping.
-- **Color regression risk.** The accent RGB triplets in `glow.ts` are hard-coded
-  and must stay in sync with the Tailwind palette referenced by the `glow-green`
-  / `glow-yellow` / `glow-red` classes. If Tailwind colors are rebranded, both
-  surfaces must be updated together — flag this in any palette PR.
+- **Color regression risk.** The glow halo colors in `glow.ts` / `styles.css`
+  (`glow-green`, `glow-red`, and the `.glow-rainbow` conic-gradient stops) are
+  hard-coded and must stay in sync with the Tailwind palette. If Tailwind colors
+  are rebranded, update them together — flag this in any palette PR. The
+  visualizer bars carry no palette of their own (they use the `--color-base-400`
+  neutral token) and so need no sync.
+- **Reduced motion.** The rainbow header animation is gated by
+  `prefers-reduced-motion: reduce`; the visualizer bars use a static color
+  (their height motion is the audio visualization, not decorative).
