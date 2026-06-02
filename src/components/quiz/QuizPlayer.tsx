@@ -14,8 +14,7 @@ export interface QuizPlayerProps {
 
 const DIFFICULTY_DETAILS: Record<DifficultyMode, string> = {
   easy: "Main title themes and recognizable tracks.",
-  mixed: "A mix of recognizable themes and more obscure tracks.",
-  hard: "More obscure tracks and deeper cuts.",
+  hard: "A mix of recognizable themes and more obscure tracks.",
 };
 
 export function QuizPlayer(props: Readonly<QuizPlayerProps>) {

@@ -12,7 +12,7 @@ export const tracks = sqliteTable("tracks", {
   title: text("title").notNull(),
   audioUrl: text("audio_url").notNull(),
   difficulty: text("difficulty", { enum: ["easy", "hard"] }).notNull(),
-  /** dB gain toward ~-16 LUFS; null if not measured (see playback gain analysis). */
+  /** Full-track dB gain toward ~-16 LUFS; null if not measured. Used for full-track playback (collection). */
   playbackGainDb: real("playback_gain_db"),
   /** Byte size of the audio file when gain was last computed or fingerprint seeded. */
   playbackGainSourceSize: integer("playback_gain_source_size"),
@@ -22,6 +22,12 @@ export const tracks = sqliteTable("tracks", {
   playStartSeconds: real("play_start_seconds"),
   /** Max clip length from start (includes fades); null = app default. */
   maxPlaySeconds: real("max_play_seconds"),
+  /** dB gain toward ~-16 LUFS measured over the quiz clip window; null if not measured. Used by quiz + admin preview. */
+  clipPlaybackGainDb: real("clip_playback_gain_db"),
+  /** Resolved clip start (seconds) the clip gain was measured at; for invalidation when the window shifts. */
+  clipPlaybackGainStartSeconds: real("clip_playback_gain_start_seconds"),
+  /** Resolved clip max length (seconds) the clip gain was measured at; for invalidation when the window shifts. */
+  clipPlaybackGainMaxSeconds: real("clip_playback_gain_max_seconds"),
 });
 
 export const categories = sqliteTable("categories", {
@@ -64,7 +70,7 @@ export const quizInstances = sqliteTable(
   {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     categorySlug: text("category_slug").notNull(),
-    difficulty: text("difficulty", { enum: ["easy", "hard", "mixed"] })
+    difficulty: text("difficulty", { enum: ["easy", "hard"] })
       .notNull(),
     code: text("code").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
@@ -9,12 +9,11 @@ const MIN_TRACKS = 20;
 function countForDifficulty(
   total: number,
   easy: number,
-  hard: number,
   difficulty: DifficultyMode,
 ): number {
-  if (difficulty === "mixed") return total;
   if (difficulty === "easy") return easy;
-  return hard;
+  // "hard" spans the whole pool (formerly "mixed").
+  return total;
 }
 
 export interface CategoryRow {
@@ -36,7 +35,7 @@ export async function loadCategoryTrackCounts(
 ): Promise<
   Map<
     string,
-    { category: CategoryRow; total: number; easy: number; hard: number }
+    { category: CategoryRow; total: number; easy: number }
   >
 > {
   const rows = await db
@@ -48,9 +47,6 @@ export async function loadCategoryTrackCounts(
       easy: sql<
         number
       >`count(distinct case when ${tracks.difficulty} = 'easy' then ${tracks.id} end)`,
-      hard: sql<
-        number
-      >`count(distinct case when ${tracks.difficulty} = 'hard' then ${tracks.id} end)`,
     })
     .from(categories)
     .innerJoin(trackCategories, eq(trackCategories.categoryId, categories.id))
@@ -59,7 +55,7 @@ export async function loadCategoryTrackCounts(
 
   const map = new Map<
     string,
-    { category: CategoryRow; total: number; easy: number; hard: number }
+    { category: CategoryRow; total: number; easy: number }
   >();
   for (const aggregateRow of rows) {
     map.set(aggregateRow.slug, {
@@ -70,7 +66,6 @@ export async function loadCategoryTrackCounts(
       },
       total: Number(aggregateRow.total),
       easy: Number(aggregateRow.easy),
-      hard: Number(aggregateRow.hard),
     });
   }
   return map;
@@ -81,13 +76,13 @@ export async function getAvailableQuizOptions(
 ): Promise<AvailableQuizOption[]> {
   const map = await loadCategoryTrackCounts(db);
   const out: AvailableQuizOption[] = [];
-  for (const { category, total, easy, hard } of map.values()) {
+  for (const { category, total, easy } of map.values()) {
     const difficulties: DifficultyMode[] = [];
     for (
-      const difficultyMode of ["easy", "mixed", "hard"] as DifficultyMode[]
+      const difficultyMode of ["easy", "hard"] as DifficultyMode[]
     ) {
       if (
-        countForDifficulty(total, easy, hard, difficultyMode) >= MIN_TRACKS
+        countForDifficulty(total, easy, difficultyMode) >= MIN_TRACKS
       ) {
         difficulties.push(difficultyMode);
       }
@@ -110,7 +105,7 @@ export async function isQuizCombinationAvailable(
   const map = await loadCategoryTrackCounts(db);
   const row = map.get(categorySlug);
   if (!row) return false;
-  return countForDifficulty(row.total, row.easy, row.hard, difficulty) >=
+  return countForDifficulty(row.total, row.easy, difficulty) >=
     MIN_TRACKS;
 }
 
@@ -149,6 +144,7 @@ export async function getTracksForCategory(
     audioUrl: string;
     difficulty: "easy" | "hard";
     playbackGainDb: number | null;
+    clipPlaybackGainDb: number | null;
     playStartSeconds: number | null;
     maxPlaySeconds: number | null;
     playbackGainSourceSize: number | null;
@@ -170,6 +166,7 @@ export async function getTracksForCategory(
     audioUrl: t.audioUrl,
     difficulty: t.difficulty,
     playbackGainDb: t.playbackGainDb,
+    clipPlaybackGainDb: t.clipPlaybackGainDb,
     playStartSeconds: t.playStartSeconds,
     maxPlaySeconds: t.maxPlaySeconds,
     playbackGainSourceSize: t.playbackGainSourceSize,
@@ -180,12 +177,21 @@ export async function getTracksForCategory(
 export async function getDistinctTitlesForCategory(
   db: DB,
   categoryId: string,
+  difficulty?: DifficultyMode,
 ): Promise<string[]> {
+  // Easy mode narrows the suggestion pool to easy-difficulty titles only, so the
+  // autocomplete is genuinely easier. "hard" (and the unspecified case)
+  // keep the full-category pool that deliberately hides which titles are in play.
+  const categoryFilter = eq(trackCategories.categoryId, categoryId);
+  const where = difficulty === "easy"
+    ? and(categoryFilter, eq(tracks.difficulty, "easy"))
+    : categoryFilter;
+
   const rows = await db
     .selectDistinct({ title: tracks.title })
     .from(tracks)
     .innerJoin(trackCategories, eq(trackCategories.trackId, tracks.id))
-    .where(eq(trackCategories.categoryId, categoryId))
+    .where(where)
     .orderBy(tracks.title);
 
   return rows.map((row) => row.title);

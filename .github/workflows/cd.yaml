@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  DENO_VERSION: 2.8.0
+  DENO_VERSION: 2.8.1
 
 jobs:
   audit:
@@ -106,12 +106,15 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
+            $ErrorActionPreference = "Stop"
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch -a
             git switch -d ${{needs.get_sha.outputs.sha_short}}
             docker system prune --all -f
             $env:FRUIZ_GIT_REVISION = "${{needs.get_sha.outputs.sha_short}}"
-            $env:DOCKER_CONFIG="/docker-no-creds"
+            $env:DOCKER_CONFIG = "/docker-no-creds"
             docker compose -p fruiz -f deploy/compose.yaml pull
             docker compose -p fruiz -f deploy/compose.yaml up --pull=never --no-build --remove-orphans -d --wait
-            $env:FRUIZ_GIT_REVISION = $null
+            $deployExit = $LASTEXITCODE
+            docker compose -p fruiz -f deploy/compose.yaml logs server
+            if ($deployExit -ne 0) { exit $deployExit }

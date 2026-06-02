@@ -8,6 +8,7 @@ export interface SelectableTrack {
   audioUrl: string;
   difficulty: "easy" | "hard";
   playbackGainDb: number | null;
+  clipPlaybackGainDb: number | null;
   playStartSeconds: number | null;
   maxPlaySeconds: number | null;
   playbackGainSourceSize: number | null;
@@ -24,11 +25,10 @@ export function selectTracksDeterministic(
   seed: string,
   take = 20,
 ): SelectableTrack[] {
+  // "easy" narrows to easy-labeled tracks; "hard" spans the whole pool.
   let filtered = pool;
   if (difficulty === "easy") {
     filtered = pool.filter((track) => track.difficulty === "easy");
-  } else if (difficulty === "hard") {
-    filtered = pool.filter((track) => track.difficulty === "hard");
   }
 
   const copy = [...filtered];
@@ -61,6 +61,7 @@ export function toQuizPayload(tracks: SelectableTrack[]): QuizTrackPayload[] {
       difficulty: track.difficulty,
       unavailable: false,
       playbackGainDb: track.playbackGainDb,
+      clipPlaybackGainDb: track.clipPlaybackGainDb,
       playStartSeconds: playback.playStartSeconds,
       maxPlaySeconds: playback.maxPlaySeconds,
       playbackGainSourceSize: track.playbackGainSourceSize,

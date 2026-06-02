@@ -55,10 +55,17 @@ Consequences worth knowing:
 - Otherwise normalizes the input and returns `true` if at least one suggestion
   normalizes to the same string.
 
-The suggestion pool is the **full category** — every distinct title in the
-category, including titles that are not in the current 20-track quiz. That
-breadth is deliberate: it prevents the autocomplete from hinting at which titles
-appear in the quiz.
+For `hard` quizzes the suggestion pool is the **full category** — every distinct
+title in the category, including titles that are not in the current 20-track
+quiz. That breadth is deliberate: it prevents the autocomplete from hinting at
+which titles appear in the quiz.
+
+**Easy mode is the exception.** Its suggestion pool is narrowed to
+easy-difficulty titles only
+(`getDistinctTitlesForCategory(db, categoryId, "easy")`), so the autocomplete is
+genuinely easier. Because an easy quiz is composed exclusively of easy tracks
+(`selectTracksDeterministic` filters to `difficulty === "easy"`), every answer
+the player needs is still in the pool — the submit gate stays complete.
 
 `QuizController` derives `canSubmitGuess` from this helper on every render and
 binds it to the Submit button's `disabled` attribute (combined with

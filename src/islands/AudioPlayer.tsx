@@ -4,7 +4,6 @@ import { buildListenSrc } from "../lib/audioListenUrl.ts";
 
 import { Button } from "../components/Button.tsx";
 import { AudioVisualizer } from "./AudioVisualizer.tsx";
-import type { DifficultyMode } from "../lib/types.ts";
 import {
   clampPlaybackGainDb,
   playbackGainDbToLinear,
@@ -17,10 +16,19 @@ import {
   resolveMaxPlaySeconds,
   resolvePlayStartSeconds,
 } from "../lib/quizPlayback.ts";
-import { FaPlay, FaSpinner, FaStop } from "react-icons/fa6";
+import { FaPlay, FaStop } from "react-icons/fa6";
+import { SpinningIcon } from "../components/ui/SpinningIcon.tsx";
 
-const VISUALIZER_FFT_SIZE = 64;
+// 1024 → 512 frequency bins, fine enough for the log-spaced band mapping in
+// AudioVisualizer to separate the bass without starving the low bars of bins.
+const VISUALIZER_FFT_SIZE = 1024;
 const VISUALIZER_SMOOTHING = 0.8;
+// The analyser taps the signal BEFORE the gain node, so it sees raw full-scale
+// audio. The default dB window (-100..-30) saturates loud music to full-height
+// bars. Widen the ceiling so only genuine peaks reach the top; the floor stays
+// low so quiet detail still registers. dB values below the floor read as 0.
+const VISUALIZER_MIN_DB = -90;
+const VISUALIZER_MAX_DB = -5;
 
 export enum PlayState {
   Idle = "idle",
@@ -140,8 +148,6 @@ interface AudioPlayerProps {
   playbackGainSourceSize?: number | null;
   /** mtime of the audio file in ms since epoch — used to cache-bust the listen URL. */
   playbackGainSourceMtimeMs?: number | null;
-  /** When set, visualizer bars use the matching difficulty color; otherwise neutral. */
-  accentDifficulty?: DifficultyMode;
   /**
    * When true, no audio request is made until the user first clicks play (no
    * eager metadata fetch). Use on list pages that render many players. Defaults
@@ -214,6 +220,8 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       const analyserNode = ctx.createAnalyser();
       analyserNode.fftSize = VISUALIZER_FFT_SIZE;
       analyserNode.smoothingTimeConstant = VISUALIZER_SMOOTHING;
+      analyserNode.maxDecibels = VISUALIZER_MAX_DB;
+      analyserNode.minDecibels = VISUALIZER_MIN_DB;
       const gainNode = ctx.createGain();
       gainNode.gain.value = 0;
       source.connect(analyserNode);
@@ -445,7 +453,6 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           enabled={!props.compact}
           active={playState.value === PlayState.Playing}
           analyserNode={graphSig.value?.analyserNode ?? null}
-          accentDifficulty={props.accentDifficulty}
         >
           {(playState.value === PlayState.Idle ||
             (playState.value === PlayState.Loading &&
@@ -469,7 +476,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
               id={`listen-loading-${props.audioId}`}
               disabled
             >
-              <FaSpinner />
+              <SpinningIcon />
             </Button>
           )}
           {playState.value === PlayState.Playing && (
