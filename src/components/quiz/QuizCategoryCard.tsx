@@ -1,12 +1,11 @@
 import { Button } from "../Button.tsx";
 import { PlateauCard } from "../ui/PlateauCard.tsx";
-import type { CategoryRow } from "../../lib/categories.ts";
-import type { DifficultyMode } from "../../lib/types.ts";
+import type { CategoryRow, DifficultyOption } from "../../lib/categories.ts";
 import { difficultyGlowClass } from "./glow.ts";
 
 export interface QuizCategoryCardProps {
   category: CategoryRow;
-  difficulties: DifficultyMode[];
+  difficulties: DifficultyOption[];
 }
 
 export function QuizCategoryCard(
@@ -20,15 +19,20 @@ export function QuizCategoryCard(
           {category.name}
         </h3>
         <div class="relative isolate flex flex-wrap gap-2">
-          {difficulties.map((d) => (
+          {difficulties.map(({ mode, trackCount }) => (
             <Button
-              key={d}
-              class={`px-6 capitalize ${difficultyGlowClass[d]}`}
+              key={mode}
+              class={`flex-col gap-0.5 px-6 leading-tight capitalize ${
+                difficultyGlowClass[mode]
+              }`}
               name="difficulty"
-              value={d}
+              value={mode}
               type="submit"
             >
-              {d}
+              <span>{mode}</span>
+              <span class="text-xs font-normal tabular-nums normal-case opacity-60">
+                {trackCount} tracks
+              </span>
             </Button>
           ))}
         </div>
