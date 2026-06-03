@@ -199,7 +199,10 @@ No new tables are introduced by this subsystem.
     — category CRUD.
   - [`src/routes/api/categories/index.ts`](../src/routes/api/categories/index.ts),
     [`src/routes/api/categories/[key]/tracks.ts`](../src/routes/api/categories/[key]/tracks.ts)
-    — admin-side helper endpoints (category list, tracks-in-category).
+    — admin-side helper endpoints (category list, tracks-in-category). The
+    tracks endpoint returns each track's `filename` (bare audio filename, no
+    directory and no extension) for verification; the full file path is never
+    exposed.
 - **Islands (client)**
   - [`src/islands/TrackForm.tsx`](../src/islands/TrackForm.tsx),
     [`src/islands/TrackAudioPick.tsx`](../src/islands/TrackAudioPick.tsx) —

@@ -15,3 +15,16 @@ export function absolutePathFromTracksAudioUrl(audioUrl: string): string {
   }
   return join(Deno.cwd(), ...rel.split("/"));
 }
+
+/**
+ * The bare filename of a track's `audioUrl` — directory and extension stripped.
+ * For verification UIs/APIs: deliberately NEVER returns the full path.
+ */
+export function filenameFromAudioUrl(audioUrl: string): string {
+  const normalized = audioUrl.trim().replaceAll("\\", "/");
+  // Drop any query/hash (manual audioUrl entries may be remote URLs).
+  const pathPart = normalized.replace(/[?#].*$/, "");
+  const base = pathPart.slice(pathPart.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  return dot > 0 ? base.slice(0, dot) : base;
+}
