@@ -31,7 +31,7 @@ export function QuizCategoryCard(
             >
               <span>{mode}</span>
               <span class="text-xs font-normal tabular-nums normal-case opacity-60">
-                {trackCount} tracks
+                {trackCount} available
               </span>
             </Button>
           ))}
