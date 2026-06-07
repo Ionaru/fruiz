@@ -8,6 +8,16 @@ services:
       - FRUIZ_SECURE_COOKIES
       - FRUIZ_RP_ID
       - FRUIZ_DEBUG
+      # OpenTelemetry → SigNoz (spec 12). Deno's built-in OTEL exports OTLP
+      # http/protobuf to port 4318; host.docker.internal reaches the collector's
+      # published host ports. Override the endpoint for other collectors.
+      - OTEL_DENO=true
+      - OTEL_SERVICE_NAME=fruiz
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://host.docker.internal:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_RESOURCE_ATTRIBUTES=service.version=${FRUIZ_GIT_REVISION:-local}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${FRUIZ_PORT:-8000}:8000"
     volumes:

@@ -6,6 +6,11 @@ import type { DifficultyMode, QuizTrackPayload } from "./types.ts";
 import { resolvedPlaybackFromDbFields } from "./quizPlayback.ts";
 import { selectTracksDeterministic } from "./selectTracks.ts";
 import { getTracksForCategory } from "./categories.ts";
+import {
+  quizCacheHitCounter,
+  quizCreatedCounter,
+  withSpan,
+} from "./telemetry.ts";
 
 interface CreateArgs {
   categorySlug: string;
@@ -84,11 +89,19 @@ async function createQuizInstance(
   args: CreateArgs,
 ): Promise<QuizInstanceData | null> {
   const pool = await getTracksForCategory(drizzle, args.categoryId);
-  const selected = selectTracksDeterministic(
-    pool,
-    args.difficulty,
-    args.code,
-    20,
+  const selected = await withSpan(
+    "quiz.select_tracks",
+    (span) => {
+      const result = selectTracksDeterministic(
+        pool,
+        args.difficulty,
+        args.code,
+        20,
+      );
+      span.setAttribute("track_count", result.length);
+      return result;
+    },
+    { category: args.categorySlug, difficulty: args.difficulty },
   );
   if (selected.length < 20) return null;
 
@@ -186,23 +199,45 @@ export async function getOrCreateQuizInstance(
   drizzle: DB,
   args: CreateArgs,
 ): Promise<QuizInstanceData | null> {
-  const existing = await getQuizInstance(
-    drizzle,
-    args.categorySlug,
-    args.difficulty,
-    args.code,
-  );
-  if (existing) return existing;
-
-  try {
-    return await createQuizInstance(drizzle, args);
-  } catch {
-    // Unique conflicts can happen when two requests create the same code.
-    return await getQuizInstance(
+  return await withSpan("quiz.materialize", async () => {
+    const existing = await getQuizInstance(
       drizzle,
       args.categorySlug,
       args.difficulty,
       args.code,
     );
-  }
+    if (existing) {
+      quizCacheHitCounter.add(1, {
+        category: args.categorySlug,
+        difficulty: args.difficulty,
+      });
+      return existing;
+    }
+
+    try {
+      const created = await createQuizInstance(drizzle, args);
+      if (created) {
+        quizCreatedCounter.add(1, {
+          category: args.categorySlug,
+          difficulty: args.difficulty,
+        });
+      }
+      return created;
+    } catch {
+      // Unique conflicts can happen when two requests create the same code.
+      const retried = await getQuizInstance(
+        drizzle,
+        args.categorySlug,
+        args.difficulty,
+        args.code,
+      );
+      if (retried) {
+        quizCacheHitCounter.add(1, {
+          category: args.categorySlug,
+          difficulty: args.difficulty,
+        });
+      }
+      return retried;
+    }
+  }, { category: args.categorySlug, difficulty: args.difficulty });
 }

@@ -1,5 +1,4 @@
-import { loggerMiddleware } from "../middlewares/logger.ts";
-
-// sessionMiddleware is registered globally in main.ts so it also covers the
-// passkey plugin's endpoints.
-export default [loggerMiddleware];
+// No file-system middleware: session is registered globally in main.ts, and
+// per-request observability now comes from Fresh's OpenTelemetry request spans
+// (spec 12), which superseded the old per-request logger.
+export default [];

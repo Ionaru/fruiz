@@ -1,8 +1,9 @@
 # 10 — Sessions and request lifecycle
 
 > Cross-cutting plumbing: the Fresh app entry, the request middleware chain, the
-> session-hydration / persistence pattern, the request logger, and the shape of
-> `ctx.state` that handlers read everywhere.
+> session-hydration / persistence pattern, and the shape of `ctx.state` that
+> handlers read everywhere. Per-request observability is owned by telemetry
+> (spec 12), not a dedicated logger.
 
 ## Purpose
 
@@ -12,7 +13,6 @@ This subsystem owns:
 - The `State` type that handlers and middleware share.
 - The session middleware — cookie read, DB load, expiry touch,
   `ctx.state.session` hydration, and write-back on mutated `data`.
-- The request logger.
 - Drizzle relations and the `DB` singleton.
 
 The WebAuthn ceremonies and session CRUD helpers live in spec 08. The listen and
@@ -30,8 +30,9 @@ At app start the Fresh instance wires, in order:
 3. Session middleware applied **globally** — see below.
 4. The passkey plugin's dispatch middleware — registers the
    `/api/auth/register-*` and `/api/auth/authenticate` endpoints (spec 08).
-5. File-system routes — everything under `src/routes/`. The only entry in the
-   file-system middleware list is the request logger.
+5. File-system routes — everything under `src/routes/`. The file-system
+   middleware list carries no app-level logger; per-request traces come from the
+   telemetry baseline (spec 12).
 
 Session lives on a global app middleware rather than the file-system route
 middleware list because the passkey plugin's endpoints are registered
@@ -65,11 +66,13 @@ otherwise miss the session hydration.
    appends a `max-age=0` `fruiz_session` cookie to the outgoing response so the
    browser stops sending the stale id on subsequent requests.
 
-### Logger middleware
+### Per-request observability
 
-A single `console.log` of method and URL per request. Intentionally minimal so
-log lines remain greppable without structured-logging overhead. Logs do not
-include cookies or session ids.
+There is no dedicated request logger. The telemetry baseline (spec 12) opens a
+span per request carrying the matched route pattern, method, status, and
+duration, superseding the old method-and-URL log line. `console.*` output is
+still captured as OpenTelemetry logs until structured logging lands (spec 90).
+Neither path records cookies or session ids.
 
 ### `ctx.state` shape
 
@@ -159,8 +162,9 @@ nonce or a multi-step admin wizard) without introducing a new table.
   - Keep the import-direction rules honest (`components` never imports
     `islands`).
 - **Manual:**
-  - Tail the dev server log and request `/` — confirm a single log line per
-    request and that `/_fresh/*` assets do not produce a session DB hit.
+  - Request `/` and confirm `/_fresh/*` assets do not produce a session DB hit.
+    With telemetry enabled (spec 12), confirm one request span per request; the
+    old per-request log line is gone.
   - Login, then `DELETE FROM sessions` in SQL, then refresh — the response MUST
     include a cookie clear and the next request must be treated as guest.
   - Inspect `Set-Cookie` after a successful login; confirm
@@ -173,9 +177,10 @@ nonce or a multi-step admin wizard) without introducing a new table.
   rather than in the session subsystem, but shares the same single-process
   constraint. Horizontal scale needs a shared challenge store — tracked
   alongside spec 08.
-- **Logging is `console.log` only.** No structured fields, no redaction.
-  Production deployments should pipe stdout to a structured logger or replace
-  this middleware with one that emits JSON.
+- **No structured application logs yet.** The dedicated request logger is
+  removed in favour of telemetry request spans (spec 12); `console.*` is
+  captured as OpenTelemetry logs but carries no structured fields or redaction.
+  A JSON-emitting logger remains future work (Structured logging, spec 90).
 - **`updated_at` precision.** The sliding-window touch bumps `expires_at` and
   `updated_at` on every authenticated request. If the application gets chatty,
   the write traffic could become significant; consider rate-limiting the touch

@@ -17,6 +17,7 @@ import {
   resolveMaxPlaySeconds,
   resolvePlayStartSeconds,
 } from "./quizPlayback.ts";
+import { audioLoudnessDuration, withSpan } from "./telemetry.ts";
 
 /** Window over which to measure loudness; omit to measure the whole file. */
 export type PlaybackGainWindow = {
@@ -138,29 +139,41 @@ export type LoudnormResult =
  * yields no `input_i` is `no_audio`, not a failure — that distinction is what
  * lets callers cache an unmeasurable window without caching a transient outage.
  */
-export async function runLoudnorm(
+export function runLoudnorm(
   absoluteAudioPath: string,
   window?: PlaybackGainWindow,
 ): Promise<LoudnormResult> {
-  const args = buildLoudnormArgs(absoluteAudioPath, window);
-  let stderrText: string;
-  try {
-    const command = new Deno.Command("ffmpeg", {
-      args,
-      stderr: "piped",
-      stdout: "piped",
-    });
-    const { stderr } = await command.output();
-    stderrText = new TextDecoder().decode(stderr);
-  } catch {
-    return { status: "failed" };
-  }
-  const inputI = parseLoudnormInputI(stderrText);
-  if (inputI === null) return { status: "no_audio" };
-  return {
-    status: "measured",
-    gainDb: clampPlaybackGainDb(PLAYBACK_TARGET_LUFS - inputI),
-  };
+  const scope = window ? "clip-window" : "full-track";
+  return withSpan("audio.loudness", async () => {
+    const args = buildLoudnormArgs(absoluteAudioPath, window);
+    const startedAt = performance.now();
+    let stderrText: string;
+    try {
+      const command = new Deno.Command("ffmpeg", {
+        args,
+        stderr: "piped",
+        stdout: "piped",
+      });
+      const { stderr } = await command.output();
+      stderrText = new TextDecoder().decode(stderr);
+    } catch {
+      audioLoudnessDuration.record(
+        (performance.now() - startedAt) / 1000,
+        { scope },
+      );
+      return { status: "failed" };
+    }
+    audioLoudnessDuration.record(
+      (performance.now() - startedAt) / 1000,
+      { scope },
+    );
+    const inputI = parseLoudnormInputI(stderrText);
+    if (inputI === null) return { status: "no_audio" };
+    return {
+      status: "measured",
+      gainDb: clampPlaybackGainDb(PLAYBACK_TARGET_LUFS - inputI),
+    };
+  }, { scope });
 }
 
 /**
@@ -349,4 +362,27 @@ export function measureClipGainDb(
   maxSeconds: number,
 ): Promise<number | null> {
   return measurePlaybackGainDb(absoluteAudioPath, { startSeconds, maxSeconds });
+}
+
+/**
+ * Maps an {@link AnalyzePlaybackGainOutcome} onto spec 12's
+ * `fruiz.playback_gain.backfill.track` `outcome` attribute (5 low-cardinality
+ * values). The two "can't read the file" outcomes collapse to one label.
+ */
+export function backfillOutcomeLabel(
+  outcome: AnalyzePlaybackGainOutcome,
+): string {
+  switch (outcome) {
+    case "cache_hit":
+      return "cache-hit";
+    case "measured":
+      return "measured";
+    case "seeded_fingerprint":
+      return "seeded";
+    case "ffmpeg_failed":
+      return "analysis-failed";
+    case "invalid_audio_url":
+    case "file_not_found":
+      return "missing-or-invalid";
+  }
 }

@@ -2,6 +2,7 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { collectedTracks } from "../../../db/schema.ts";
 import { getCategoryCollectionStats } from "../../../lib/collections.ts";
+import { collectionTrackAddedCounter } from "../../../lib/telemetry.ts";
 
 export const handler = define.handlers({
   async POST(ctx) {
@@ -36,6 +37,13 @@ export const handler = define.handlers({
     const progress = categorySlug
       ? await getCategoryCollectionStats(db, user.id, categorySlug)
       : null;
+
+    if (created) {
+      collectionTrackAddedCounter.add(
+        1,
+        categorySlug ? { category: categorySlug } : {},
+      );
+    }
 
     return Response.json(
       { status: created ? "created" : "existed", progress },

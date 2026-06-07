@@ -6,6 +6,7 @@ import {
   getSuggestionById,
   reviewSuggestion,
 } from "../../../lib/trackSuggestions.ts";
+import { suggestionReviewedCounter } from "../../../lib/telemetry.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { SuggestionReviewForm } from "../../../components/admin/SuggestionReviewForm.tsx";
@@ -71,6 +72,7 @@ export const handler = define.handlers({
         302,
       );
     }
+    suggestionReviewedCounter.add(1, { decision });
     return Response.redirect(
       new URL("/admin/suggestions", ctx.req.url).href,
       302,

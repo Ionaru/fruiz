@@ -13,6 +13,7 @@ import {
   listSuggestionsForUser,
 } from "../lib/trackSuggestions.ts";
 import TrackSuggestionForm from "../islands/TrackSuggestionForm.tsx";
+import { suggestionCreatedCounter } from "../lib/telemetry.ts";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_category: "Pick a category from the list before submitting.",
@@ -52,9 +53,10 @@ export const handler = define.handlers({
       return ctx.redirect("/account/login");
     }
     const form = await ctx.req.formData();
+    const categoryKey = String(form.get("categoryKey") ?? "").trim();
     const result = await createSuggestion(db, {
       userId: user.id,
-      categoryKey: String(form.get("categoryKey") ?? "").trim(),
+      categoryKey,
       title: String(form.get("title") ?? ""),
       youtubeUrl: String(form.get("youtubeUrl") ?? ""),
     });
@@ -64,6 +66,7 @@ export const handler = define.handlers({
         302,
       );
     }
+    suggestionCreatedCounter.add(1, { category: categoryKey });
     return Response.redirect(new URL("/suggest?ok=1", ctx.req.url).href, 302);
   },
 });

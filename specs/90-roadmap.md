@@ -71,9 +71,11 @@ scale:
 
 ### Structured logging
 
-Replace `loggerMiddleware` (spec 10) with a JSON-emitting logger that includes
-request id, status, duration, and (where safe) authenticated user id. Redact
-cookies.
+The plain per-request logger (spec 10) is removed; telemetry request spans
+(spec 12) now carry route, status, and duration, and `console.*` is captured as
+OpenTelemetry logs. Remaining work is a JSON-emitting application logger with
+redaction and, where safe, an authenticated user id on log records — for
+consumers that want structured logs rather than spans.
 
 ### Rate limiting
 
