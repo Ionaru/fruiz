@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
+import { filenameFromAudioUrl } from "./audioFilePath.ts";
 import type { DifficultyMode } from "./types.ts";
 
 const MIN_TRACKS = 20;
@@ -202,16 +203,20 @@ export async function getDistinctTitlesForCategory(
   return rows.map((row) => row.title);
 }
 
-/** All tracks in a category as `{ title, difficulty }`, ordered by difficulty then title. */
+/**
+ * All tracks in a category as `{ title, difficulty, filename }`, ordered by
+ * difficulty then title. `filename` is the bare audio filename (no directory,
+ * no extension) for verification — the full path is never exposed.
+ */
 export async function getTrackTitlesWithDifficultyForCategory(
   db: DB,
   categoryId: string,
-): Promise<{ title: string; difficulty: "easy" | "hard" }[]> {
+): Promise<{ title: string; difficulty: "easy" | "hard"; filename: string }[]> {
   const category = await db.query.categories.findFirst({
     where: { id: categoryId },
     with: {
       tracks: {
-        columns: { title: true, difficulty: true },
+        columns: { title: true, difficulty: true, audioUrl: true },
         orderBy: (trackRow, { asc }) => [
           asc(trackRow.difficulty),
           asc(trackRow.title),
@@ -219,7 +224,11 @@ export async function getTrackTitlesWithDifficultyForCategory(
       },
     },
   });
-  return category?.tracks ?? [];
+  return (category?.tracks ?? []).map(({ title, difficulty, audioUrl }) => ({
+    title,
+    difficulty,
+    filename: filenameFromAudioUrl(audioUrl),
+  }));
 }
 
 /**
