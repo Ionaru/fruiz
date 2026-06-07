@@ -1,4 +1,5 @@
 import { define } from "../utils.ts";
+import PreloadGuard from "../islands/PreloadGuard.tsx";
 
 export default define.page(function App({ Component }) {
   const revision = (
@@ -8,7 +9,7 @@ export default define.page(function App({ Component }) {
   ).trim();
 
   return (
-    <html lang="en">
+    <html lang="en" class="preload">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,6 +23,7 @@ export default define.page(function App({ Component }) {
         >
           {revision}
         </div>
+        <PreloadGuard />
       </body>
     </html>
   );

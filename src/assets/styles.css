@@ -3,6 +3,20 @@
 
 @source inline("shadow-none");
 
+/* Suppress CSS transitions during the initial page load. The broad
+   `transition-all` used by `.plateau` (and other interactive surfaces) would
+   otherwise animate from its default to its styled state on first paint —
+   visible as a flash when navigating with the HTTP cache disabled, because the
+   stylesheet is (re)applied after the first unstyled render. The `preload`
+   class is removed by a small inline script in routes/_app.tsx once the first
+   styled frame has painted. Keyframe animations (spinner, glow) are
+   intentionally left untouched. */
+html.preload *,
+html.preload *::before,
+html.preload *::after {
+  transition: none !important;
+}
+
 @theme {
   --breakpoint-xs: 30rem;
   --color-base-50: theme(colors.zinc.50);
