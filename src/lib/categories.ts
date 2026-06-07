@@ -22,9 +22,15 @@ export interface CategoryRow {
   slug: string;
 }
 
+export interface DifficultyOption {
+  mode: DifficultyMode;
+  /** Size of the track pool this difficulty draws from (always >= MIN_TRACKS). */
+  trackCount: number;
+}
+
 export interface AvailableQuizOption {
   category: CategoryRow;
-  difficulties: DifficultyMode[];
+  difficulties: DifficultyOption[];
 }
 
 /**
@@ -77,14 +83,13 @@ export async function getAvailableQuizOptions(
   const map = await loadCategoryTrackCounts(db);
   const out: AvailableQuizOption[] = [];
   for (const { category, total, easy } of map.values()) {
-    const difficulties: DifficultyMode[] = [];
+    const difficulties: DifficultyOption[] = [];
     for (
       const difficultyMode of ["easy", "hard"] as DifficultyMode[]
     ) {
-      if (
-        countForDifficulty(total, easy, difficultyMode) >= MIN_TRACKS
-      ) {
-        difficulties.push(difficultyMode);
+      const trackCount = countForDifficulty(total, easy, difficultyMode);
+      if (trackCount >= MIN_TRACKS) {
+        difficulties.push({ mode: difficultyMode, trackCount });
       }
     }
     if (difficulties.length > 0) {
