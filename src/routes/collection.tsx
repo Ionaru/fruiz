@@ -36,7 +36,6 @@ export const handler = define.handlers({
     const [rows, stats, totalTracks] = await Promise.all([
       db.query.collectedTracks.findMany({
         where: { userId: user.id },
-        orderBy: { collectedAt: "desc" },
         with: {
           track: {
             columns: {
@@ -68,6 +67,9 @@ export const handler = define.handlers({
         playbackGainSourceMtimeMs: row.track.playbackGainSourceMtimeMs,
       });
     }
+    collectionTracks.sort((left, right) =>
+      left.title.localeCompare(right.title)
+    );
 
     const categoryCounts: Record<string, CategoryCount> = {};
     for (const stat of stats) {

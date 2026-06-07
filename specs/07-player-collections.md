@@ -58,9 +58,9 @@ progress line once it resolves.
 
 1. Redirect to `/account` if there is no logged-in user.
 2. Run three queries in parallel:
-   - All `collected_tracks` rows for the user, ordered by `collectedAt desc`,
-     joined to `tracks` and `categories` (track columns plus category names for
-     chips).
+   - All `collected_tracks` rows for the user, joined to `tracks` and
+     `categories` (track columns plus category names for chips). The resulting
+     `CollectionTrack[]` is sorted alphabetically by track title.
    - `getCollectionStatsByCategory(db, userId)` — aggregate rollup filtered to
      categories where the user has collected at least one track.
    - `getCategorizedTrackCount(db)` — total number of distinct tracks that
@@ -172,9 +172,10 @@ Application types:
   - Sign in, play a quiz, answer correctly — confirm the modal shows the "added
     to collection" line plus the category progress line.
   - Sign out, play a quiz, answer correctly — confirm no network call fires.
-  - Visit `/collection` while signed in — confirm the list orders newest first,
-    the rollup hides categories with zero collected tracks, and the "all tracks
-    collected" message appears when a category is complete.
+  - Visit `/collection` while signed in — confirm the list is sorted
+    alphabetically by track title, the rollup hides categories with zero
+    collected tracks, and the "all tracks collected" message appears when a
+    category is complete.
   - Sign in on a second device — confirm the collection page reflects
     cross-device server state (no per-device caching).
 
