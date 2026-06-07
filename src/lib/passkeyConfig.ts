@@ -36,19 +36,21 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
     validateUsername,
     getSessionUserId: (state) => state.session.user?.id ?? null,
 
-    onRegistered: async (verified) => {
+    onRegistered: (verified) => {
       try {
         const sessionId = insertUserPasskeyAndSession(verified);
         const headers = new Headers();
         appendSessionCookie(headers, sessionId);
         passkeyRegisteredCounter.add(1, { outcome: "success" });
-        return Response.json(
-          { ok: true, userId: verified.pendingUserId },
-          { status: 201, headers },
+        return Promise.resolve(
+          Response.json(
+            { ok: true, userId: verified.pendingUserId },
+            { status: 201, headers },
+          ),
         );
       } catch (error) {
         passkeyRegisteredCounter.add(1, { outcome: "failure" });
-        throw error;
+        return Promise.reject(error);
       }
     },
 
