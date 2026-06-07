@@ -4,10 +4,12 @@ import { define } from "../../utils.ts";
 import { db } from "../../db/db.ts";
 import { listAdminCategories, listAdminTracks } from "../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../lib/adminSession.ts";
+import { countPendingSuggestions } from "../../lib/trackSuggestions.ts";
 import { HomeButton } from "../../components/ui/HomeButton.tsx";
 import { AccountButton } from "../../components/ui/AccountButton.tsx";
 import { ManageCategoriesButton } from "../../components/admin/ManageCategoriesButton.tsx";
 import { ManageTracksButton } from "../../components/admin/ManageTracksButton.tsx";
+import { ManageSuggestionsButton } from "../../components/admin/ManageSuggestionsButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -15,11 +17,13 @@ export const handler = define.handlers({
     if (gate instanceof Response) return gate;
     const catRows = await listAdminCategories(db);
     const trackRows = await listAdminTracks(db);
+    const pendingSuggestions = await countPendingSuggestions(db);
     return {
       data: {
         session: gate.session,
         categories: catRows,
         tracks: trackRows,
+        pendingSuggestions,
       },
     };
   },
@@ -54,6 +58,17 @@ export default define.page<typeof handler>(({ data }) => (
       <div class="flex flex-wrap gap-2">
         <ManageCategoriesButton />
         <ManageTracksButton />
+      </div>
+    </section>
+    <section class="plateau rounded-2xl p-5 space-y-3">
+      <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
+        Suggestions
+      </h2>
+      <p class="text-sm opacity-90 text-base-800 dark:text-base-100">
+        {data.pendingSuggestions} pending review
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <ManageSuggestionsButton />
       </div>
     </section>
   </AdminPageShell>

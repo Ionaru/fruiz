@@ -65,4 +65,17 @@ export const relations = defineRelations(schema, (relations) => ({
       to: relations.tracks.id,
     }),
   },
+  trackSuggestions: {
+    // Only the relations the query API traverses are declared, and only one
+    // points at `users` — `reviewedByUserId` stays a plain FK column (never
+    // traversed) so the relational `with: { user: true }` is unambiguous.
+    user: relations.one.users({
+      from: relations.trackSuggestions.userId,
+      to: relations.users.id,
+    }),
+    category: relations.one.categories({
+      from: relations.trackSuggestions.categoryId,
+      to: relations.categories.id,
+    }),
+  },
 }));

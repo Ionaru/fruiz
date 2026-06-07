@@ -20,6 +20,7 @@ gates, etc.) live in [`../AGENTS.md`](../AGENTS.md).
 | 08 | [Account authentication and passkeys](./08-admin-authentication-and-passkeys.md)         | Public passkey registration, discoverable login, admin gate                         |
 | 09 | [Admin content management](./09-admin-content-management.md)                             | Track / category CRUD, audio upload, music library scan                             |
 | 10 | [Sessions and request lifecycle](./10-sessions-and-request-lifecycle.md)                 | Session middleware, cookie handling, logger, `ctx.state` shape                      |
+| 11 | [Track suggestions and moderation](./11-track-suggestions.md)                            | Player track suggestion form, admin moderation queue, approve/deny with note        |
 | 90 | [Roadmap](./90-roadmap.md)                                                               | Known future work and risks                                                         |
 
 ## Numbering

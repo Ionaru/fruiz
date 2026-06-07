@@ -9,6 +9,8 @@ interface AnswerInputProps {
   suggestions: string[];
   value: string;
   disabled?: boolean;
+  /** Field label; defaults to "Your answer" for the quiz. */
+  label?: string;
   /** Optional id of helper text for screen readers (e.g. submit gating hint). */
   ariaDescribedBy?: string;
   onValue: (value: string) => void;
@@ -124,7 +126,7 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
         containerEl.value = element;
       }}
     >
-      <FieldGroup label="Your answer" htmlFor={inputId} center>
+      <FieldGroup label={props.label ?? "Your answer"} htmlFor={inputId} center>
         <div class="relative">
           <TextInput
             class="text-center"

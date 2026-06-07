@@ -41,11 +41,6 @@ extend that schema rather than parallel one.
 A single fixed quiz per day, surfaced on the home page. Implementation is a
 date-derived `code` per category. Stays inside spec 02's identity rules.
 
-### Community submissions
-
-Players propose tracks via a form; admins approve through the existing admin
-panel (spec 09). Requires a `track_submissions` table and a moderation queue.
-
 ### Audio URL obfuscation
 
 Today the listen route (spec 03) is unauthenticated and predictable. Before
