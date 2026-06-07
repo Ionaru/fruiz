@@ -9,6 +9,10 @@ import {
   deleteDbSession,
 } from "./session.ts";
 import { DrizzlePasskeyStore } from "./passkeyStore.ts";
+import {
+  passkeyAuthenticatedCounter,
+  passkeyRegisteredCounter,
+} from "./telemetry.ts";
 
 function getRpId(): string {
   return Deno.env.get("FRUIZ_RP_ID") ?? "localhost";
@@ -32,16 +36,20 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
     validateUsername,
     getSessionUserId: (state) => state.session.user?.id ?? null,
 
-    onRegistered: (verified) => {
-      const sessionId = insertUserPasskeyAndSession(verified);
-      const headers = new Headers();
-      appendSessionCookie(headers, sessionId);
-      return Promise.resolve(
-        Response.json(
+    onRegistered: async (verified) => {
+      try {
+        const sessionId = insertUserPasskeyAndSession(verified);
+        const headers = new Headers();
+        appendSessionCookie(headers, sessionId);
+        passkeyRegisteredCounter.add(1, { outcome: "success" });
+        return Response.json(
           { ok: true, userId: verified.pendingUserId },
           { status: 201, headers },
-        ),
-      );
+        );
+      } catch (error) {
+        passkeyRegisteredCounter.add(1, { outcome: "failure" });
+        throw error;
+      }
     },
 
     onAuthenticated: async (userId, state) => {
@@ -49,6 +57,7 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
       // minting a session — verifying the ceremony is not enough to log in.
       const user = await db.query.users.findFirst({ where: { id: userId } });
       if (!user) {
+        passkeyAuthenticatedCounter.add(1, { outcome: "failure" });
         return Response.json({ error: "User not found" }, { status: 401 });
       }
 
@@ -60,6 +69,7 @@ export function buildPasskeyConfig(): PasskeyConfig<State> {
       const headers = new Headers();
       appendSessionCookie(headers, sessionId);
 
+      passkeyAuthenticatedCounter.add(1, { outcome: "success" });
       return Response.json(
         {
           ok: true,
