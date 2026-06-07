@@ -240,6 +240,13 @@ export default function QuizController(props: Readonly<Props>) {
 
     const isCorrect =
       normalizeAnswer(answerDraft.value) === normalizeAnswer(track.title);
+
+    void fetch("/api/quiz/guess", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ matched: isCorrect }),
+    }).catch(() => {/* telemetry is best-effort */});
+
     updateTrack(activeTrackId, () => ({
       trackId: activeTrackId,
       status: isCorrect ? "correct" : "incorrect",
