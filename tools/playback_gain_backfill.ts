@@ -6,7 +6,11 @@
  * Force full re-measure: `deno task playback-gain:backfill -- --force`
  */
 import { db } from "../src/db/db.ts";
-import { analyzeAndStorePlaybackGainForTrack } from "../src/lib/playbackGainAnalysis.ts";
+import {
+  analyzeAndStorePlaybackGainForTrack,
+  backfillOutcomeLabel,
+} from "../src/lib/playbackGainAnalysis.ts";
+import { backfillTrackCounter } from "../src/lib/telemetry.ts";
 
 const force = Deno.args.includes("--force");
 
@@ -31,6 +35,7 @@ for (const [i, row] of rows.entries()) {
     row.audioUrl,
     { force },
   );
+  backfillTrackCounter.add(1, { outcome: backfillOutcomeLabel(outcome) });
   switch (outcome) {
     case "cache_hit":
       cacheHit++;
