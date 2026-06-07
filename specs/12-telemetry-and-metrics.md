@@ -61,6 +61,17 @@ It is explicitly **not** responsible for:
   and domain outcomes the runtime cannot see (quiz created vs reused, guess
   matched, suggestion decision). They never re-time what the baseline already
   times (the HTTP request).
+- **Client-only outcomes are reported through a dedicated sink.** Guess scoring
+  happens in the browser, so the player UI reports each guess's match result to
+  a small fire-and-forget server endpoint that emits the guess counter. The
+  outcome flag is the only thing sent; no answer text, track, or player identity
+  crosses the wire, and no telemetry code enters the client bundle.
+- **Passkey outcomes capture what the host sees.** WebAuthn ceremony
+  verification is performed by the passkey layer before the host's
+  identity/session hook runs, so the authentication counter records the
+  host-visible outcomes — a successful login and the rejection of a credential
+  whose user no longer exists — not cryptographic-verification failures handled
+  upstream.
 
 ### Configuration
 
