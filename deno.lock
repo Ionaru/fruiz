@@ -1964,6 +1964,7 @@
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/encoding@^1.0.10",
       "jsr:@std/http@^1.1.1",
+      "npm:@opentelemetry/api@^1.9.0",
       "npm:@preact/signals@^2.9.1",
       "npm:@tailwindcss/vite@^4.3.0",
       "npm:@tsparticles/confetti@^4.1.1",

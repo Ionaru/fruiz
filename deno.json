@@ -33,6 +33,7 @@
   "imports": {
     "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.1.2",
     "@ionaru/fresh-passkeys": "jsr:@ionaru/fresh-passkeys@^1.0.0",
+    "@opentelemetry/api": "npm:@opentelemetry/api@^1.9.0",
     "@preact/signals": "npm:@preact/signals@^2.9.1",
     "@simplewebauthn/browser": "jsr:@simplewebauthn/browser@^13.3.0",
     "@simplewebauthn/server": "jsr:@simplewebauthn/server@^13.3.1",
