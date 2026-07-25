@@ -27,8 +27,9 @@ The app is a music-guessing game built around a tight core loop:
    (category-scoped autocomplete), then submits an answer or skips to revisit
    later.
 5. The quiz ends automatically when every track has been answered. The results
-   screen shows the final score, a per-track breakdown, a "Copy quiz link"
-   action, and a "Play again" action.
+   screen shows the final score, a per-track breakdown, a "Challenge a friend"
+   action that copies the shareable quiz link, and a "Play a new quiz" action
+   that starts a fresh quiz in the same category and difficulty.
 
 The shareable URL (path only) fully reproduces the quiz on any device. Personal
 preferences (replay limit, local progress) attach to the device and do not
@@ -91,7 +92,8 @@ change the track list.
 - Single-column layouts under phone widths.
 - Touch-friendly targets; no hover-only interactions.
 - Audio playback waits for a user gesture (iOS/Android requirement).
-- The "Copy quiz link" action MUST work with the mobile clipboard API.
+- The "Challenge a friend" action copies the quiz link and MUST work with the
+  mobile clipboard API.
 - ARIA labels are only added when semantic HTML cannot communicate the role.
 - Color contrast on status indicators MUST be sufficient for outdoor screens.
 

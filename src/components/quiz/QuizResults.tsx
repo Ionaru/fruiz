@@ -8,7 +8,7 @@ export interface QuizResultsProps {
   progress: QuizProgress;
   loggedIn: boolean;
   onCopyLink: () => void;
-  onPlayAgain: () => void;
+  onPlayNewQuiz: () => void;
 }
 
 export function QuizResults(props: Readonly<QuizResultsProps>) {
@@ -23,10 +23,10 @@ export function QuizResults(props: Readonly<QuizResultsProps>) {
           variant="info"
           onClick={props.onCopyLink}
         >
-          Copy quiz link
+          Challenge a friend
         </Button>
-        <Button class="flex-1" variant="success" onClick={props.onPlayAgain}>
-          Play again
+        <Button class="flex-1" variant="success" onClick={props.onPlayNewQuiz}>
+          Play a new quiz
         </Button>
         {props.loggedIn && (
           <a

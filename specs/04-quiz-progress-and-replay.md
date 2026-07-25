@@ -123,7 +123,7 @@ Two extra rules:
 - **Sole remaining incomplete is the active track.** `findNextTrackAfterSkip`
   leaves the active id unchanged, so the player can answer the only remaining
   round.
-- **Play again.** Generates a fresh 3-char code, preserves the existing
+- **Play a new quiz.** Generates a fresh 3-char code, preserves the existing
   `?limit=` (and any other query params), and navigates to a new quiz path.
   Progress is not carried over (different path → different storage key).
 

@@ -331,7 +331,7 @@ export default function QuizController(props: Readonly<Props>) {
     }
   };
 
-  const playAgain = () => {
+  const playNewQuiz = () => {
     const slug = encodeSlug(
       props.identity.difficulty,
       generateShortCode(),
@@ -365,7 +365,7 @@ export default function QuizController(props: Readonly<Props>) {
         progress={progress.value}
         loggedIn={props.loggedIn}
         onCopyLink={() => void copyBarePath()}
-        onPlayAgain={playAgain}
+        onPlayNewQuiz={playNewQuiz}
       />
     );
   }
