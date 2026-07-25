@@ -7,7 +7,7 @@ export interface QuizResultsProps {
   tracks: QuizTrackPayload[];
   progress: QuizProgress;
   loggedIn: boolean;
-  onCopyLink: () => void;
+  onChallengeFriend: () => void;
   onPlayNewQuiz: () => void;
 }
 
@@ -21,7 +21,7 @@ export function QuizResults(props: Readonly<QuizResultsProps>) {
         <Button
           class="flex-1"
           variant="info"
-          onClick={props.onCopyLink}
+          onClick={props.onChallengeFriend}
         >
           Challenge a friend
         </Button>
