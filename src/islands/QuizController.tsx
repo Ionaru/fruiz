@@ -1,6 +1,7 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { Button } from "../components/Button.tsx";
 import { AudioTrackPlayer } from "../components/quiz/AudioTrackPlayer.tsx";
+import { buildChallengeShareText } from "../lib/challengeShare.ts";
 import { guessMatchesSuggestionPool } from "../lib/guess_match.ts";
 import { isInteractiveFocus } from "../lib/keyboard.ts";
 import { normalizeAnswer } from "../lib/normalize.ts";
@@ -23,6 +24,7 @@ import type {
 } from "../lib/types.ts";
 import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
+import { ChallengeShareModal } from "./ChallengeShareModal.tsx";
 import { GuessResultModal } from "./GuessResultModal.tsx";
 import QuizTrackNav from "./QuizTrackNav.tsx";
 import { QuizResults } from "../components/quiz/QuizResults.tsx";
@@ -61,6 +63,7 @@ export default function QuizController(props: Readonly<Props>) {
     buildDefaultProgress(props.tracks, props.quizPath),
   );
   const showResults = useSignal(false);
+  const shareOpen = useSignal(false);
   const didHydrateStorage = useSignal(false);
   const popupResult = useSignal<PopupResult | null>(null);
 
@@ -321,17 +324,17 @@ export default function QuizController(props: Readonly<Props>) {
     }
   };
 
-  const copyBarePath = async () => {
+  const challengeShareText = () => {
     const url = new URL(globalThis.location.href);
-    url.searchParams.keys().forEach((key) => url.searchParams.delete(key));
-    try {
-      await navigator.clipboard.writeText(url.toString());
-    } catch {
-      /* ignore */
-    }
+    url.search = "";
+    return buildChallengeShareText(
+      scoreFromProgress(progress.value),
+      props.tracks.length,
+      url.toString(),
+    );
   };
 
-  const playAgain = () => {
+  const playNewQuiz = () => {
     const slug = encodeSlug(
       props.identity.difficulty,
       generateShortCode(),
@@ -360,13 +363,25 @@ export default function QuizController(props: Readonly<Props>) {
 
   if (showResults.value) {
     return (
-      <QuizResults
-        tracks={props.tracks}
-        progress={progress.value}
-        loggedIn={props.loggedIn}
-        onCopyLink={() => void copyBarePath()}
-        onPlayAgain={playAgain}
-      />
+      <>
+        <QuizResults
+          tracks={props.tracks}
+          progress={progress.value}
+          loggedIn={props.loggedIn}
+          onChallengeFriend={() => {
+            shareOpen.value = true;
+          }}
+          onPlayNewQuiz={playNewQuiz}
+        />
+        {shareOpen.value && (
+          <ChallengeShareModal
+            shareText={challengeShareText()}
+            onDismiss={() => {
+              shareOpen.value = false;
+            }}
+          />
+        )}
+      </>
     );
   }
 

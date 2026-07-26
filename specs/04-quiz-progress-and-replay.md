@@ -123,9 +123,14 @@ Two extra rules:
 - **Sole remaining incomplete is the active track.** `findNextTrackAfterSkip`
   leaves the active id unchanged, so the player can answer the only remaining
   round.
-- **Play again.** Generates a fresh 3-char code, preserves the existing
+- **Play a new quiz.** Generates a fresh 3-char code, preserves the existing
   `?limit=` (and any other query params), and navigates to a new quiz path.
   Progress is not carried over (different path → different storage key).
+- **Challenge a friend.** Opens a share popup with a copy-ready challenge
+  message: the final score plus the bare quiz URL (query params stripped, so
+  quiz identity is preserved and the recipient sets their own replay limit). The
+  popup's copy button writes the message to the clipboard and shows transient
+  "Copied!" / "Couldn't copy" feedback instead of failing silently.
 
 ## Data model
 
@@ -176,12 +181,16 @@ In-progress quiz discovery on the home page uses `InProgressQuizEntry` (also in
   - [`src/lib/categories.ts`](../src/lib/categories.ts) —
     `parseReplayLimitFromUrl` (the `null` / `0` semantics for the settings
     gate).
+  - [`src/lib/challengeShare.ts`](../src/lib/challengeShare.ts) —
+    `buildChallengeShareText` (the copy-ready challenge message).
 - **Islands (client)**
   - [`src/islands/QuizController.tsx`](../src/islands/QuizController.tsx) —
     settings gate, replay gate, skip/next/end actions, popup result flow,
     persistence effects, keyboard space-bar play/stop.
   - [`src/islands/InProgressQuizSection.tsx`](../src/islands/InProgressQuizSection.tsx)
     — home-page list of resumable quizzes.
+  - [`src/islands/ChallengeShareModal.tsx`](../src/islands/ChallengeShareModal.tsx)
+    — end-of-quiz share popup with clipboard copy feedback.
 - **Components (SSR)**
   - [`src/components/quiz/SettingsGate.tsx`](../src/components/quiz/SettingsGate.tsx)
     — the gate UI (no client behavior of its own).
@@ -190,6 +199,8 @@ In-progress quiz discovery on the home page uses `InProgressQuizEntry` (also in
 - **Tests**
   - [`tests/unit/lib/quiz_playback_test.ts`](../tests/unit/lib/quiz_playback_test.ts)
     — progress helpers (skip-advance, resume, default progress).
+  - [`tests/unit/lib/challenge_share_test.ts`](../tests/unit/lib/challenge_share_test.ts)
+    — challenge share message composition.
   - [`tests/integration/routes/share_resume_test.ts`](../tests/integration/routes/share_resume_test.ts)
     — bare URL → settings gate behavior.
 
