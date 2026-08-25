@@ -97,7 +97,6 @@ AGENTS.md           Canonical implementation standards
 CLAUDE.md           Claude Code session entry hints
 compose.yaml        Docker Compose stack for container deployment
 Dockerfile          Container image (Deno + ffmpeg)
-.env.example        Template for the deployment .env
 deno.json           Deno config — tasks, lint rules, import map
 drizzle.config.ts   Drizzle schema migration config
 vite.config.ts      Vite build configuration
@@ -116,8 +115,7 @@ The app reads the following environment variables:
 | `FRUIZ_GIT_REVISION`   | unset          | Git SHA injected into the page footer; CI sets this on deploy. |
 | `DENO_DEPLOYMENT_ID`   | unset          | Fallback identifier used when `FRUIZ_GIT_REVISION` is unset.   |
 
-`compose.yaml` reads four more at the compose layer, documented in
-[`.env.example`](./.env.example):
+`compose.yaml` reads four more at the compose layer:
 
 | Variable                  | Default                       | Purpose                                                             |
 | ------------------------- | ----------------------------- | ------------------------------------------------------------------- |
@@ -128,6 +126,34 @@ The app reads the following environment variables:
 
 The port is not configurable. The service always listens on 8000, both inside
 and outside Docker.
+
+In a container these are all read from a `.env` file next to `compose.yaml`.
+There is no `.env.example` to copy; the deployment file is short enough to write
+by hand, and the two tables above are its documentation:
+
+```dotenv
+FRUIZ_RP_ID=fruiz.example.com
+FRUIZ_SECURE_COOKIES=1
+FRUIZ_ENVIRONMENT=production
+```
+
+Everything else has a working default. `FRUIZ_DATA_VOLUME` may be left unset to
+use the `fruiz_data` named volume; its only other valid value is an **absolute**
+host path. A bare volume name is rejected by Compose as an undefined volume.
+
+**Both of the required variables fail open.** `FRUIZ_RP_ID` and
+`FRUIZ_SECURE_COOKIES` are passed straight through from the environment, so when
+they are missing Compose does not set them in the container at all and the app
+quietly uses its own fallbacks: passkey registration and login break against the
+real domain, and session cookies lose `Secure`. Neither trips the healthcheck,
+so `/` still returns 200 and the deploy still reports success. Confirm them
+against the resolved config rather than the deploy log:
+
+```bash
+docker compose config | grep -E 'FRUIZ_RP_ID|FRUIZ_SECURE_COOKIES'
+```
+
+A `null` there means the variable is not reaching the container.
 
 ## Deployment
 
@@ -169,17 +195,18 @@ front of it, reached over a shared Docker network named `edge`.
    the reverse proxy; `otel` carries OTLP export to the collector and is renamed
    by `FRUIZ_TELEMETRY_NETWORK`.
 
-4. Create a `.env` file next to `compose.yaml`, using
-   [`.env.example`](./.env.example) as the template:
+4. Create a `.env` file next to `compose.yaml`. Three lines are enough; see
+   [Configuration](#configuration) for the full set and their defaults:
 
-   ```bash
-   cp .env.example .env
+   ```dotenv
+   FRUIZ_RP_ID=fruiz.example.com
+   FRUIZ_SECURE_COOKIES=1
+   FRUIZ_ENVIRONMENT=production
    ```
 
-   At minimum set `FRUIZ_RP_ID` to your domain and `FRUIZ_SECURE_COOKIES=1`.
-   Neither has a failure mode you can see from the outside: with `FRUIZ_RP_ID`
-   unset the app falls back to `localhost` and every passkey login fails, while
-   the container still reports healthy.
+   The first two have no failure mode you can see from the outside: with
+   `FRUIZ_RP_ID` unset the app falls back to `localhost` and every passkey login
+   fails, while the container still reports healthy.
 
 5. Start the service, from the root of the checkout:
 
