@@ -91,11 +91,13 @@ src/                Application code (routes, islands, components, db, lib, midd
 tests/              Unit and integration tests
 specs/              Subsystem behaviour specs (start at specs/README.md)
 tools/              CLI utilities (seed-music, playback-gain backfill)
-deploy/             Dockerfile and docker-compose for container deployment
 data/               SQLite database and uploaded audio (gitignored, runtime-created)
 .agents/skills/     Deno / Fresh skills for AI agents
 AGENTS.md           Canonical implementation standards
 CLAUDE.md           Claude Code session entry hints
+compose.yaml        Docker Compose stack for container deployment
+Dockerfile          Container image (Deno + ffmpeg)
+.env.example        Template for the deployment .env
 deno.json           Deno config — tasks, lint rules, import map
 drizzle.config.ts   Drizzle schema migration config
 vite.config.ts      Vite build configuration
@@ -114,22 +116,113 @@ The app reads the following environment variables:
 | `FRUIZ_GIT_REVISION`   | unset          | Git SHA injected into the page footer; CI sets this on deploy. |
 | `DENO_DEPLOYMENT_ID`   | unset          | Fallback identifier used when `FRUIZ_GIT_REVISION` is unset.   |
 
-`deploy/compose.yaml` additionally honours `FRUIZ_PORT` (default `8000`) and
-`FRUIZ_DATA_VOLUME` (default `data`) at the compose layer.
+`compose.yaml` reads three more at the compose layer, documented in
+[`.env.example`](./.env.example):
+
+| Variable                  | Default                             | Purpose                                                             |
+| ------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
+| `FRUIZ_DATA_VOLUME`       | the `fruiz_data` named volume       | Where the database and audio live. Otherwise an absolute host path. |
+| `FRUIZ_TELEMETRY_NETWORK` | `signoz_default`                    | Name of the external Docker network the OTLP collector is on.       |
+| `FRUIZ_OTLP_ENDPOINT`     | `http://signoz-otel-collector:4318` | OTLP endpoint, reached over that network.                           |
+
+The port is not configurable. The service always listens on 8000, both inside
+and outside Docker.
 
 ## Deployment
 
-`deploy/Dockerfile` builds a `denoland/deno:debian` image with `ffmpeg`
-installed (required for playback-gain analysis), runs `deno task build`, and
-serves on port `8000`. `/app/data` is exposed as a volume so the SQLite database
-and uploaded audio survive container restarts.
+`Dockerfile` builds a `denoland/deno:debian` image with `ffmpeg` installed
+(required for playback-gain analysis), runs `deno task build`, and serves on
+port `8000`. `/app/data` is a volume so the SQLite database and uploaded audio
+survive container restarts.
 
-`.github/workflows/cd.yaml` runs `deno audit`, `deno task check`, and
+`.github/workflows/cd.yaml` runs `deno audit`, `deno task check` and
 `deno task test` on every push and pull request, builds and pushes
-`ghcr.io/ionaru/fruiz/server:latest` on merges to `main`, and SSH-deploys via
-`deploy/compose.yaml`. On container start the compose entrypoint runs
-`deno task db:sync` and `deno task playback-gain:backfill` before
-`deno task start`.
+`ghcr.io/ionaru/fruiz` on merges to `main`, then deploys over SSH: the checkout
+on the server is moved to the built commit, the image is pulled by its short
+SHA, and `docker compose up --wait` blocks until the container reports healthy.
+On start the compose command runs `deno task db:sync` and
+`deno task playback-gain:backfill` before `deno task start`.
+
+## Self-hosting
+
+It is possible to self-host fruiz. It requires Docker with the Compose v2
+plugin, and images are published to `ghcr.io/ionaru/fruiz`.
+
+fruiz does not publish a port. It listens on 8000 and expects a reverse proxy in
+front of it, reached over a shared Docker network named `edge`.
+
+1. Install [Docker Engine](https://docs.docker.com/engine/install/), which
+   includes the Compose v2 plugin.
+2. Clone this repository, or
+   [download](https://github.com/Ionaru/fruiz/archive/main.zip) and extract it.
+3. Create the shared network, if your reverse proxy has not already created it:
+
+   ```bash
+   docker network create edge
+   ```
+
+   The Compose file declares this network as `external`, so it will **not**
+   create it for you and startup fails if it is missing. The same applies to the
+   telemetry network named by `FRUIZ_TELEMETRY_NETWORK`.
+
+4. Create a `.env` file next to `compose.yaml`, using
+   [`.env.example`](./.env.example) as the template:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   At minimum set `FRUIZ_RP_ID` to your domain and `FRUIZ_SECURE_COOKIES=1`.
+   Neither has a failure mode you can see from the outside: with `FRUIZ_RP_ID`
+   unset the app falls back to `localhost` and every passkey login fails, while
+   the container still reports healthy.
+
+5. Start the service, from the root of the checkout:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   No flags are needed. `compose.yaml` is at the checkout root, so Compose finds
+   it, picks up the `.env` next to it, and takes the project name from the file.
+
+6. Check that it came up:
+
+   ```bash
+   docker compose ps
+   ```
+
+   The service has a healthcheck, so it reports `healthy` once it is actually
+   serving.
+
+The first start is slow. Before opening its port, fruiz applies the database
+schema and measures playback gain for every track with `ffmpeg`, which on a cold
+cache takes several minutes. Later starts skip files whose size and mtime are
+unchanged and are fast.
+
+Point your reverse proxy at `http://fruiz:8000`. Compose registers the service
+name as a network alias, so anything else attached to `edge` can resolve it.
+With Caddy that is:
+
+```caddyfile
+fruiz.example.com {
+    reverse_proxy fruiz:8000
+}
+```
+
+If you would rather not run a reverse proxy, publish the port yourself with an
+override file next to the Compose file, `compose.override.yaml`:
+
+```yaml
+services:
+  fruiz:
+    ports:
+      - "8000:8000"
+```
+
+Run `docker compose config` instead of `up` at any point to print the fully
+resolved configuration. That is the quickest way to confirm your networks and
+data volume are what you expect.
 
 ## Documentation
 

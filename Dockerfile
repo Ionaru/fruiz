@@ -4,6 +4,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+# Links the image to its repository at publish time, which is what lets the GHCR
+# package inherit the repository's visibility instead of landing private.
+LABEL org.opencontainers.image.source=https://github.com/Ionaru/fruiz
+
 ARG FRUIZ_GIT_REVISION
 ENV DENO_DEPLOYMENT_ID=${FRUIZ_GIT_REVISION}
 

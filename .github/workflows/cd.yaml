@@ -16,8 +16,9 @@ jobs:
   audit:
     name: Audit dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -26,10 +27,11 @@ jobs:
   get_sha:
     name: Get short SHA for image tags
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       sha_short: ${{ steps.get_sha.outputs.sha_short }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - id: get_sha
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -37,8 +39,9 @@ jobs:
     name: Static code analysis
     needs: audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -49,8 +52,9 @@ jobs:
     name: Unit tests
     needs: [audit]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -63,14 +67,17 @@ jobs:
     name: Build image
     needs: [audit, get_sha]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
-      - run: docker compose -f deploy/compose.yaml build server --build-arg FRUIZ_GIT_REVISION=${{needs.get_sha.outputs.sha_short}}
-      - run: docker save -o server-image.tar ghcr.io/ionaru/fruiz/server:latest
+      - uses: actions/checkout@v7
+      # compose.yaml sits at the repo root, so no --file is needed. The image tag
+      # falls back to :latest because FRUIZ_GIT_REVISION is unset on the runner.
+      - run: docker compose build fruiz --build-arg FRUIZ_GIT_REVISION=${{needs.get_sha.outputs.sha_short}}
+      - run: docker save -o fruiz-image.tar ghcr.io/ionaru/fruiz:latest
       - uses: actions/upload-artifact@v7
         with:
-          name: server-image
-          path: server-image.tar
+          name: fruiz-image
+          path: fruiz-image.tar
           retention-days: 1
 
   push-image:
@@ -78,43 +85,82 @@ jobs:
     if: github.event_name == 'push'
     needs: [get_sha, lint, test, build-image]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: server-image
-      - run: docker load -i server-image.tar
-      - run: docker tag ghcr.io/ionaru/fruiz/server:latest ghcr.io/ionaru/fruiz/server:${{needs.get_sha.outputs.sha_short}}
+          name: fruiz-image
+      - run: docker load -i fruiz-image.tar
+      - run: docker tag ghcr.io/ionaru/fruiz:latest ghcr.io/ionaru/fruiz:${{needs.get_sha.outputs.sha_short}}
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker push -a ghcr.io/ionaru/fruiz/server
+      - run: docker push -a ghcr.io/ionaru/fruiz
 
   deploy:
+    name: Deploy
     needs: [get_sha, push-image]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     concurrency:
       group: deploy
       cancel-in-progress: false
     steps:
       - uses: appleboy/ssh-action@v1.2.5
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GIT_REVISION: ${{ needs.get_sha.outputs.sha_short }}
         with:
-          command_timeout: 30m
+          command_timeout: 40m
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
+          envs: DEPLOY_PATH,GIT_REVISION
           script: |
-            $ErrorActionPreference = "Stop"
-            cd ${{ secrets.DEPLOY_PATH }}
-            git fetch -a
-            git switch -d ${{needs.get_sha.outputs.sha_short}}
-            docker system prune --all -f
-            $env:FRUIZ_GIT_REVISION = "${{needs.get_sha.outputs.sha_short}}"
-            $env:DOCKER_CONFIG = "/docker-no-creds"
-            docker compose -p fruiz -f deploy/compose.yaml pull
-            docker compose -p fruiz -f deploy/compose.yaml up --pull=never --no-build --remove-orphans -d --wait
-            $deployExit = $LASTEXITCODE
-            docker compose -p fruiz -f deploy/compose.yaml logs server
-            if ($deployExit -ne 0) { exit $deployExit }
+            set -eu
+
+            cd "$DEPLOY_PATH"
+
+            # Match the checkout to the commit whose image was just published, so the
+            # compose file on disk and the running image always come from one commit.
+            git fetch --prune origin
+            git checkout --force "$GIT_REVISION"
+
+            export FRUIZ_GIT_REVISION="$GIT_REVISION"
+
+            # compose.yaml sits at the checkout root, which is the working directory,
+            # so Compose finds the file, picks up the .env next to it and takes the
+            # project name from the file itself. No flags needed.
+            docker compose pull
+
+            # The container runs db:sync and the playback-gain backfill before it opens
+            # its port, hence the long wait. Under "set -eu" the "|| rc=$?" capture is
+            # mandatory rather than stylistic: without it the script dies here and the
+            # logs below never print.
+            rc=0
+            docker compose up --detach --pull=never --no-build --remove-orphans \
+              --wait --wait-timeout 1500 || rc=$?
+
+            # The backfill prints a line per track and ends with a one-line summary, so
+            # the tail is the part worth keeping.
+            docker compose logs --tail=200 fruiz
+
+            if [ "$rc" -ne 0 ]; then
+              exit "$rc"
+            fi
+
+            # Reclaim disk from superseded fruiz images only. Other stacks share this
+            # Docker daemon, so a global "docker system prune --all" would delete their
+            # images and, because it prunes networks too, the shared "edge" network.
+            stale="$(docker image ls --format '{{.Repository}}:{{.Tag}}' \
+              --filter 'reference=ghcr.io/ionaru/fruiz' \
+              | grep -vx "ghcr.io/ionaru/fruiz:${GIT_REVISION}" || true)"
+            if [ -n "$stale" ]; then
+              echo "$stale" | xargs -r docker image rm --force || true
+            fi
