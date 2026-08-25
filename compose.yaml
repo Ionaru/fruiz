@@ -1,0 +1,70 @@
+# Pinned so the project name (and with it the container and volume names) does
+# not depend on what the checkout directory happens to be called.
+name: fruiz
+
+services:
+  fruiz:
+    image: ghcr.io/ionaru/fruiz:${FRUIZ_GIT_REVISION:-latest}
+    build:
+      context: .
+    environment:
+      - FRUIZ_SECURE_COOKIES
+      - FRUIZ_RP_ID
+      - FRUIZ_RP_NAME
+      - FRUIZ_DEBUG
+      # OpenTelemetry → SigNoz (spec 12). Deno's built-in OTEL exports OTLP
+      # http/protobuf to port 4318. The collector is reached by its own compose
+      # service name over the shared "telemetry" network. An unset endpoint makes
+      # Deno fall back to localhost:4318 inside this container, where nothing is
+      # listening and every export fails silently, so these carry defaults rather
+      # than being bare pass-throughs.
+      - OTEL_DENO=true
+      - OTEL_SERVICE_NAME=fruiz
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${FRUIZ_OTLP_ENDPOINT:-http://signoz-ingester:4318}
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_RESOURCE_ATTRIBUTES=service.version=${FRUIZ_GIT_REVISION:-local},deployment.environment=${FRUIZ_ENVIRONMENT:-development}
+    # No published ports. The service listens on 8000 and is reached over the
+    # "edge" network by the reverse proxy, as http://fruiz:8000.
+    networks:
+      - edge
+      - telemetry
+    volumes:
+      - ${FRUIZ_DATA_VOLUME:-data}:/app/data
+    restart: unless-stopped
+    # The playback-gain backfill shells out to ffmpeg once per track, so give the
+    # container a real init to reap anything those passes leave behind.
+    init: true
+    healthcheck:
+      test:
+        - CMD
+        - deno
+        - eval
+        - "if (!(await fetch('http://127.0.0.1:8000/')).ok) Deno.exit(1)"
+      # The port only opens after db:sync and the playback-gain backfill have run,
+      # which on a cold cache means an ffmpeg loudness pass per track. A probe that
+      # fails inside the start period does not count toward retries, and one that
+      # succeeds marks the container healthy immediately, so a generous window
+      # costs nothing when startup is fast.
+      start_period: 1800s
+      start_interval: 5s
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    # Backfill skips unchanged files (size+mtime fingerprint); use `playback-gain:backfill -- --force` for full re-measure.
+    command:
+      - /bin/sh
+      - -c
+      - deno task db:sync && deno task playback-gain:backfill && exec deno task start
+
+networks:
+  # Shared with the reverse proxy; created outside this stack.
+  edge:
+    external: true
+  # The SigNoz collector's network, also created outside this stack. The default
+  # is its real name; the variable is here for a collector that lives elsewhere.
+  telemetry:
+    external: true
+    name: ${FRUIZ_TELEMETRY_NETWORK:-telemetry}
+
+volumes:
+  data:
