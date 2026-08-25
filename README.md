@@ -121,7 +121,7 @@ The app reads the following environment variables:
 | ------------------------- | ----------------------------- | ------------------------------------------------------------------- |
 | `FRUIZ_DATA_VOLUME`       | the `fruiz_data` named volume | Where the database and audio live. Otherwise an absolute host path. |
 | `FRUIZ_ENVIRONMENT`       | `development`                 | Reported to SigNoz as `deployment.environment`.                     |
-| `FRUIZ_TELEMETRY_NETWORK` | `otel`                        | Name of the external Docker network the OTLP collector is on.       |
+| `FRUIZ_TELEMETRY_NETWORK` | `telemetry`                   | Name of the external Docker network the OTLP collector is on.       |
 | `FRUIZ_OTLP_ENDPOINT`     | `http://signoz-ingester:4318` | OTLP endpoint, reached over that network.                           |
 
 The port is not configurable. The service always listens on 8000, both inside
@@ -187,13 +187,13 @@ front of it, reached over a shared Docker network named `edge`.
 
    ```bash
    docker network create edge
-   docker network create otel
+   docker network create telemetry
    ```
 
    The Compose file declares both as `external`, so it will **not** create them
    for you and startup fails if either is missing. `edge` carries ingress from
-   the reverse proxy; `otel` carries OTLP export to the collector and is renamed
-   by `FRUIZ_TELEMETRY_NETWORK`.
+   the reverse proxy; `telemetry` carries OTLP export to the collector and is
+   renamed by `FRUIZ_TELEMETRY_NETWORK`.
 
 4. Create a `.env` file next to `compose.yaml`. Three lines are enough; see
    [Configuration](#configuration) for the full set and their defaults:

@@ -14,8 +14,8 @@ services:
       - FRUIZ_DEBUG
       # OpenTelemetry → SigNoz (spec 12). Deno's built-in OTEL exports OTLP
       # http/protobuf to port 4318. The collector is reached by its own compose
-      # service name over the shared "otel" network. An unset endpoint makes Deno
-      # fall back to localhost:4318 inside this container, where nothing is
+      # service name over the shared "telemetry" network. An unset endpoint makes
+      # Deno fall back to localhost:4318 inside this container, where nothing is
       # listening and every export fails silently, so these carry defaults rather
       # than being bare pass-throughs.
       - OTEL_DENO=true
@@ -27,7 +27,7 @@ services:
     # "edge" network by the reverse proxy, as http://fruiz:8000.
     networks:
       - edge
-      - otel
+      - telemetry
     volumes:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     restart: unless-stopped
@@ -62,9 +62,9 @@ networks:
     external: true
   # The SigNoz collector's network, also created outside this stack. The default
   # is its real name; the variable is here for a collector that lives elsewhere.
-  otel:
+  telemetry:
     external: true
-    name: ${FRUIZ_TELEMETRY_NETWORK:-otel}
+    name: ${FRUIZ_TELEMETRY_NETWORK:-telemetry}
 
 volumes:
   data:
