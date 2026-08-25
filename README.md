@@ -116,14 +116,15 @@ The app reads the following environment variables:
 | `FRUIZ_GIT_REVISION`   | unset          | Git SHA injected into the page footer; CI sets this on deploy. |
 | `DENO_DEPLOYMENT_ID`   | unset          | Fallback identifier used when `FRUIZ_GIT_REVISION` is unset.   |
 
-`compose.yaml` reads three more at the compose layer, documented in
+`compose.yaml` reads four more at the compose layer, documented in
 [`.env.example`](./.env.example):
 
-| Variable                  | Default                             | Purpose                                                             |
-| ------------------------- | ----------------------------------- | ------------------------------------------------------------------- |
-| `FRUIZ_DATA_VOLUME`       | the `fruiz_data` named volume       | Where the database and audio live. Otherwise an absolute host path. |
-| `FRUIZ_TELEMETRY_NETWORK` | `signoz_default`                    | Name of the external Docker network the OTLP collector is on.       |
-| `FRUIZ_OTLP_ENDPOINT`     | `http://signoz-otel-collector:4318` | OTLP endpoint, reached over that network.                           |
+| Variable                  | Default                       | Purpose                                                             |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------- |
+| `FRUIZ_DATA_VOLUME`       | the `fruiz_data` named volume | Where the database and audio live. Otherwise an absolute host path. |
+| `FRUIZ_ENVIRONMENT`       | `development`                 | Reported to SigNoz as `deployment.environment`.                     |
+| `FRUIZ_TELEMETRY_NETWORK` | `otel`                        | Name of the external Docker network the OTLP collector is on.       |
+| `FRUIZ_OTLP_ENDPOINT`     | `http://signoz-ingester:4318` | OTLP endpoint, reached over that network.                           |
 
 The port is not configurable. The service always listens on 8000, both inside
 and outside Docker.
@@ -155,15 +156,18 @@ front of it, reached over a shared Docker network named `edge`.
    includes the Compose v2 plugin.
 2. Clone this repository, or
    [download](https://github.com/Ionaru/fruiz/archive/main.zip) and extract it.
-3. Create the shared network, if your reverse proxy has not already created it:
+3. Create the shared networks, if your reverse proxy and collector have not
+   already created them:
 
    ```bash
    docker network create edge
+   docker network create otel
    ```
 
-   The Compose file declares this network as `external`, so it will **not**
-   create it for you and startup fails if it is missing. The same applies to the
-   telemetry network named by `FRUIZ_TELEMETRY_NETWORK`.
+   The Compose file declares both as `external`, so it will **not** create them
+   for you and startup fails if either is missing. `edge` carries ingress from
+   the reverse proxy; `otel` carries OTLP export to the collector and is renamed
+   by `FRUIZ_TELEMETRY_NETWORK`.
 
 4. Create a `.env` file next to `compose.yaml`, using
    [`.env.example`](./.env.example) as the template:

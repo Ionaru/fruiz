@@ -14,20 +14,20 @@ services:
       - FRUIZ_DEBUG
       # OpenTelemetry → SigNoz (spec 12). Deno's built-in OTEL exports OTLP
       # http/protobuf to port 4318. The collector is reached by its own compose
-      # service name over the shared "telemetry" network. An unset endpoint makes
-      # Deno fall back to localhost:4318 inside this container, where nothing is
-      # listening and every export fails silently, so this carries a default
-      # rather than being a bare pass-through.
+      # service name over the shared "otel" network. An unset endpoint makes Deno
+      # fall back to localhost:4318 inside this container, where nothing is
+      # listening and every export fails silently, so these carry defaults rather
+      # than being bare pass-throughs.
       - OTEL_DENO=true
       - OTEL_SERVICE_NAME=fruiz
-      - OTEL_EXPORTER_OTLP_ENDPOINT=${FRUIZ_OTLP_ENDPOINT:-http://signoz-otel-collector:4318}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${FRUIZ_OTLP_ENDPOINT:-http://signoz-ingester:4318}
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-      - OTEL_RESOURCE_ATTRIBUTES=service.version=${FRUIZ_GIT_REVISION:-local}
+      - OTEL_RESOURCE_ATTRIBUTES=service.version=${FRUIZ_GIT_REVISION:-local},deployment.environment=${FRUIZ_ENVIRONMENT:-development}
     # No published ports. The service listens on 8000 and is reached over the
     # "edge" network by the reverse proxy, as http://fruiz:8000.
     networks:
       - edge
-      - telemetry
+      - otel
     volumes:
       - ${FRUIZ_DATA_VOLUME:-data}:/app/data
     restart: unless-stopped
@@ -60,11 +60,11 @@ networks:
   # Shared with the reverse proxy; created outside this stack.
   edge:
     external: true
-  # The SigNoz collector's network, also created outside this stack. Its name is
-  # deployment-specific, so it comes from the .env next to this file.
-  telemetry:
+  # The SigNoz collector's network, also created outside this stack. The default
+  # is its real name; the variable is here for a collector that lives elsewhere.
+  otel:
     external: true
-    name: ${FRUIZ_TELEMETRY_NETWORK:-signoz_default}
+    name: ${FRUIZ_TELEMETRY_NETWORK:-otel}
 
 volumes:
   data:
