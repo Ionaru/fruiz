@@ -3,6 +3,16 @@
 
 @source inline("shadow-none");
 
+/* Opt the document into both color schemes so the browser paints its own
+   widgets to match `prefers-color-scheme`, the same signal Tailwind's `dark:`
+   variant uses. Without this the UA assumes a light page and renders native
+   chrome light even in dark mode: the `<select>` option popup (glaringly so on
+   the admin track forms, which list every audio file), scrollbars, spinner
+   buttons and the like. */
+:root {
+  color-scheme: light dark;
+}
+
 /* Suppress CSS transitions during the initial page load. The broad
    `transition-all` used by `.plateau` (and other interactive surfaces) would
    otherwise animate from its default to its styled state on first paint —
