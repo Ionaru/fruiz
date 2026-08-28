@@ -6,7 +6,6 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
-import { AdminButton } from "../../../components/ui/AdminButton.tsx";
 import { NewCategoryButton } from "../../../components/admin/NewCategoryButton.tsx";
 
 export const handler = define.handlers({
@@ -18,27 +17,19 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell>
+export default define.page<typeof handler>(({ data, state, url }) => (
+  <AdminPageShell user={state.session.user} currentPath={url.pathname}>
     <Head>
       <title>Categories — admin</title>
     </Head>
-    <AdminListHeader
-      title="Categories"
-      actions={
-        <>
-          <AdminButton />
-          <NewCategoryButton />
-        </>
-      }
-    />
+    <AdminListHeader title="Categories" actions={<NewCategoryButton />} />
     <ul class="flex flex-col gap-2">
-      {data.categories.map((c) => (
+      {data.categories.map((category) => (
         <AdminCategoryListItem
-          key={c.id}
-          id={c.id}
-          name={c.name}
-          slug={c.slug}
+          key={category.id}
+          id={category.id}
+          name={category.name}
+          slug={category.slug}
         />
       ))}
     </ul>

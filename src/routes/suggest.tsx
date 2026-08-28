@@ -2,9 +2,8 @@ import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
 import { db } from "../db/db.ts";
 import { PageShell } from "../components/layout/PageShell.tsx";
+import { SiteHeader } from "../components/layout/SiteHeader.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
-import { HomeButton } from "../components/ui/HomeButton.tsx";
-import { AccountButton } from "../components/ui/AccountButton.tsx";
 import { InlineAlert } from "../components/ui/InlineAlert.tsx";
 import { SuggestionStatusList } from "../components/SuggestionStatusList.tsx";
 import { listAdminCategories } from "../lib/adminReads.ts";
@@ -71,21 +70,16 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
+export default define.page<typeof handler>(({ data, state, url }) => (
   <PageShell>
     <Head>
       <title>Suggest a track — fruiz</title>
     </Head>
     <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <h1 class="text-3xl font-semibold text-base-900 dark:text-base-100">
-          Suggest a track
-        </h1>
-        <nav class="flex flex-wrap gap-2">
-          <HomeButton />
-          <AccountButton />
-        </nav>
-      </div>
+      <SiteHeader user={state.session.user} currentPath={url.pathname} />
+      <h1 class="text-3xl font-semibold text-base-900 dark:text-base-100">
+        Suggest a track
+      </h1>
 
       {data.submitted && (
         <p

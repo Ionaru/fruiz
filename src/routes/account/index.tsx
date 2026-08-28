@@ -1,9 +1,9 @@
 import { Head } from "fresh/runtime";
+import { AccountTopNav } from "../../components/layout/AccountTopNav.tsx";
 import { PageShell } from "../../components/layout/PageShell.tsx";
 import { PlateauCard } from "../../components/ui/PlateauCard.tsx";
 import { define } from "../../utils.ts";
 import AccountManage from "../../islands/AccountManage.tsx";
-import { HomeButton } from "../../components/ui/HomeButton.tsx";
 
 export const handler = define.handlers({
   GET(ctx) {
@@ -21,14 +21,12 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
+export default define.page<typeof handler>(({ data, state, url }) => (
   <PageShell>
     <Head>
       <title>Account — fruiz</title>
     </Head>
-    <nav class="max-w-md mx-auto mb-6">
-      <HomeButton />
-    </nav>
+    <AccountTopNav user={state.session.user} currentPath={url.pathname} />
     {data.mode === "hub"
       ? (
         <PlateauCard class="max-w-md mx-auto flex flex-col gap-6">

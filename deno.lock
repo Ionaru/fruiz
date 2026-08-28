@@ -67,6 +67,7 @@
     "npm:esbuild@0.25.7": "0.25.7",
     "npm:esbuild@~0.25.5": "0.25.12",
     "npm:preact-render-to-string@^6.6.3": "6.7.0_preact@10.29.7",
+    "npm:preact-render-to-string@^6.7.0": "6.7.0_preact@10.29.7",
     "npm:preact@^10.28.2": "10.29.7_preact-render-to-string@6.7.0",
     "npm:preact@^10.29.1": "10.29.7_preact-render-to-string@6.7.0",
     "npm:preact@^10.29.2": "10.29.7_preact-render-to-string@6.7.0",
@@ -118,7 +119,7 @@
         "npm:@preact/signals@^2.5.1",
         "npm:esbuild-wasm",
         "npm:esbuild@0.25.7",
-        "npm:preact-render-to-string",
+        "npm:preact-render-to-string@^6.6.3",
         "npm:preact@^10.28.2",
         "npm:preact@^10.29.1"
       ]
@@ -1991,6 +1992,7 @@
       "npm:@tsparticles/engine@^4.1.1",
       "npm:drizzle-kit@1.0.0-beta.23",
       "npm:drizzle-orm@1.0.0-beta.23",
+      "npm:preact-render-to-string@^6.7.0",
       "npm:preact@^10.29.2",
       "npm:react-icons@^5.6.0",
       "npm:tailwindcss-neumorphism-ui@2",

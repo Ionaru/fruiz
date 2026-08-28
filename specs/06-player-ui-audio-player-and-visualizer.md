@@ -17,7 +17,7 @@ This subsystem owns:
   actual media duration once `loadedmetadata` fires.
 - The mirrored-bar visualizer driven from the analyser node.
 - The QuizPlayer page shell: difficulty-colored glow halo, mobile-first layout,
-  top nav.
+  and the shared site header (spec 01).
 - The track-grid navigation and result modal.
 - The keyboard space-bar shortcut for play / stop on the active track.
 
@@ -29,9 +29,10 @@ and gain measurement live in spec 03. Answer entry lives in spec 05.
 ### Page shell
 
 [`src/components/quiz/QuizPlayer.tsx`](../src/components/quiz/QuizPlayer.tsx) is
-the SSR wrapper for a live quiz: a centered column on phone widths, a top "Home"
-button, and a header card. The header is the `PlateauCard` component with a
-difficulty-colored soft glow class from
+the SSR wrapper for a live quiz: a centered column on phone widths, the shared
+[`SiteHeader`](../src/components/layout/SiteHeader.tsx) (spec 01), and a header
+card. The header card is the `PlateauCard` component with a difficulty-colored
+soft glow class from
 [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts):
 
 | Difficulty | Header (soft glow) class                           | Visualizer bars |

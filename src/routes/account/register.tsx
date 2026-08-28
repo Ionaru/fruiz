@@ -4,13 +4,13 @@ import { PageShell } from "../../components/layout/PageShell.tsx";
 import { define } from "../../utils.ts";
 import AccountRegistration from "../../islands/AccountRegistration.tsx";
 
-export default define.page(function AccountRegisterPage() {
+export default define.page(function AccountRegisterPage({ state, url }) {
   return (
     <PageShell>
       <Head>
         <title>Register — fruiz</title>
       </Head>
-      <AccountTopNav />
+      <AccountTopNav user={state.session.user} currentPath={url.pathname} />
       <AccountRegistration />
     </PageShell>
   );
