@@ -7,7 +7,6 @@ import { define } from "../../../utils.ts";
 import { db } from "../../../db/db.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { resolvedPlaybackFromDbFields } from "../../../lib/quizPlayback.ts";
-import { AdminButton } from "../../../components/ui/AdminButton.tsx";
 import { NewTrackButton } from "../../../components/admin/NewTrackButton.tsx";
 
 export const handler = define.handlers({
@@ -29,20 +28,12 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell>
+export default define.page<typeof handler>(({ data, state, url }) => (
+  <AdminPageShell user={state.session.user} currentPath={url.pathname}>
     <Head>
       <title>Tracks — admin</title>
     </Head>
-    <AdminListHeader
-      title="Tracks"
-      actions={
-        <>
-          <AdminButton />
-          <NewTrackButton />
-        </>
-      }
-    />
+    <AdminListHeader title="Tracks" actions={<NewTrackButton />} />
     <ul class="flex flex-col gap-2">
       {data.tracks.map((track) => (
         <AdminTrackListItem

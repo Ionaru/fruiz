@@ -97,6 +97,9 @@ change the track list.
   clipboard API and MUST show visible feedback for both the copied and failed
   outcomes.
 - ARIA labels are only added when semantic HTML cannot communicate the role.
+  Icon-only controls (such as the site header destinations) carry a
+  visually-hidden text label rather than an `aria-label`, so the accessible name
+  never depends on CSS media state.
 - Color contrast on status indicators MUST be sufficient for outdoor screens.
 
 ### Future possibilities
@@ -127,6 +130,12 @@ Game-level concepts only — implementation details live in the subsystem specs.
   `trailingSlashes("never")`, and `app.fsRoutes()`.
 - [`src/routes/index.tsx`](../src/routes/index.tsx) — home page; starts a new
   quiz, lists in-progress quizzes, and links to account / collection.
+- [`src/components/layout/SiteHeader.tsx`](../src/components/layout/SiteHeader.tsx):
+  the site header rendered on every page, holding the logo, the wordmark, and
+  the session-aware home / collection / admin / account destinations. Which
+  destinations a visitor sees depends on their session but never on the page
+  they are on, so the bar does not reshuffle while navigating. Home is the sole
+  exception: it is dropped on the home page, where it would link to itself.
 - [`src/components/quiz/QuizCategoryCard.tsx`](../src/components/quiz/QuizCategoryCard.tsx),
   [`src/components/quiz/StartNewQuizSection.tsx`](../src/components/quiz/StartNewQuizSection.tsx)
   — category-and-difficulty picker.

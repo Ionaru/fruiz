@@ -23,3 +23,6 @@ data/music
 /.junie
 /.kiro
 /.playwright-mcp
+
+# IDE
+/.idea

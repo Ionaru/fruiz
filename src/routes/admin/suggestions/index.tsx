@@ -6,7 +6,6 @@ import { listSuggestionsForAdmin } from "../../../lib/trackSuggestions.ts";
 import { AdminListHeader } from "../../../components/admin/AdminListHeader.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
 import { AdminSuggestionListItem } from "../../../components/admin/AdminSuggestionListItem.tsx";
-import { AdminButton } from "../../../components/ui/AdminButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -17,12 +16,12 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell>
+export default define.page<typeof handler>(({ data, state, url }) => (
+  <AdminPageShell user={state.session.user} currentPath={url.pathname}>
     <Head>
       <title>Suggestions — admin</title>
     </Head>
-    <AdminListHeader title="Suggestions" actions={<AdminButton />} />
+    <AdminListHeader title="Suggestions" />
     <ul class="flex flex-col gap-2">
       {data.suggestions.map((suggestion) => (
         <AdminSuggestionListItem

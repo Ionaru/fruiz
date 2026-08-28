@@ -1,15 +1,18 @@
 import type { ComponentChildren } from "preact";
 import { PageShell } from "../layout/PageShell.tsx";
+import { SiteHeader } from "../layout/SiteHeader.tsx";
 import { PlateauCard } from "../ui/PlateauCard.tsx";
 import type { CategoryRow } from "../../lib/categories.ts";
 import type { DifficultyMode } from "../../lib/types.ts";
-import { HomeButton } from "../ui/HomeButton.tsx";
+import type { AuthUserSnapshot } from "../../utils.ts";
 import { difficultyGlowSoftClass } from "./glow.ts";
 
 export interface QuizPlayerProps {
   category: CategoryRow;
   children: ComponentChildren;
   difficulty: DifficultyMode;
+  user: AuthUserSnapshot | null;
+  currentPath: string;
 }
 
 const DIFFICULTY_DETAILS: Record<DifficultyMode, string> = {
@@ -21,9 +24,7 @@ export function QuizPlayer(props: Readonly<QuizPlayerProps>) {
   return (
     <PageShell paddingY="6">
       <div class="relative isolate max-w-lg mx-auto flex flex-col gap-2 sm:gap-6 text-base-900 dark:text-base-100">
-        <nav class="w-full">
-          <HomeButton />
-        </nav>
+        <SiteHeader user={props.user} currentPath={props.currentPath} />
         <PlateauCard
           padding="5"
           class={difficultyGlowSoftClass[props.difficulty]}

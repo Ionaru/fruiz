@@ -111,8 +111,8 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
-  <AdminPageShell>
+export default define.page<typeof handler>(({ data, state, url }) => (
+  <AdminPageShell user={state.session.user} currentPath={url.pathname}>
     <Head>
       <title>{data.category.name} — category</title>
     </Head>

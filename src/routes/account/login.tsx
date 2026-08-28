@@ -4,13 +4,13 @@ import { PageShell } from "../../components/layout/PageShell.tsx";
 import { define } from "../../utils.ts";
 import AccountLogin from "../../islands/AccountLogin.tsx";
 
-export default define.page(function AccountLoginPage() {
+export default define.page(function AccountLoginPage({ state, url }) {
   return (
     <PageShell>
       <Head>
         <title>Sign in — fruiz</title>
       </Head>
-      <AccountTopNav />
+      <AccountTopNav user={state.session.user} currentPath={url.pathname} />
       <AccountLogin />
     </PageShell>
   );

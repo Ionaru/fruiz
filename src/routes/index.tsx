@@ -9,11 +9,9 @@ import {
 import type { DifficultyMode } from "../lib/types.ts";
 import { encodeSlug, generateShortCode } from "../lib/slug.ts";
 import { PageShell } from "../components/layout/PageShell.tsx";
+import { SiteHeader } from "../components/layout/SiteHeader.tsx";
 import { StartNewQuizSection } from "../components/quiz/StartNewQuizSection.tsx";
 import InProgressQuizSection from "../islands/InProgressQuizSection.tsx";
-import { AccountButton } from "../components/ui/AccountButton.tsx";
-import { CollectionButton } from "../components/ui/CollectionButton.tsx";
-import { AdminButton } from "../components/ui/AdminButton.tsx";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -21,13 +19,10 @@ export const handler = define.handlers({
     const homeLimitQuery = parseReplayLimitFromUrl(
       new URL(ctx.req.url).searchParams,
     );
-    const user = ctx.state.session.user;
     return {
       data: {
         options,
         homeLimitQuery,
-        loggedIn: user !== null,
-        showAdminLink: user?.admin === true,
       },
     };
   },
@@ -47,27 +42,13 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
+export default define.page<typeof handler>(({ data, state, url }) => (
   <PageShell>
     <Head>
       <title>fruiz - musical quiz</title>
     </Head>
     <div class="max-w-xl mx-auto flex flex-col gap-6">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-semibold text-base-900 dark:text-base-100">
-            Musical quiz
-          </h1>
-          <p class="mt-1 text-sm text-base-900/70 dark:text-base-100/70">
-            Do you know where the music is from?
-          </p>
-        </div>
-        <nav class="flex flex-wrap gap-2">
-          {data.loggedIn && <CollectionButton />}
-          {data.showAdminLink && <AdminButton />}
-          <AccountButton />
-        </nav>
-      </div>
+      <SiteHeader user={state.session.user} currentPath={url.pathname} />
       {data.homeLimitQuery !== null && (
         <p class="plateau rounded-xl px-4 py-3 text-sm text-base-800 dark:text-base-100">
           Replay limits are chosen on the quiz page. The{" "}

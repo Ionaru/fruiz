@@ -72,7 +72,7 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => (
+export default define.page<typeof handler>(({ data, state, url }) => (
   <>
     <Head>
       <title>{data.category.name} quiz — Fruiz</title>
@@ -82,7 +82,12 @@ export default define.page<typeof handler>(({ data }) => (
       <meta property="og:type" content="website" />
       <meta property="og:url" content={data.shareMeta.url} />
     </Head>
-    <QuizPlayer category={data.category} difficulty={data.difficulty}>
+    <QuizPlayer
+      category={data.category}
+      difficulty={data.difficulty}
+      user={state.session.user}
+      currentPath={url.pathname}
+    >
       <QuizController
         identity={data.identity}
         initialReplayLimit={data.initialReplayLimit ?? 0}
