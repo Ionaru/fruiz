@@ -13,19 +13,18 @@ export interface CollectionProgressPanelProps {
  * The counts stay global even while a category filter is active: they are the
  * page's identity, and each filter already carries its own numbers.
  *
- * Unlike the artboard, this is a plateau card on phones as well as on desktop.
- * `.plateau` is a component-layer class rather than a utility, so `lg:plateau`
- * would generate nothing, and the alternative — rendering the block twice
- * behind `lg:hidden` / `hidden lg:block` — would put two `<h1>`s in the
- * document to show one.
+ * Bare on phones, where the heading sits directly on the page, and a card in
+ * the sidebar from `lg` — see `.plateau-from-lg` in `styles.css` for why that
+ * needs its own class rather than `lg:plateau`.
  */
 export function CollectionProgressPanel(
   props: Readonly<CollectionProgressPanelProps>,
 ) {
   const { collected, total } = props;
-  const classes = ["plateau rounded-2xl p-4", props.class].filter(Boolean).join(
-    " ",
-  );
+  const classes = [
+    "plateau-from-lg lg:rounded-2xl lg:p-4",
+    props.class,
+  ].filter(Boolean).join(" ");
   return (
     <div class={classes}>
       <div class="flex items-baseline justify-between gap-3 lg:block">

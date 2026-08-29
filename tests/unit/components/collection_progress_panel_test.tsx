@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { render } from "preact-render-to-string";
 import { CollectionProgressPanel } from "../../../src/components/collection/CollectionProgressPanel.tsx";
 import { CollectionSearchField } from "../../../src/components/collection/CollectionSearchField.tsx";
@@ -60,4 +60,18 @@ Deno.test("CollectionSearchField: filtering is announced politely, not shouted",
   );
   assertStringIncludes(html, 'aria-live="polite"');
   assertStringIncludes(html, "3 tracks shown");
+});
+
+Deno.test("CollectionProgressPanel: bare on phones, a card from lg", () => {
+  const html = render(<CollectionProgressPanel collected={115} total={241} />);
+  // `.plateau` is a component-layer class, so `lg:plateau` would generate
+  // nothing; `.plateau-from-lg` carries the surface behind the breakpoint.
+  assertStringIncludes(html, "plateau-from-lg");
+  assertStringIncludes(html, "lg:rounded-2xl");
+  assertStringIncludes(html, "lg:p-4");
+  const rootClass = html.match(/^<div class="([^"]*)"/)?.[1] ?? "";
+  assert(
+    !rootClass.split(/\s+/).includes("plateau"),
+    "an unconditional plateau would box the heading on phones, which the design does not",
+  );
 });

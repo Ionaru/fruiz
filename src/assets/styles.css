@@ -69,6 +69,28 @@ html.preload *::after {
     }
   }
 
+  /*
+    The same raised surface, but only from `lg`. The collection's progress block
+    is bare on phones, where it is the page heading rather than a card, and
+    becomes a sidebar card on desktop.
+
+    This has to be its own class: `.plateau` lives in the components layer, and
+    Tailwind only applies variants to utilities, so `lg:plateau` would silently
+    generate nothing. The underlying `nm-*` utilities do take variants, so the
+    body is a copy of `.plateau`'s above and must be kept in step with it.
+  */
+  .plateau-from-lg {
+    @variant lg {
+      @apply nm-protrude transition-all duration-200 ease-out bg-linear-to-br
+        from-base-100 to-base-200;
+
+      @variant dark {
+        @apply text-white nm-highlight-base-700/50! nm-shadow-base-950/70!
+          from-base-700 to-base-900;
+      }
+    }
+  }
+
   dialog {
     opacity: 0;
     scale: 0.95;
