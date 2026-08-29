@@ -24,6 +24,17 @@ function hasDestination(html: string, href: string): boolean {
   return html.includes(`href="${href}"`);
 }
 
+/** Classes captured by `pattern`, or an empty list when it matches nothing. */
+function classesFrom(html: string, pattern: RegExp): string[] {
+  return html.match(pattern)?.[1]?.split(" ") ?? [];
+}
+
+/** The row that holds the wordmark and, on the home page, the tagline. */
+const brandRow = /<div[^>]*class="([^"]*)"[^>]*><h1/;
+const wordmark = /<h1[^>]*class="([^"]*)"/;
+const tagline = /<p[^>]*class="([^"]*)"[^>]*>Do you know where/;
+const taglineTag = /<p[^>]*>Do you know where/;
+
 /** Hrefs of the header's destination links, in render order. */
 function destinations(html: string): string[] {
   const nav = html.match(/<nav\b[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? "";
@@ -98,6 +109,63 @@ Deno.test("the tagline is rendered only on the home page", () => {
     markup(null, "/collection").includes(
       "Do you know where the music is from?",
     ),
+  );
+});
+
+/*
+ * The wordmark outranks the tagline: the bar must never show the two of them
+ * ellipsised side by side, which is what happened while both could shrink. The
+ * geometry that enforces it only exists in a browser, so these two tests guard
+ * the markup that produces it.
+ */
+
+Deno.test("the tagline is shown whole or not at all", () => {
+  const html = markup(admin, "/");
+  const taglineClasses = classesFrom(html, tagline);
+  assert(
+    taglineClasses.includes("shrink-0"),
+    "the tagline must keep its full width so it can only wrap away as a whole",
+  );
+  assertFalse(
+    taglineClasses.includes("truncate"),
+    "the tagline must never be ellipsised",
+  );
+  assert(
+    classesFrom(html, wordmark).includes("truncate"),
+    "the wordmark keeps the ellipsis for the narrow screens where it is alone",
+  );
+});
+
+Deno.test("the brand row hides a tagline that no longer fits", () => {
+  const rowClasses = classesFrom(markup(admin, "/"), brandRow);
+  for (
+    const expected of [
+      "flex-wrap",
+      "sm:max-h-7",
+      "sm:max-h-[1lh]",
+      "sm:overflow-hidden",
+      "sm:text-lg",
+    ]
+  ) {
+    assert(
+      rowClasses.includes(expected),
+      `expected the brand row to carry ${expected} so the wrapped tagline is clipped`,
+    );
+  }
+  assertFalse(
+    classesFrom(markup(admin, "/"), wordmark).some((className) =>
+      className.endsWith("text-base") || className.endsWith("text-lg")
+    ),
+    "the row owns the type scale so that its `1lh` clamp is one line of the wordmark",
+  );
+});
+
+Deno.test("a tagline clipped by the row is still announced", () => {
+  const opening = markup(admin, "/").match(taglineTag)?.[0] ?? "";
+  assertStringIncludes(opening, "<p", "expected the tagline to be rendered");
+  assertFalse(
+    opening.includes("aria-hidden"),
+    "the tagline is real copy at the widths that fit it, so it stays in the accessibility tree",
   );
 });
 
