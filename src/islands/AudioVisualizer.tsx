@@ -13,10 +13,10 @@ import {
 const BAR_COUNT = 24;
 /**
  * The inline strip is a fraction of the flanking pair's width, so it gets
- * proportionally fewer bands — 24 bars in ~80px would render as slivers with no
- * readable gap between them.
+ * proportionally fewer bands — even 12 bars in the 40px the collection row can
+ * spare on a phone would render as slivers with no readable gap between them.
  */
-const INLINE_BAR_COUNT = 12;
+const INLINE_BAR_COUNT = 8;
 /** Bars never shrink below this fraction of canvas height, so a thin resting
  * line stays visible when idle (and bars never fully disappear while playing). */
 const RESTING_FRACTION = 0.08;
@@ -36,7 +36,7 @@ export interface AudioVisualizerProps {
   /**
    * `"flanking"` (the default) mirrors two canvases around {@link children}.
    * `"inline"` draws a single short strip and renders no children — the
-   * collection row places its play control separately, beside the label column.
+   * collection row sits it beside its own controls, not around them.
    */
   layout?: VisualizerLayout;
   /** Center element flanked by the two bar canvases (usually the play/stop button). */
@@ -84,7 +84,7 @@ function drawBars(
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
 
-  const bars = Math.min(BAR_COUNT, magnitudes.length);
+  const bars = magnitudes.length;
   const slotWidth = width / bars;
   const barWidth = Math.max(1, slotWidth * 0.6);
   const gap = slotWidth - barWidth;
@@ -249,7 +249,7 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
     return (
       <canvas
         ref={rightCanvasRef}
-        class="h-3.5 w-20 shrink-0"
+        class="h-9 w-10 shrink-0 xs:w-14"
         aria-hidden="true"
       />
     );

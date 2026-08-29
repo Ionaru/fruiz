@@ -77,7 +77,8 @@ progress line once it resolves.
 The [`CollectionView`](../src/islands/CollectionView.tsx) island lets the user
 filter by category, search their collected titles, and play whole tracks on
 demand. Playback uses the same `AudioPlayer` island as the quiz page (spec 06),
-in its row layout and with pause/resume rather than stop-and-rewind.
+in its row layout and with `resumable` set, so a row offers pause **and** stop:
+pause keeps the position and shows it, stop rewinds.
 
 #### Serialization contract
 
@@ -122,6 +123,27 @@ no uncollected title survives it.
   rewinds, even though this page opts into pause — pausing is a choice the
   listener makes, not something starting another track should scatter down the
   list.
+
+#### The list reads as one set of cards
+
+- **Rows never change size.** Both label lines are permanent and the meter sits
+  on the control line, so a card is the same height idle, playing and paused
+  (see spec 06's `row` bullet). A track with no categories is one line shorter,
+  which is a property of the track, not of its state.
+- **No card's appearance depends on its neighbours.** Collected rows and filter
+  pills use `nm-protrude-sm` and the list gap is 10px, which is wider than the
+  ~4.8px the smaller relief reaches. At `.plateau`'s full depth the reach is
+  ~11.7px, and every card's shadow was being washed by the next card's highlight
+  — so the cards with nothing after them stood out.
+- **Locked slots are flat, not recessed.** A page that is mostly gaps read as
+  busy with a dent per gap. Only the lock badge keeps its recess, so the row
+  still reads as a slot rather than as empty space.
+- **The pill row's shadows are not clipped.** `overflow-x: auto` clips both
+  axes, so `CategoryFilterList` insets matched padding on all four sides and
+  cancels it with an equal negative margin.
+- **Selecting a filter does not resize it.** The active pill is signalled by the
+  `info` tint, a stronger count contrast and `aria-pressed` — never by weight,
+  which would make the pill wider and shove the row along.
 
 ### Collection progress on the main menu
 
@@ -213,7 +235,8 @@ Application types:
 - **Islands (client)**
   - [`src/islands/CollectionView.tsx`](../src/islands/CollectionView.tsx).
   - [`src/islands/AudioPlayer.tsx`](../src/islands/AudioPlayer.tsx) — row
-    layout, pause/resume, elapsed time, single-player preemption (spec 06).
+    layout, pause/resume and stop, elapsed time, single-player preemption (spec
+    06).
   - [`src/islands/GuessResultModal.tsx`](../src/islands/GuessResultModal.tsx) —
     consumes the progress payload.
   - [`src/islands/QuizController.tsx`](../src/islands/QuizController.tsx) —
@@ -278,10 +301,22 @@ Application types:
     order with locked slots at their true positions, every category is offered
     as a filter (including one with nothing collected), and collected + hidden
     equals the total.
-  - Play a row — the glow, the inline waveform and the elapsed time appear, and
-    the control becomes Pause. Pause and resume — playback continues from where
-    it stopped. Start a second row — the first stops **and rewinds**, and only
-    one track is audible.
+  - Play a row — the glow, the waveform and the elapsed time appear beside the
+    controls, and Pause and Stop replace Play. The row is the same height as it
+    was idle, and as its neighbours.
+  - Pause — the glow goes out, the bars settle to the resting line, and the
+    readout freezes at the position it kept. Resume — playback continues from
+    exactly there.
+  - Stop while playing, and Stop while **paused** — both rewind to the start,
+    clear the readout and put the row back to its idle look.
+  - Start a second row — the first stops **and rewinds**, from paused as well as
+    from playing, and only one track is audible.
+  - Below 480px the readout is hidden and the bars are not; above it, both show.
+  - Look down a letter run: the last card, the card before a locked slot, and
+    the playing card carry the same shadow as every other card. Locked slots
+    read flat, with only the lock badge recessed.
+  - Scroll the filter pills — no pill's shadow is sliced off by the row's edges
+    — and select one: it must not change width or shove its neighbours.
   - Search — locked slots disappear, dividers survive, and a query that matches
     nothing offers a way back out.
   - **Confirm the quiz is unchanged**: stopping a clip still rewinds to the clip

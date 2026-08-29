@@ -49,8 +49,16 @@ Deno.test("CollectionLockedItem: the repeated hint is not announced 126 times", 
   assert(hiddenIndex !== -1, "the hint line should be aria-hidden");
 });
 
-Deno.test("CollectionLockedItem: reads as recessed rather than raised", () => {
-  assertStringIncludes(render(<CollectionLockedItem />), "nm-dent-sm");
+Deno.test("CollectionLockedItem: the card is flat, and only the badge is recessed", () => {
+  const html = render(<CollectionLockedItem />);
+  const cardClasses = html.match(/<div class="([^"]*)"/)?.[1] ?? "";
+  assertStringIncludes(cardClasses, "shadow-none");
+  assert(
+    !cardClasses.includes("nm-dent-sm"),
+    "the card itself should carry no recess",
+  );
+  // The lock badge keeps the row's one piece of relief.
+  assertStringIncludes(html, "nm-dent-sm");
 });
 
 Deno.test("CollectionLetterDivider: is a heading the section can be labelled by", () => {

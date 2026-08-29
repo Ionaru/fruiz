@@ -36,6 +36,8 @@ export enum PlayState {
   Idle = "idle",
   Loading = "loading",
   Playing = "playing",
+  /** Stopped where it stood, with the position kept for a later resume. */
+  Paused = "paused",
 }
 
 const LOADING_UI_DELAY_MS = 500;
@@ -166,41 +168,41 @@ interface AudioPlayerProps {
    */
   lazyLoad?: boolean;
   /**
-   * Pause where you are instead of stopping and rewinding to the clip start.
+   * Offer a pause control alongside stop, and resume from where pause left off.
    *
-   * Defaults to false, which is what the quiz needs: stopping a round has to
-   * rewind so the next replay costs a full listen rather than resuming the
-   * tail. Free listening in the collection wants the opposite, so it opts in —
-   * and the control shows a pause glyph rather than a stop square, because the
-   * icon has to tell the truth about what the button does.
+   * Defaults to false, which is what the quiz needs: a round only ever stops,
+   * and stopping rewinds so the next replay costs a full listen rather than
+   * resuming the tail. Free listening in the collection wants both, so it opts
+   * in and gets two controls — stop still rewinds, pause keeps the position.
    */
-  pauseInsteadOfStop?: boolean;
+  resumable?: boolean;
   /**
    * Id of the player that currently owns playback, or `null` when none does.
    * When it names a different player this one stops, so a list of rows can
    * never have two clips audible at once. Callers that render a single player
    * omit it and nothing changes.
    *
-   * Being preempted always rewinds, even under {@link pauseInsteadOfStop}:
-   * pausing is something the listener chooses, and leaving stale half-played
-   * rows scattered down the list is not what starting another track means.
+   * Being preempted always rewinds, even under {@link resumable}: pausing is
+   * something the listener chooses, and leaving stale half-played rows
+   * scattered down the list is not what starting another track means.
    */
   activePlayerId?: string | null;
   /**
-   * Render as a single track row — one card holding a label column and the
-   * control — instead of the default centred stack.
+   * Render as a single track row — one card holding a label column, the
+   * playback meter and the controls — instead of the default centred stack.
    *
-   * The player owns the card because all three of the row's playing-state
-   * changes (the glow, the swap of `secondary` for the waveform, the pause
-   * glyph) depend on state that lives in here. `primary` is always shown;
-   * `secondary` gives way to the waveform and elapsed time during playback.
+   * The player owns the card because every one of the row's playing-state
+   * changes (the glow, the meter, the elapsed time and which controls are
+   * offered) depends on state that lives in here. Both label slots are always
+   * shown: the meter sits beside the controls rather than replacing
+   * `secondary`, so the row is exactly as tall idle as it is playing.
    */
   row?: {
     primary: ComponentChildren;
     secondary: ComponentChildren;
     /**
-     * What the control is acting on, e.g. the track title. It becomes part of
-     * the button's accessible name: a list of 241 buttons all announcing
+     * What the controls are acting on, e.g. the track title. It becomes part of
+     * each button's accessible name: a list of 241 buttons all announcing
      * "Play, button" tells a screen-reader user nothing about which is which.
      */
     label: string;
@@ -335,6 +337,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       pendingPlayStartNotification.value = false;
       hasStartedPlayback.value = false;
       playState.value = PlayState.Idle;
+      elapsedSeconds.value = 0;
       const duration = el.duration;
       const raw = clipTimingsFromFormOrFallback(
         props.syncPlaybackFromFormId,
@@ -427,7 +430,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
         // Resuming after a pause continues where it left off; every other
         // start (and every quiz replay) rewinds to the clip start first.
         const resumePosition = el.currentTime;
-        const isResuming = props.pauseInsteadOfStop === true &&
+        const isResuming = props.resumable === true &&
           resumePosition > playStartSeconds + 0.001 &&
           resumePosition < playStartSeconds + maxPlaySeconds;
         if (!isResuming) {
@@ -491,14 +494,16 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     })();
   };
 
-  const stopPlayback = (keepPosition: boolean) => {
-    if (!audioRef.value) return;
+  /** Ends the session: rewinds to the clip start and clears the readout. */
+  const stop = () => {
+    const el = audioRef.value;
+    if (!el) return;
     clearClipStopTimer();
     silenceGainNow();
     pendingPlayStartNotification.value = false;
     hasStartedPlayback.value = false;
-    audioRef.value.pause();
-    const duration = audioRef.value.duration;
+    el.pause();
+    const duration = el.duration;
     const raw = clipTimingsFromFormOrFallback(
       props.syncPlaybackFromFormId,
       fallbackStartSig.value,
@@ -509,14 +514,26 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       raw.maxPlaySeconds,
       Number.isFinite(duration) ? duration : Number.NaN,
     );
-    if (!keepPosition) {
-      audioRef.value.currentTime = playStartSeconds;
-      elapsedSeconds.value = 0;
-    }
+    el.currentTime = playStartSeconds;
+    elapsedSeconds.value = 0;
     playState.value = PlayState.Idle;
   };
 
-  const stop = () => stopPlayback(props.pauseInsteadOfStop === true);
+  /**
+   * Holds the session open where it stands. The position and the readout are
+   * kept on purpose — they are what makes a resume mean anything, and what the
+   * row shows while paused.
+   */
+  const pause = () => {
+    const el = audioRef.value;
+    if (!el) return;
+    clearClipStopTimer();
+    silenceGainNow();
+    pendingPlayStartNotification.value = false;
+    hasStartedPlayback.value = false;
+    el.pause();
+    playState.value = PlayState.Paused;
+  };
 
   // Raw props are not reactive dependencies, so the id is bridged into a signal
   // before the effect reads it (see AGENTS.md, client reactivity).
@@ -527,11 +544,12 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     const owner = activePlayerIdSig.value;
     if (owner === null || owner === props.audioId) return;
     if (playState.value === PlayState.Idle) return;
-    stopPlayback(false);
+    stop();
   });
 
   const isPlaying = playState.value === PlayState.Playing;
-  const isPausing = props.pauseInsteadOfStop === true;
+  const isPaused = playState.value === PlayState.Paused;
+  const offersPause = props.resumable === true;
   // The row control is a fixed circle rather than a padded pill. `p-0!` beats
   // the `p-4` that Button's pill shape applies, which plain `p-0` would not
   // reliably win against.
@@ -545,7 +563,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     ? <audio ref={audioRef} preload="none" />
     : <audio ref={audioRef} src={listenSrc} preload="metadata" />;
 
-  const showsPlayControl = playState.value === PlayState.Idle ||
+  const showsPlayControl = playState.value === PlayState.Idle || isPaused ||
     (playState.value === PlayState.Loading && !loadingUiVisible.value);
 
   const controls = (
@@ -557,7 +575,9 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           id={`listen-play-${props.audioId}`}
           disabled={props.disabled || playState.value === PlayState.Loading}
           onClick={play}
-          aria-label={props.row ? `Play ${props.row.label}` : undefined}
+          aria-label={props.row
+            ? `${isPaused ? "Resume" : "Play"} ${props.row.label}`
+            : undefined}
         >
           <FaPlay />
         </Button>
@@ -573,48 +593,79 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
           <SpinningIcon />
         </Button>
       )}
-      {isPlaying && (
+      {isPlaying && offersPause && (
         <Button
           class={pad}
-          variant={isPausing ? "success" : "danger"}
+          variant="warning"
+          id={`listen-pause-${props.audioId}`}
+          onClick={pause}
+          aria-label={props.row ? `Pause ${props.row.label}` : undefined}
+        >
+          <FaPause />
+        </Button>
+      )}
+      {(isPlaying || isPaused) && (
+        <Button
+          class={pad}
+          variant="danger"
           id={`listen-stop-${props.audioId}`}
           onClick={stop}
-          aria-label={props.row
-            ? `${isPausing ? "Pause" : "Stop"} ${props.row.label}`
-            : undefined}
+          aria-label={props.row ? `Stop ${props.row.label}` : undefined}
         >
-          {isPausing ? <FaPause /> : <FaStop />}
+          <FaStop />
         </Button>
       )}
     </>
   );
 
   if (props.row) {
+    /*
+      The meter sits on the control line rather than under the title. That buys
+      it the row's full height instead of a 14px sliver, and it leaves both
+      label lines in place, so the card is the same height idle, playing and
+      paused. `nm-protrude-sm` keeps the card's relief inside the list gap: at
+      the full `.plateau` depth a card's shadow reaches into its neighbour's
+      highlight, and the cards with no neighbour to wash them — the last of a
+      letter run, one before a locked slot, the playing row — read heavier than
+      the rest.
+    */
+    const showsMeter = isPlaying || isPaused;
     return (
       <div
-        class={`plateau flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3 ${
+        class={`plateau nm-protrude-sm flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3 ${
           isPlaying ? "glow glow-soft glow-green" : ""
         }`}
       >
         {audioElement}
         <div class="min-w-0 flex-1">
           {props.row.primary}
-          {isPlaying
-            ? (
-              <div class="mt-1 flex h-3.5 items-center gap-1.5">
-                <AudioVisualizer
-                  enabled
-                  layout="inline"
-                  active
-                  analyserNode={graphSig.value?.analyserNode ?? null}
-                />
-                <span class="text-[10.5px] leading-none tabular-nums opacity-45">
-                  {formatPlaybackTime(elapsedSeconds.value)}
-                </span>
-              </div>
-            )
-            : props.row.secondary}
+          {props.row.secondary}
         </div>
+        {showsMeter && (
+          <div class="flex shrink-0 items-center gap-1.5">
+            {
+              /*
+              Resting bars and a frozen readout are how a paused row reports the
+              position it kept; `active` drives the existing collapse tween.
+            */
+            }
+            <AudioVisualizer
+              enabled
+              layout="inline"
+              active={isPlaying}
+              analyserNode={graphSig.value?.analyserNode ?? null}
+            />
+            {
+              /*
+              Below `xs` the row has to seat a title, the bars and two controls,
+              and the bars are what request the space; the readout waits.
+            */
+            }
+            <span class="hidden shrink-0 text-[10.5px] leading-none tabular-nums opacity-45 xs:block">
+              {formatPlaybackTime(elapsedSeconds.value)}
+            </span>
+          </div>
+        )}
         {controls}
       </div>
     );

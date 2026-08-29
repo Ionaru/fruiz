@@ -34,9 +34,11 @@ export function CategoryFilterList(props: Readonly<CategoryFilterListProps>) {
       <div
         role="group"
         aria-label="Filter tracks by category"
-        // The negative inset keeps the pills' raised shadows from being clipped
-        // by the scroll container.
-        class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:overflow-x-visible lg:px-0 lg:pb-0"
+        // `overflow-x: auto` forces the other axis to clip too, so the inset
+        // has to be matched on all four sides: the padding gives the pills'
+        // shadows room inside the scroll container and the negative margin
+        // takes the same space back out of the layout.
+        class="-m-1.5 flex gap-2.5 overflow-x-auto p-1.5 lg:m-0 lg:flex-col lg:overflow-x-visible lg:p-0"
       >
         <CategoryFilterButton
           label="All"

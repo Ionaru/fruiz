@@ -10,10 +10,14 @@ import { FaLock } from "react-icons/fa6";
  *
  * Deliberately not a button: there is nothing to activate, so it stays out of
  * the tab order and the lock glyph is decorative — the text carries the state.
+ *
+ * The card is flat rather than recessed. A page of these is mostly gaps, and a
+ * dent apiece made the list read as busy; the badge keeps the only relief, so
+ * the row still reads as a slot with something missing from it.
  */
 export function CollectionLockedItem() {
   return (
-    <div class="plateau nm-dent-sm flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3">
+    <div class="plateau shadow-none flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3">
       <div class="min-w-0 flex-1">
         {
           /*

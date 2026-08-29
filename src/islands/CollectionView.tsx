@@ -149,7 +149,7 @@ export default function CollectionView(props: Readonly<CollectionViewProps>) {
                     letter={section.letter}
                     id={headingId}
                   />
-                  <ul class="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-2.5">
+                  <ul class="flex flex-col gap-2.5 lg:grid lg:grid-cols-2">
                     {section.entries.map((entry, entryIndex) => (
                       <li
                         key={entry.kind === "collected"
@@ -168,7 +168,7 @@ export default function CollectionView(props: Readonly<CollectionViewProps>) {
                               playbackGainSourceMtimeMs={entry
                                 .playbackGainSourceMtimeMs}
                               lazyLoad
-                              pauseInsteadOfStop
+                              resumable
                               activePlayerId={nowPlayingId.value}
                               onPlayRequested={() => {
                                 nowPlayingId.value = entry.id;
