@@ -47,6 +47,32 @@ Deno.test("the resolved display name is used, not the raw slug", () => {
   assertStringIncludes(html, "Video Games");
 });
 
+Deno.test("the quiz code sits beside the name and keeps its own casing", () => {
+  const html = markup(hardNintendo);
+  assertStringIncludes(html, "hAB");
+  // `capitalize` renders the code as "HAB" if it reaches it, so it is scoped to
+  // the name — which needs it for the nameFromSlug fallback.
+  assertStringIncludes(
+    html,
+    '<span class="truncate font-medium capitalize">Nintendo</span>',
+  );
+  assertFalse(
+    /capitalize[^"]*">\s*hAB/.test(html),
+    "the quiz code must not inherit capitalize",
+  );
+});
+
+Deno.test("a long category name truncates instead of squeezing out the code", () => {
+  const html = markup(hardNintendo, "Nintendo Handheld Classics");
+  // truncate belongs on the name (a flex container cannot ellipsize its own
+  // children) and the code holds its width with shrink-0.
+  assertStringIncludes(html, 'class="truncate font-medium capitalize"');
+  assertStringIncludes(
+    html,
+    'class="shrink-0 text-xs tabular-nums opacity-50"',
+  );
+});
+
 Deno.test("progress is exposed as a real progressbar", () => {
   const html = markup(hardNintendo);
   assertStringIncludes(html, 'role="progressbar"');

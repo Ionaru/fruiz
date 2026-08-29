@@ -19,14 +19,21 @@ export interface InProgressQuizItemProps {
 
 const iconButtonClass = "w-[38px] shrink-0 rounded-full px-0 py-2.5 text-sm";
 
+/**
+ * The heading pairs the category name with the quiz code. `capitalize` is
+ * scoped to the name — it covers the `nameFromSlug` fallback and must not reach
+ * the code, which is case-sensitive. Truncation likewise sits on the name
+ * itself: a flex container cannot ellipsize its own children, and the code
+ * keeps `shrink-0` so a long name never squeezes it out.
+ */
 export function InProgressQuizItem(props: Readonly<InProgressQuizItemProps>) {
   const { entry, categoryName } = props;
   return (
     <li class="plateau rounded-2xl px-4 py-3.5">
       <div class="flex items-baseline justify-between gap-2.5">
-        <div class="min-w-0 truncate font-medium flex gap-2 items-baseline">
-          {categoryName}
-          <span class="text-xs tabular-nums opacity-50">
+        <div class="flex min-w-0 items-baseline gap-2">
+          <span class="truncate font-medium capitalize">{categoryName}</span>
+          <span class="shrink-0 text-xs tabular-nums opacity-50">
             {entry.slug}
           </span>
         </div>
