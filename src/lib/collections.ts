@@ -43,7 +43,12 @@ export interface CategoryCollectionStatsRow {
   total: number;
 }
 
-export async function getCollectionStatsByCategory(
+/**
+ * Collection totals for every category that has tracks, including the ones this
+ * player has not collected from yet (`collected: 0`). The menu needs those rows
+ * so a category can show an empty progress bar rather than none at all.
+ */
+export async function getCollectionStatsForAllCategories(
   db: DB,
   userId: string,
 ): Promise<CategoryCollectionStatsRow[]> {
@@ -65,14 +70,37 @@ export async function getCollectionStatsByCategory(
     )
     .groupBy(categories.id, categories.slug, categories.name);
 
-  return rows
-    .map((row) => ({
-      categorySlug: row.categorySlug,
-      categoryName: row.categoryName,
-      total: Number(row.total),
-      collected: Number(row.collected),
-    }))
-    .filter((row) => row.collected > 0);
+  return rows.map((row) => ({
+    categorySlug: row.categorySlug,
+    categoryName: row.categoryName,
+    total: Number(row.total),
+    collected: Number(row.collected),
+  }));
+}
+
+/**
+ * Categories this player actually holds tracks in — what the collection page
+ * offers as filters, where an always-empty filter would be dead weight.
+ */
+export async function getCollectionStatsByCategory(
+  db: DB,
+  userId: string,
+): Promise<CategoryCollectionStatsRow[]> {
+  const rows = await getCollectionStatsForAllCategories(db, userId);
+  return rows.filter((row) => row.collected > 0);
+}
+
+/** Collected-track counts keyed by category slug, for the menu's progress bars. */
+export async function getCollectedCountsBySlug(
+  db: DB,
+  userId: string,
+): Promise<Record<string, number>> {
+  const rows = await getCollectionStatsForAllCategories(db, userId);
+  const countsBySlug: Record<string, number> = {};
+  for (const row of rows) {
+    countsBySlug[row.categorySlug] = row.collected;
+  }
+  return countsBySlug;
 }
 
 export async function getCategorizedTrackCount(db: DB): Promise<number> {

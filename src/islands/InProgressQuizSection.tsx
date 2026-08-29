@@ -1,8 +1,21 @@
 import { useSignal, useSignalEffect } from "@preact/signals";
 import { InProgressQuizItem } from "../components/quiz/InProgressQuizItem.tsx";
+import { SectionHeading } from "../components/ui/SectionHeading.tsx";
 import { decodeSlug } from "../lib/slug.ts";
+import { nameFromSlug } from "../lib/formatSlug.ts";
 import { STORAGE_KEY_PREFIX } from "../lib/quizProgress.ts";
 import type { InProgressQuizEntry, QuizProgress } from "../lib/types.ts";
+
+export interface InProgressQuizSectionProps {
+  /** Category display names keyed by slug, from the categories the server sent. */
+  categoryNames?: Record<string, string>;
+  /**
+   * Applied to the section root. The section renders nothing when there is no
+   * saved progress, so its layout classes have to live on the element the
+   * island itself emits — a wrapper would leave an empty column behind.
+   */
+  class?: string;
+}
 
 function parseQuizPathParts(
   quizPath: string,
@@ -81,7 +94,10 @@ function readInProgressEntries(): InProgressQuizEntry[] {
   );
 }
 
-export default function InProgressQuizSection() {
+export default function InProgressQuizSection(
+  props: Readonly<InProgressQuizSectionProps>,
+) {
+  const categoryNames = props.categoryNames ?? {};
   const entries = useSignal<InProgressQuizEntry[]>([]);
   const refreshCounter = useSignal(0);
 
@@ -119,21 +135,21 @@ export default function InProgressQuizSection() {
   if (entries.value.length === 0) return null;
 
   return (
-    <div class="space-y-3">
-      <h2 class="text-lg font-medium text-base-900 dark:text-base-100">
-        Resume quiz
-      </h2>
+    <section class={["space-y-3", props.class].filter(Boolean).join(" ")}>
+      <SectionHeading>Resume</SectionHeading>
       <ul class="space-y-3">
         {entries.value.map((entry) => (
           <InProgressQuizItem
             key={entry.storageKey}
             entry={entry}
+            categoryName={categoryNames[entry.category] ??
+              nameFromSlug(entry.category)}
             onResume={onResume}
             onDelete={onDelete}
             onShare={(quizPath) => void onShare(quizPath)}
           />
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
