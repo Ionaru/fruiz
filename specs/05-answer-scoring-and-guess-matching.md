@@ -105,6 +105,11 @@ limit in `AnswerInput` is `MAX_MATCHES = 20`.
 
 - The input has `role="combobox"`, `aria-autocomplete="list"`, and
   `aria-expanded` reflecting the dropdown state.
+- Both `aria-expanded` here and `aria-selected` on the option rows are written
+  as the literal strings `"true"` / `"false"`, never as a raw boolean. Elements
+  compiled through the JSX precompile path serialize a boolean as an HTML
+  boolean attribute, which renders `true` as a bare valueless attribute and
+  drops the attribute altogether when false, leaving the state unreported.
 - Up / Down arrows move `activeIndex` through the matches, with wrap-around.
 - `Enter` commits the active suggestion. `Escape` closes the dropdown. `Tab`
   closes the dropdown without committing.
@@ -155,7 +160,7 @@ No new tables or columns. The relevant data flows:
     Submit gating, scoring, popup result wiring (see spec 04).
 - **Components (SSR)**
   - [`src/components/quiz/AnswerSuggestionOption.tsx`](../src/components/quiz/AnswerSuggestionOption.tsx)
-    — single suggestion row.
+    — single suggestion row, carrying the `aria-selected` string above.
 - **Tests**
   - [`tests/unit/lib/normalize_test.ts`](../tests/unit/lib/normalize_test.ts) —
     NFD, punctuation, whitespace cases.
@@ -163,6 +168,10 @@ No new tables or columns. The relevant data flows:
     predicate.
   - [`tests/suggest_matches_test.ts`](../tests/suggest_matches_test.ts) —
     ranking and ordering.
+  - [`tests/unit/components/answer_suggestion_option_test.tsx`](../tests/unit/components/answer_suggestion_option_test.tsx)
+    — `aria-selected` renders as `"true"` / `"false"`.
+  - [`tests/unit/islands/answer_input_test.tsx`](../tests/unit/islands/answer_input_test.tsx)
+    — the combobox's rendered ARIA contract.
 
 ## Constraints and invariants
 
@@ -186,6 +195,8 @@ No new tables or columns. The relevant data flows:
   `suggest_matches_test.ts`. Together they cover: NFD decomposition, punctuation
   set, whitespace collapsing, exact / startsWith / contains ranking, ordering
   stability, and gate behavior on empty / matching / non-matching input.
+  `answer_suggestion_option_test.tsx` and `answer_input_test.tsx` cover the
+  rendered ARIA state strings described above.
 - **Manual:**
   - Type a normalized variant ("walle", "WALL-E", "Wall·E") and confirm Submit
     enables and answers score correctly.
