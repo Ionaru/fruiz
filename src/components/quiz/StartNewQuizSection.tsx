@@ -19,7 +19,9 @@ export function StartNewQuizSection(
   >,
 ) {
   return (
-    <section class={["space-y-3", className].filter(Boolean).join(" ")}>
+    <section
+      class={["flex flex-col gap-3", className].filter(Boolean).join(" ")}
+    >
       <SectionHeading>Start new quiz</SectionHeading>
       {options.length === 0
         ? (
