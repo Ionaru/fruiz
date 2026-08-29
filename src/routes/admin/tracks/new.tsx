@@ -5,6 +5,8 @@ import { trackCategories, tracks } from "../../../db/schema.ts";
 import { listAdminCategories } from "../../../lib/adminReads.ts";
 import { requireAdminSessionOrRedirect } from "../../../lib/adminSession.ts";
 import { listAudioFilesInMusicDir } from "../../../lib/listMusicDir.ts";
+import { trackTitleFromAudioUrl } from "../../../lib/audioFilePath.ts";
+import { normalizedPath } from "../../../lib/trackFormHelpers.ts";
 import { analyzeAndStorePlaybackGainForTrack } from "../../../lib/playbackGainAnalysis.ts";
 import { AdminBackLink } from "../../../components/admin/AdminBackLink.tsx";
 import { AdminPageShell } from "../../../components/admin/AdminPageShell.tsx";
@@ -18,12 +20,21 @@ export const handler = define.handlers({
     if (gate instanceof Response) return gate;
     const audioChoices = await listAudioFilesInMusicDir();
     const categoryOptions = await listAdminCategories(db);
-    const queryError = new URL(ctx.req.url).searchParams.get("err");
+    const searchParams = new URL(ctx.req.url).searchParams;
+    const queryError = searchParams.get("err");
+    // Only a path the music directory actually holds may reach the form: the
+    // link comes from the unlinked-files list on /admin/tracks, but the query
+    // string is user-controlled and must never widen what POST accepts.
+    const requestedAudioUrl = normalizedPath(searchParams.get("audio") ?? "");
+    const preselectedAudioUrl = audioChoices.includes(requestedAudioUrl)
+      ? requestedAudioUrl
+      : "";
     return {
       data: {
         session: gate.session,
         categoryOptions,
         audioChoices,
+        preselectedAudioUrl,
         queryError,
       },
     };
@@ -97,6 +108,10 @@ export default define.page<typeof handler>(({ data, state, url }) => (
         action="/admin/tracks/new"
         categories={data.categoryOptions}
         audioChoices={data.audioChoices}
+        defaultAudioUrl={data.preselectedAudioUrl}
+        defaultTitle={data.preselectedAudioUrl === ""
+          ? ""
+          : trackTitleFromAudioUrl(data.preselectedAudioUrl)}
         submitLabel="Create track"
       />
     </div>

@@ -10,9 +10,12 @@ This subsystem owns:
 
 - The `/admin/*` route tree and its server-rendered CRUD forms.
 - The track and category Drizzle reads used by the admin shell
-  (`listAdminTracks`, `listAdminCategories`).
+  (`listAdminTracks`, `listAdminCategories`, `listUnlinkedAudioFiles`).
+- The unlinked-audio list on `/admin/tracks` and the `?audio=` preselect it
+  hands to the new-track form.
 - Audio upload handling (`saveTrackAudioUpload`, `resolveTrackFormAudioUrl`,
-  `normalizeUploadDir`).
+  `normalizeUploadDir`) — present in `src/lib/` but **not wired to any route**
+  today; see "Audio intake" below.
 - The music-folder seeder (`seedTracksFromMusicDir`) used to bootstrap a
   category from a directory of audio files.
 - Admin-only previews of `AudioPlayer` (`compact` mode) with live windowing
@@ -36,7 +39,8 @@ the music-folder seed action. Counts come from `listAdminCategories` and
 Routes:
 
 - [`src/routes/admin/tracks/index.tsx`](../src/routes/admin/tracks/index.tsx) —
-  list with category chips and a compact in-row `AudioPlayer` preview.
+  the unlinked-audio list (below) followed by **All tracks**: category chips and
+  a compact in-row `AudioPlayer` preview.
 - [`src/routes/admin/tracks/new.tsx`](../src/routes/admin/tracks/new.tsx) —
   create a track.
 - [`src/routes/admin/tracks/[id].tsx`](../src/routes/admin/tracks/[id].tsx) —
@@ -45,12 +49,11 @@ Routes:
 All routes start with `requireAdminSessionOrRedirect`; missing admin returns a
 redirect response.
 
-Track form fields:
+Track form fields ([`src/islands/TrackForm.tsx`](../src/islands/TrackForm.tsx)):
 
 - `title` (required, non-empty).
-- `audioFile` (upload) **or** `audioUrl` (repo-relative POSIX path). Uploads win
-  when present.
-- `uploadDir` (defaults to `data/music`).
+- `audioUrl` — a `<select>` over the audio files `listAudioFilesInMusicDir`
+  finds in `data/music`. There is no in-form upload; see "Audio intake" below.
 - `difficulty` (`easy` / `hard`).
 - `playStartSeconds`, `maxPlaySeconds` (empty → store `null` → use defaults; see
   spec 03).
@@ -58,15 +61,57 @@ Track form fields:
 
 On submit:
 
-1. Resolve the audio URL via `resolveTrackFormAudioUrl(form)`:
-   - If `audioFile` is a non-empty `Blob`, call `saveTrackAudioUpload`.
-   - Otherwise return the trimmed `audioUrl` field.
-   - Otherwise return `null`. The form re-renders with an error.
+1. Re-list the music directory and require `audioUrl` to be a member of it. A
+   missing title, an unknown audio path, or an unknown difficulty redirects back
+   to the form.
 2. Parse playback fields with `parseTrackPlaybackFormFields` (spec 03).
 3. Insert / update the `tracks` row.
 4. Rewrite `track_categories` for the selected categories
    (`trackFormHelpers.ts`).
-5. Redirect to the track list.
+5. Analyze playback gain, then redirect to the track list.
+
+### Audio intake
+
+Audio files arrive by being copied into `data/music` on the server. The admin UI
+never writes audio: it only links an existing file to a `tracks` row.
+`saveTrackAudioUpload` / `resolveTrackFormAudioUrl` still exist in
+[`src/lib/saveTrackAudioUpload.ts`](../src/lib/saveTrackAudioUpload.ts) with the
+upload rules documented under "Audio upload" below, but no route calls them.
+Treat that section as the contract to honor **if** an upload field is
+reintroduced, not as current behavior.
+
+### Unlinked audio files
+
+Because the `audioUrl` `<select>` lists every file in `data/music` — including
+every file already linked to a track — it grows without bound and a
+freshly-copied file is hard to find in it. `/admin/tracks` therefore leads with
+the files that have **no track yet**:
+
+- `listUnlinkedAudioFiles(db)`
+  ([`src/lib/adminReads.ts`](../src/lib/adminReads.ts)) lists `data/music`,
+  subtracts every distinct `tracks.audio_url`, then reads the modification time
+  of what remains and sorts **newest first**, so a just-copied file leads the
+  list. Filtering before stat'ing keeps the filesystem work proportional to the
+  unlinked set, not the whole library.
+- Comparison normalizes the stored path (trim, `\` → `/`, leading `/` dropped)
+  but stays **case-sensitive**, matching the exact set-membership check the form
+  handlers gate writes on. A stored value that is not a music-directory path at
+  all (a remote URL, say) matches nothing, so the file stays listed — the safe
+  direction.
+- Each row (`AdminUnlinkedAudioListItem`) shows the filename with its extension
+  and links to `/admin/tracks/new?audio=<encoded repo-relative path>`.
+- The section is omitted entirely when every file is linked.
+
+`GET /admin/tracks/new` accepts that `audio` parameter, normalizes it, and
+preselects it **only if it is in the freshly-listed music directory**; anything
+else degrades to an empty form with nothing reflected back. The title is
+prefilled from the filename with `trackTitleFromAudioUrl`, the same helper the
+music-folder seeder uses, so a track created either way starts from the same
+title.
+
+**Invariant.** The `audio` parameter never widens what `POST` accepts — the
+create handler re-lists the directory and re-checks membership regardless of how
+the form was reached.
 
 Delete is a separate confirmed POST (`/admin/tracks/[id]` with a
 `_method=delete`-style form) that removes the `tracks` row and lets the cascade
@@ -182,8 +227,13 @@ No new tables are introduced by this subsystem.
     upload pipeline.
   - [`src/lib/seedMusic.ts`](../src/lib/seedMusic.ts) —
     `seedTracksFromMusicDir`.
-  - [`src/lib/listMusicDir.ts`](../src/lib/listMusicDir.ts) — admin helper for
-    listing audio files in the upload directory.
+  - [`src/lib/listMusicDir.ts`](../src/lib/listMusicDir.ts) — lists audio files
+    in the music directory (`listAudioFilesInMusicDir`) plus the pure
+    `filterUnlinkedAudioUrls` / `sortAudioEntriesByNewestFirst` helpers and
+    `readAudioEntryModifiedTimes`.
+  - [`src/lib/audioFilePath.ts`](../src/lib/audioFilePath.ts) —
+    `basenameFromAudioUrl`, `filenameFromAudioUrl`, and `trackTitleFromAudioUrl`
+    (shared with `seedMusic.ts`).
   - [`src/lib/trackFormHelpers.ts`](../src/lib/trackFormHelpers.ts) — track-form
     parsing and category sync.
   - [`src/lib/formatSlug.ts`](../src/lib/formatSlug.ts) — category slug
@@ -214,6 +264,7 @@ No new tables are introduced by this subsystem.
     [`src/components/admin/AdminListHeader.tsx`](../src/components/admin/AdminListHeader.tsx),
     [`src/components/admin/AdminBackLink.tsx`](../src/components/admin/AdminBackLink.tsx),
     [`src/components/admin/AdminTrackListItem.tsx`](../src/components/admin/AdminTrackListItem.tsx),
+    [`src/components/admin/AdminUnlinkedAudioListItem.tsx`](../src/components/admin/AdminUnlinkedAudioListItem.tsx),
     [`src/components/admin/AdminCategoryListItem.tsx`](../src/components/admin/AdminCategoryListItem.tsx),
     [`src/components/admin/CategoryForm.tsx`](../src/components/admin/CategoryForm.tsx),
     [`src/components/admin/CategoryBadge.tsx`](../src/components/admin/CategoryBadge.tsx),
@@ -224,6 +275,12 @@ No new tables are introduced by this subsystem.
     — create / edit / delete behavior, category delete guard, confirmation gate.
   - [`tests/integration/routes/composition_boundary_test.ts`](../tests/integration/routes/composition_boundary_test.ts)
     — enforces components-never-import-islands across the admin tree.
+  - [`tests/unit/lib/listMusicDir_test.ts`](../tests/unit/lib/listMusicDir_test.ts)
+    — unlinked filtering and newest-first ordering.
+  - [`tests/unit/lib/audio_file_path_test.ts`](../tests/unit/lib/audio_file_path_test.ts)
+    — filename and title derivation.
+  - [`tests/unit/components/admin_unlinked_audio_list_item_test.tsx`](../tests/unit/components/admin_unlinked_audio_list_item_test.tsx)
+    — the preselect link, its encoding, and the row's accessible label.
 
 ## Constraints and invariants
 
@@ -248,7 +305,27 @@ No new tables are introduced by this subsystem.
 - **Integration:** `admin_crud_test.ts` covers create / edit / delete behavior,
   category delete guard, confirmation gate, and re-render of the list after a
   successful mutation.
+- **Unit:** `tests/unit/lib/listMusicDir_test.ts` covers
+  `filterUnlinkedAudioUrls` (exact match, backslash / leading-slash / whitespace
+  variants, a stored remote URL, case sensitivity) and
+  `sortAudioEntriesByNewestFirst` (descending mtime, unknown times last, name
+  tie-break, no input mutation). `tests/unit/lib/audio_file_path_test.ts` covers
+  `basenameFromAudioUrl` and `trackTitleFromAudioUrl`.
+  `tests/unit/components/admin_unlinked_audio_list_item_test.tsx` renders the
+  row and asserts the `?audio=` link, its percent-encoding, and the
+  `sr-only sm:not-sr-only` label. The DB-backed `listUnlinkedAudioFiles` is not
+  unit-tested (tests avoid the `db` singleton, which opens `data/quiz.db` at
+  import); it is covered by the manual pass below.
 - **Manual:**
+  - Copy a few audio files into `data/music`, open `/admin/tracks`, and confirm
+    they appear under **Unlinked audio files** newest first with a matching
+    count. Click **Add track** on one: the new-track form opens with that file
+    selected and the title prefilled. Save, and confirm the file moves out of
+    the unlinked section into **All tracks**. With every file linked, the
+    section is absent.
+  - Request `/admin/tracks/new?audio=../../etc/passwd` and `?audio=` with a path
+    outside `data/music`: the form must render with nothing preselected and no
+    reflected value.
   - Sign in as admin, create a category, upload an audio file with the same
     filename twice — confirm the second upload lands as `-2`.
   - Edit a track, change `playStartSeconds` and `maxPlaySeconds`, use the
@@ -261,8 +338,14 @@ No new tables are introduced by this subsystem.
 ## Open questions and known risks
 
 - **Bulk upload.** There is no batch upload UI. Operators script around it with
-  `seedTracksFromMusicDir` today. If admins frequently upload dozens of files, a
-  real bulk-upload page with progress would help.
+  `seedTracksFromMusicDir` today. The unlinked-audio list makes a batch workable
+  one file at a time — creating a track redirects back to `/admin/tracks`, where
+  the remaining files are still at the top — but a real bulk-upload page with
+  progress would still help.
+- **Missing files are not surfaced.** The unlinked list answers "which files
+  have no track"; the inverse (a `tracks` row whose file has been deleted) is
+  only surfaced per-track by the edit form's warning. See the audio-file orphan
+  item in `specs/90-roadmap.md`.
 - **Edit conflicts.** No optimistic concurrency control. Two admins editing the
   same track produce a last-writer-wins result. Acceptable for the current
   single-admin reality; consider an `updated_at` column

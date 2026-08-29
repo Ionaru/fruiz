@@ -1,5 +1,6 @@
 import { join } from "node:path";
 
+import { trackTitleFromAudioUrl } from "./audioFilePath.ts";
 import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
 
@@ -24,12 +25,6 @@ export interface SeedMusicOptions {
 
 function posixRel(...parts: string[]): string {
   return join(...parts).replaceAll("\\", "/");
-}
-
-function titleFromFilename(fileName: string): string {
-  const base = fileName.replace(/\.[^.]+$/, "");
-  const spaced = base.replaceAll(/[_-]+/g, " ").replaceAll(/\s+/g, " ").trim();
-  return spaced || fileName;
 }
 
 function extOf(name: string): string {
@@ -130,7 +125,7 @@ export async function seedTracksFromMusicDir(
     const [row] = await drizzle
       .insert(tracks)
       .values({
-        title: titleFromFilename(name),
+        title: trackTitleFromAudioUrl(name),
         audioUrl,
         difficulty,
       })
