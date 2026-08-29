@@ -12,8 +12,9 @@ export interface CategoryFilterButtonProps {
  * desktop sidebar — one control rendered once, because two copies would give
  * assistive technology two competing filter groups for the same state.
  *
- * The active state carries the `info` plateau tint as well as the heavier
- * weight, and reports `aria-pressed`, so it is not signalled by boldness alone.
+ * The active state is carried by the `info` plateau tint, a stronger count
+ * contrast and `aria-pressed`. Weight is deliberately not part of it: a bolder
+ * label is wider, so selecting a pill used to resize it.
  */
 export function CategoryFilterButton(
   props: Readonly<CategoryFilterButtonProps>,
@@ -28,16 +29,14 @@ export function CategoryFilterButton(
       aria-pressed={isActive ? "true" : "false"}
       aria-label={`${label}, ${collected} of ${total} collected`}
       onClick={props.onSelect}
-      class={`plateau flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13.5px] lg:w-full lg:justify-between lg:gap-2.5 lg:rounded-xl lg:px-3.5 ${
-        isActive ? "info font-semibold" : ""
+      class={`plateau nm-protrude-sm flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13.5px] lg:w-full lg:justify-between lg:gap-2.5 lg:rounded-xl lg:px-3.5 ${
+        isActive ? "info" : ""
       }`}
     >
       <span>{label}</span>
       <span
         aria-hidden="true"
-        class={`tabular-nums ${
-          isActive ? "font-normal opacity-75" : "opacity-55"
-        }`}
+        class={`tabular-nums ${isActive ? "opacity-75" : "opacity-55"}`}
       >
         <span class="lg:hidden">{collected}</span>
         <span class="hidden lg:inline">{collected} / {total}</span>

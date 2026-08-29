@@ -67,10 +67,12 @@ interactive audio surface.
 
 State and Web Audio graph:
 
-- Three play states: `Idle`, `Loading`, `Playing` (with a 500 ms loading-UI
-  delay before showing the spinner so brief network blips do not flash). A
-  paused player under `pauseInsteadOfStop` sits in `Idle` with its position
-  kept, so resuming is a `play()` that skips the seek.
+- Four play states: `Idle`, `Loading`, `Playing`, `Paused` (with a 500 ms
+  loading-UI delay before showing the spinner so brief network blips do not
+  flash). `Paused` is reachable only through the pause control, which only
+  `resumable` callers get; it keeps `currentTime` and the elapsed readout, so
+  resuming is a `play()` that skips the seek and the row can show the position
+  it is holding. `Idle` always means rewound.
 - **The graph is built on first play, not on mount.** `ensureGraph(el)` is
   called from `play()`; `MediaElementSource` may only be created once per
   element, so the identity check is load-bearing. This matters because the
@@ -108,46 +110,71 @@ Clip timing resolution:
 
 User-facing controls:
 
-- A play button (FaPlay) with the difficulty-colored glow.
-- A stop button (FaStop) shown during playback — or a pause button (FaPause,
-  `success` rather than `danger`) when the caller opts into
-  `pauseInsteadOfStop`.
+- A play button (FaPlay, `success`) with the difficulty-colored glow, shown
+  while idle or paused. Its accessible name says "Resume" rather than "Play"
+  when there is a position to return to.
+- A stop button (FaStop, `danger`) shown while playing **or** paused. It always
+  rewinds to the clip start and clears the readout, which is what makes it worth
+  offering next to pause.
+- A pause button (FaPause, `warning`) shown while playing, and only when the
+  caller opts into `resumable`. Amber rather than green: the row's playing glow
+  is already green, and a green control beside it reads as the play affordance.
 - A spinner (SpinningIcon) shown during the loading window.
 - The play button is disabled when the parent passes `disabled={true}`
   (replay-limit reached, answer locked, or audio unavailable).
-- Stable DOM ids (`listen-play-${audioId}`, `listen-stop-${audioId}`) let
-  `QuizController`'s space-bar shortcut click the right control.
+- Stable DOM ids (`listen-play-${audioId}`, `listen-stop-${audioId}`,
+  `listen-pause-${audioId}`) let `QuizController`'s space-bar shortcut click the
+  right control. The shortcut deliberately targets stop and play only — the quiz
+  never renders a pause button, and space has to mean the same thing in every
+  round.
 
 Optional behaviors, all defaulted off so the quiz and admin call sites are
 unchanged:
 
-- **`pauseInsteadOfStop`** — stopping keeps the position instead of rewinding to
-  the clip start, and the control shows a pause glyph. The default matters: the
-  quiz needs stop-and-rewind so a replay costs a full listen rather than
-  resuming the tail. The icon follows the behavior, because a pause glyph over
-  stop-and-rewind would be lying about what the button does.
+- **`resumable`** — adds a pause control beside stop, and lets `play()` resume
+  from where pause left off instead of seeking back to the clip start. Stop is
+  unchanged by it and always rewinds, including from `Paused`. The default
+  matters: the quiz offers stop alone so a replay costs a full listen rather
+  than resuming the tail.
 - **`activePlayerId`** — names the player that currently owns playback. When it
   names a different one, this player stops, so a list of rows can never have two
-  clips audible at once. Being preempted **always rewinds**, even under
-  `pauseInsteadOfStop`: pausing is something the listener chooses, and starting
-  another track should not scatter half-played rows down the list.
+  clips audible at once. Being preempted **always rewinds**, from `Paused` as
+  well as from `Playing`: pausing is something the listener chooses, and
+  starting another track should not scatter half-played rows down the list.
 - **`row`** — renders the player as a single track row (one card holding a label
-  column and the control) instead of the default centred stack, taking `primary`
-  and `secondary` label slots plus a `label` string for the control's accessible
-  name. The player owns the card because all three of the row's playing-state
-  changes — the glow, the swap of `secondary` for the waveform, and the pause
-  glyph — depend on state that only this island holds. While playing,
-  `secondary` gives way to an inline visualizer and an elapsed-time readout
-  (`formatPlaybackTime`, fed by a `timeupdate` listener writing to a signal).
+  column, the playback meter and the controls) instead of the default centred
+  stack, taking `primary` and `secondary` label slots plus a `label` string for
+  the controls' accessible names. The player owns the card because every one of
+  the row's playing-state changes — the glow, the meter, the readout and which
+  controls are offered — depends on state that only this island holds.
+
+  Both label slots are permanent. The meter (an inline visualizer plus an
+  elapsed-time readout from `formatPlaybackTime`, fed by a `timeupdate` listener
+  writing to a signal) sits on the control line rather than replacing
+  `secondary`: that gives it the row's full height instead of a 14px sliver, and
+  it keeps the card exactly as tall idle as it is playing. The readout is hidden
+  below the `xs` breakpoint, where the row has to seat a title, the bars and two
+  controls. It is shown while paused as well as while playing — frozen, over
+  resting bars, with the glow off — because a position kept is worth nothing if
+  the row will not say what it is.
+
+  The card carries `nm-protrude-sm` rather than `.plateau`'s full relief. At the
+  full depth a card's shadow reaches ~11.7px, further than the list gap, so each
+  card's cast shadow is washed by the next card's highlight — and the cards with
+  no such neighbour (the last of a letter run, one before a locked slot, the
+  playing row, which `.glow` lifts into the positioned paint step) read markedly
+  heavier than the rest. The smaller relief reaches ~4.8px, inside the list's
+  10px gap, so no card's appearance depends on what follows it.
 
 ### Audio visualizer island
 
 [`src/islands/AudioVisualizer.tsx`](../src/islands/AudioVisualizer.tsx) is a
 small island with two layouts. The default, `"flanking"`, wraps two canvases on
 either side of the play button so the bars _mirror_ outward from the center
-child. `"inline"` draws a single short left-to-right strip (12 bands rather than
-24, because 24 in ~80px would render as slivers) and renders no children — the
-collection row places its control separately, beside the label column. Both
+child. `"inline"` draws a single short left-to-right strip (8 bands rather than
+24, because the collection row can only spare ~40px for it on a phone, and more
+bands than that would render as slivers) and renders no children — the
+collection row sits it beside its own controls rather than around them. Both
 share the same drawing code, resting line, collapse tween, midline centring and
 `--color-base-400` fill.
 

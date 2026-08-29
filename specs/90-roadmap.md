@@ -102,6 +102,21 @@ intentionally or remove it from the `State` interface. Tracked as a known nit.
 The legacy `/admin/login` route (spec 08) overlaps with `/account/login`. Fold
 one into the other and replace the legacy entry with a permanent redirect.
 
+### Neumorphic relief in tight card lists
+
+`.plateau` casts a shadow and a mirrored highlight that each reach ~11.7px
+outside the card. In a list whose gap is narrower than that, every card's shadow
+is washed by the next card's highlight, so the cards with no such neighbour —
+the last in the list, the one before a flat or dented sibling, and any card
+`.glow` lifts into the positioned paint step — read markedly heavier than the
+rest. The collection list fixed this locally by dropping its rows and filter
+pills to `nm-protrude-sm` and widening the gap to 10px (spec 07).
+
+[`src/components/quiz/InProgressQuizItem.tsx`](../src/components/quiz/InProgressQuizItem.tsx)
+still has it: `.plateau` cards in a `flex flex-col gap-3` list on the home page.
+Either apply the same treatment or decide the relief belongs in `.plateau`'s own
+definition, rather than leaving two card lists that do not match.
+
 ### Janitor for in-progress quiz keys
 
 `InProgressQuizSection` (spec 04) scans `localStorage` for `fruiz-quiz:*` keys
