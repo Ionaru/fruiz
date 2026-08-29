@@ -163,8 +163,10 @@ Game-level concepts only — implementation details live in the subsystem specs.
   the site header rendered on every page, holding the logo, the wordmark, and
   the session-aware home / collection / admin / account destinations. Which
   destinations a visitor sees depends on their session but never on the page
-  they are on, so the bar does not reshuffle while navigating. Home is the sole
-  exception: it is dropped on the home page, where it would link to itself.
+  they are on, so the bar does not reshuffle while navigating. The only
+  exceptions are the destinations that would link to the current page: home is
+  dropped on the home page, and a guest's "Sign in" call to action is dropped on
+  `/account`, which is where it points.
 - [`src/components/layout/SignInPromptStrip.tsx`](../src/components/layout/SignInPromptStrip.tsx)
   — what an account buys, shown to guests in place of the collection
   destination.

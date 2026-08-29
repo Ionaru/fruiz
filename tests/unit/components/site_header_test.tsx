@@ -101,12 +101,36 @@ Deno.test("the tagline is rendered only on the home page", () => {
   );
 });
 
-Deno.test("home is the only destination that varies between pages", () => {
+Deno.test("guests lose the sign-in destination on the page it points at", () => {
+  const onAccount = markup(null, "/account");
+  assertFalse(onAccount.includes("Sign in"));
+  assertFalse(
+    hasDestination(onAccount, "/account"),
+    "the sign-in pill must not link a guest to the page they are on",
+  );
+  for (
+    const path of ["/", "/collection", "/account/login", "/account/register"]
+  ) {
+    assertStringIncludes(
+      markup(null, path),
+      "Sign in",
+      `expected a sign-in destination on ${path}`,
+    );
+  }
+});
+
+Deno.test("signed-in visitors keep the account destination on the account page", () => {
+  assert(hasDestination(markup(player, "/account"), "/account"));
+  assert(hasDestination(markup(admin, "/account"), "/account"));
+});
+
+Deno.test("home and sign-in are the only destinations that vary between pages", () => {
+  // `/account` is excluded: it is where the guest sign-in destination drops
+  // out, covered by its own test above.
   const pages = [
     "/collection",
     "/suggest",
     "/admin",
-    "/account",
     "/account/login",
     "/account/register",
     "/quiz/nintendo/eABC",
