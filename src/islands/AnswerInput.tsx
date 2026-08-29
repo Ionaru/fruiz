@@ -137,7 +137,10 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
             autocomplete="off"
             role="combobox"
             aria-autocomplete="list"
-            aria-expanded={expanded}
+            // Explicit strings for the same reason as the option rows: an
+            // ARIA state is a string, and a boolean only survives here
+            // because it reaches the input through a spread.
+            aria-expanded={expanded ? "true" : "false"}
             aria-controls={listboxId}
             aria-activedescendant={activeDescendant}
             aria-describedby={props.ariaDescribedBy}
