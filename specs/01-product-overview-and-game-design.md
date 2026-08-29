@@ -170,7 +170,17 @@ Game-level concepts only — implementation details live in the subsystem specs.
   they are on, so the bar does not reshuffle while navigating. The only
   exceptions are the destinations that would link to the current page: home is
   dropped on the home page, and a guest's "Sign in" call to action is dropped on
-  `/account`, which is where it points.
+  `/account`, which is where it points. On the home page the wordmark is joined
+  by the tagline, and the wordmark has priority over it: whenever the two cannot
+  both be shown in full, the tagline is dropped rather than the pair of them
+  being ellipsised. The tagline is therefore shown whole or not at all. It
+  appears only from the `sm` breakpoint up, so on a phone the brand is the
+  wordmark alone whoever is looking; above that, a wider nav (a signed-in
+  visitor's, and wider still for an admin) is what pushes it out, so on the
+  narrow home column a guest keeps it where a signed-in visitor does not.
+  Whether or not it is shown, it keeps its place in the reading order for
+  assistive technology, the same way the wordmark stays in the accessible name
+  of the home link when it steps aside off the home page.
 - [`src/components/layout/SignInPromptStrip.tsx`](../src/components/layout/SignInPromptStrip.tsx)
   — what an account buys, shown to guests in place of the collection
   destination.
