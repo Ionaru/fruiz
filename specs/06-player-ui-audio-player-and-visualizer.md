@@ -68,7 +68,20 @@ interactive audio surface.
 State and Web Audio graph:
 
 - Three play states: `Idle`, `Loading`, `Playing` (with a 500 ms loading-UI
-  delay before showing the spinner so brief network blips do not flash).
+  delay before showing the spinner so brief network blips do not flash). A
+  paused player under `pauseInsteadOfStop` sits in `Idle` with its position
+  kept, so resuming is a `play()` that skips the seek.
+- **The graph is built on first play, not on mount.** `ensureGraph(el)` is
+  called from `play()`; `MediaElementSource` may only be created once per
+  element, so the identity check is load-bearing. This matters because the
+  collection page renders a player per categorized track — building a source, an
+  analyser and a gain node for each on mount would open hundreds of Web Audio
+  nodes to play at most one of them.
+- **Effects are component-scoped.** Every effect in the island uses
+  `useSignalEffect`, never the module-level `effect()`. The latter builds a
+  fresh, never-disposed effect on each render, and one of them owns the media
+  element's event listeners — on a long, frequently re-rendered list that leaks
+  a listener set per render.
 - A module-level `sharedAudioContext` is lazily constructed on first user
   gesture (`getSharedAudioContext()`) — mobile browsers block context creation
   before a gesture.
@@ -96,18 +109,47 @@ Clip timing resolution:
 User-facing controls:
 
 - A play button (FaPlay) with the difficulty-colored glow.
-- A stop button (FaStop) shown during playback.
+- A stop button (FaStop) shown during playback — or a pause button (FaPause,
+  `success` rather than `danger`) when the caller opts into
+  `pauseInsteadOfStop`.
 - A spinner (SpinningIcon) shown during the loading window.
 - The play button is disabled when the parent passes `disabled={true}`
   (replay-limit reached, answer locked, or audio unavailable).
 - Stable DOM ids (`listen-play-${audioId}`, `listen-stop-${audioId}`) let
   `QuizController`'s space-bar shortcut click the right control.
 
+Optional behaviors, all defaulted off so the quiz and admin call sites are
+unchanged:
+
+- **`pauseInsteadOfStop`** — stopping keeps the position instead of rewinding to
+  the clip start, and the control shows a pause glyph. The default matters: the
+  quiz needs stop-and-rewind so a replay costs a full listen rather than
+  resuming the tail. The icon follows the behavior, because a pause glyph over
+  stop-and-rewind would be lying about what the button does.
+- **`activePlayerId`** — names the player that currently owns playback. When it
+  names a different one, this player stops, so a list of rows can never have two
+  clips audible at once. Being preempted **always rewinds**, even under
+  `pauseInsteadOfStop`: pausing is something the listener chooses, and starting
+  another track should not scatter half-played rows down the list.
+- **`row`** — renders the player as a single track row (one card holding a label
+  column and the control) instead of the default centred stack, taking `primary`
+  and `secondary` label slots plus a `label` string for the control's accessible
+  name. The player owns the card because all three of the row's playing-state
+  changes — the glow, the swap of `secondary` for the waveform, and the pause
+  glyph — depend on state that only this island holds. While playing,
+  `secondary` gives way to an inline visualizer and an elapsed-time readout
+  (`formatPlaybackTime`, fed by a `timeupdate` listener writing to a signal).
+
 ### Audio visualizer island
 
 [`src/islands/AudioVisualizer.tsx`](../src/islands/AudioVisualizer.tsx) is a
-small island wrapping two canvases on either side of the play button so the bars
-_mirror_ outward from the center child.
+small island with two layouts. The default, `"flanking"`, wraps two canvases on
+either side of the play button so the bars _mirror_ outward from the center
+child. `"inline"` draws a single short left-to-right strip (12 bands rather than
+24, because 24 in ~80px would render as slivers) and renders no children — the
+collection row places its control separately, beside the label column. Both
+share the same drawing code, resting line, collapse tween, midline centring and
+`--color-base-400` fill.
 
 Pattern details worth knowing:
 

@@ -11,13 +11,20 @@ import {
 } from "../lib/audioSpectrum.ts";
 
 const BAR_COUNT = 24;
+/**
+ * The inline strip is a fraction of the flanking pair's width, so it gets
+ * proportionally fewer bands — 24 bars in ~80px would render as slivers with no
+ * readable gap between them.
+ */
+const INLINE_BAR_COUNT = 12;
 /** Bars never shrink below this fraction of canvas height, so a thin resting
  * line stays visible when idle (and bars never fully disappear while playing). */
 const RESTING_FRACTION = 0.08;
 /** Duration of the ease-back-to-resting animation when playback stops. */
 const COLLAPSE_MS = 300;
-/** All-zero magnitudes render as the resting line (floored to RESTING_FRACTION). */
-const RESTING_MAGNITUDES = new Float32Array(BAR_COUNT);
+
+/** How the bars are arranged around (or beside) the player's control. */
+export type VisualizerLayout = "flanking" | "inline";
 
 export interface AudioVisualizerProps {
   /** Live AnalyserNode tap from the audio graph; null disables drawing. */
@@ -26,6 +33,12 @@ export interface AudioVisualizerProps {
   active: boolean;
   /** When false, canvases are skipped entirely (e.g. compact admin lists). */
   enabled: boolean;
+  /**
+   * `"flanking"` (the default) mirrors two canvases around {@link children}.
+   * `"inline"` draws a single short strip and renders no children — the
+   * collection row places its play control separately, beside the label column.
+   */
+  layout?: VisualizerLayout;
   /** Center element flanked by the two bar canvases (usually the play/stop button). */
   children?: ComponentChildren;
 }
@@ -88,6 +101,10 @@ function drawBars(
 }
 
 export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
+  const isInline = props.layout === "inline";
+  const barCount = isInline ? INLINE_BAR_COUNT : BAR_COUNT;
+  /** All-zero magnitudes render as the resting line (floored to RESTING_FRACTION). */
+  const restingMagnitudes = new Float32Array(barCount);
   const leftCanvasRef = useSignalRef<HTMLCanvasElement | null>(null);
   const rightCanvasRef = useSignalRef<HTMLCanvasElement | null>(null);
 
@@ -106,41 +123,47 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
 
   useSignalEffect(() => {
     if (!props.enabled) return;
-    const left = leftCanvasRef.value;
+    // The inline layout draws the single right-hand canvas only; the flanking
+    // layout needs both before it can mirror them.
     const right = rightCanvasRef.value;
-    if (!left || !right) return;
-    const leftCtx = left.getContext("2d");
+    if (!right) return;
+    const left = isInline ? null : leftCanvasRef.value;
+    if (!isInline && !left) return;
     const rightCtx = right.getContext("2d");
-    if (!leftCtx || !rightCtx) return;
+    if (!rightCtx) return;
+    const leftCtx = left ? left.getContext("2d") : null;
+    if (left && !leftCtx) return;
 
-    const leftState: CanvasState = { canvas: left, ctx: leftCtx };
-    const rightState: CanvasState = { canvas: right, ctx: rightCtx };
-    resizeToDisplay(left);
-    resizeToDisplay(right);
+    const targets: { state: CanvasState; direction: "ltr" | "rtl" }[] = [
+      { state: { canvas: right, ctx: rightCtx }, direction: "ltr" },
+    ];
+    if (left && leftCtx) {
+      targets.push({ state: { canvas: left, ctx: leftCtx }, direction: "rtl" });
+    }
+    for (const target of targets) resizeToDisplay(target.state.canvas);
 
     // Muted neutral that reads on both themes. `||` (not `??`) so an unresolved
     // custom property — getPropertyValue returns "" — also falls back, instead
     // of assigning "" to fillStyle (a silent no-op that leaves bars black).
-    const fill = getComputedStyle(left).getPropertyValue("--color-base-400") ||
+    const fill = getComputedStyle(right).getPropertyValue("--color-base-400") ||
       "#9A9A9E";
 
     const drawPair = (magnitudes: ArrayLike<number>) => {
-      drawBars(rightState, magnitudes, fill, "ltr");
-      drawBars(leftState, magnitudes, fill, "rtl");
+      for (const target of targets) {
+        drawBars(target.state, magnitudes, fill, target.direction);
+      }
     };
-    const drawResting = () => drawPair(RESTING_MAGNITUDES);
+    const drawResting = () => drawPair(restingMagnitudes);
 
     let frameId: number | undefined;
     /** True while a rAF loop (live or collapse) owns the canvas; static states redraw on resize. */
     let isAnimating = false;
 
     const observer = new ResizeObserver(() => {
-      resizeToDisplay(left);
-      resizeToDisplay(right);
+      for (const target of targets) resizeToDisplay(target.state.canvas);
       if (!isAnimating) drawResting();
     });
-    observer.observe(left);
-    observer.observe(right);
+    for (const target of targets) observer.observe(target.state.canvas);
 
     const cleanup = () => {
       if (frameId !== undefined) globalThis.cancelAnimationFrame(frameId);
@@ -153,17 +176,17 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
     if (activeSig.value && analyser) {
       isAnimating = true;
       const frequencyData = new Uint8Array(analyser.frequencyBinCount);
-      const magnitudes = new Float32Array(BAR_COUNT);
+      const magnitudes = new Float32Array(barCount);
       // Precompute the log-spaced band edges and treble tilt once per effect so
       // the per-frame path only averages bins (see lib/audioSpectrum.ts for why
       // linear bins are remapped). Raw bins would pin the low bars and flatten
       // the high bars on every track.
       const bandEdges = computeLogBandEdges(
-        BAR_COUNT,
+        barCount,
         SPECTRUM_MIN_BIN,
         resolveMaxBin(frequencyData.length),
       );
-      const tiltWeights = computeTiltWeights(BAR_COUNT, SPECTRUM_TILT);
+      const tiltWeights = computeTiltWeights(barCount, SPECTRUM_TILT);
       // Expose the live buffer for the stop-collapse tween. The reference is
       // stable: renderFrame mutates it in place, and cleanup cancels the loop
       // before the idle branch reads it via peek(), so no per-frame copy is
@@ -221,6 +244,16 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
   });
 
   if (!props.enabled) return <>{props.children}</>;
+
+  if (isInline) {
+    return (
+      <canvas
+        ref={rightCanvasRef}
+        class="h-3.5 w-20 shrink-0"
+        aria-hidden="true"
+      />
+    );
+  }
 
   return (
     <>

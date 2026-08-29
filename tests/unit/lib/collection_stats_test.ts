@@ -12,7 +12,6 @@ import {
 } from "../../../src/db/schema.ts";
 import {
   getCollectedCountsBySlug,
-  getCollectionStatsByCategory,
   getCollectionStatsForAllCategories,
 } from "../../../src/lib/collections.ts";
 import type { DB } from "../../../src/db/db.ts";
@@ -138,11 +137,6 @@ Deno.test("getCollectionStatsForAllCategories: keeps categories the player has n
     nintendo: { collected: 1, total: 3 },
     arcade: { collected: 0, total: 2 },
   });
-});
-
-Deno.test("getCollectionStatsByCategory: still drops categories with nothing collected", async () => {
-  const stats = bySlug(await getCollectionStatsByCategory(seedDb(), PLAYER));
-  assertEquals(stats, { nintendo: { collected: 1, total: 3 } });
 });
 
 Deno.test("getCollectedCountsBySlug: every category is keyed, zeros included", async () => {
