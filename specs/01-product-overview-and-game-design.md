@@ -96,7 +96,11 @@ I start, and what does each difficulty actually mean.
 
 - **Sections.** `Resume` (only when the browser holds saved progress) and
   `Start new quiz`, each introduced by a quiet small-caps heading. The cards
-  carry the weight; the headings only say which group you are looking at.
+  carry the weight; the headings only say which group you are looking at. Both
+  sections separate their heading from their content with the section's own
+  `gap`, and the heading carries no margin utility of its own. `space-y-*` is
+  emitted as a zero-specificity `:where()` rule, so a margin class on a child
+  silently cancels it; `gap` cannot be overridden that way.
 - **Category card.** The category name with its whole pool beside it
   (`52 tracks`). Signed-in players also get a collection progress bar and a
   collected count for that category; signed-out visitors get neither, having no
