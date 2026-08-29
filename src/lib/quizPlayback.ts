@@ -106,3 +106,16 @@ export function parseTrackPlaybackFormFields(
 
   return { ok: true, playStartSeconds, maxPlaySeconds };
 }
+
+/**
+ * Elapsed playback position as `m:ss`, for the readout beside the collection
+ * row's waveform. Negative and non-finite inputs read as `0:00` rather than
+ * rendering `NaN`, since the position is sampled from a live media element.
+ */
+export function formatPlaybackTime(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}

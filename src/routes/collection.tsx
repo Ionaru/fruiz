@@ -5,25 +5,13 @@ import { PageShell } from "../components/layout/PageShell.tsx";
 import { SiteHeader } from "../components/layout/SiteHeader.tsx";
 import { PlateauCard } from "../components/ui/PlateauCard.tsx";
 import CollectionView from "../islands/CollectionView.tsx";
+import type { CategoryFilterOption } from "../components/collection/CategoryFilterList.tsx";
+import { toCollectionEntries } from "../lib/collectionEntries.ts";
 import {
   getCategorizedTrackCount,
-  getCollectionStatsByCategory,
+  getCollectionCatalog,
+  getCollectionStatsForAllCategories,
 } from "../lib/collections.ts";
-
-export interface CollectionTrack {
-  id: string;
-  title: string;
-  audioUrl: string;
-  playbackGainDb: number | null;
-  categories: string[];
-  playbackGainSourceSize: number | null;
-  playbackGainSourceMtimeMs: number | null;
-}
-
-export interface CategoryCount {
-  collected: number;
-  total: number;
-}
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -32,58 +20,30 @@ export const handler = define.handlers({
       return ctx.redirect("/account");
     }
 
-    const [rows, stats, totalTracks] = await Promise.all([
-      db.query.collectedTracks.findMany({
-        where: { userId: user.id },
-        with: {
-          track: {
-            columns: {
-              id: true,
-              title: true,
-              audioUrl: true,
-              playbackGainDb: true,
-              playbackGainSourceSize: true,
-              playbackGainSourceMtimeMs: true,
-            },
-            with: { categories: { columns: { name: true } } },
-          },
-        },
-      }),
-      getCollectionStatsByCategory(db, user.id),
+    const [catalog, stats, totalTracks] = await Promise.all([
+      getCollectionCatalog(db, user.id),
+      getCollectionStatsForAllCategories(db, user.id),
       getCategorizedTrackCount(db),
     ]);
 
-    const collectionTracks: CollectionTrack[] = [];
-    for (const row of rows) {
-      if (!row.track) continue;
-      collectionTracks.push({
-        id: row.track.id,
-        title: row.track.title,
-        audioUrl: row.track.audioUrl,
-        playbackGainDb: row.track.playbackGainDb,
-        categories: row.track.categories.map((cat) => cat.name),
-        playbackGainSourceSize: row.track.playbackGainSourceSize,
-        playbackGainSourceMtimeMs: row.track.playbackGainSourceMtimeMs,
-      });
-    }
-    collectionTracks.sort((left, right) =>
-      left.title.localeCompare(right.title)
-    );
+    // Titles of uncollected tracks are read here only to order the list and
+    // pick a divider letter; the projection drops them before serialization.
+    const entries = toCollectionEntries(catalog);
 
-    const categoryCounts: Record<string, CategoryCount> = {};
-    for (const stat of stats) {
-      categoryCounts[stat.categoryName] = {
+    const categories: CategoryFilterOption[] = stats
+      .map((stat) => ({
+        name: stat.categoryName,
         collected: stat.collected,
         total: stat.total,
-      };
-    }
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
 
     const allTotals = {
-      collected: collectionTracks.length,
+      collected: catalog.filter((track) => track.collected).length,
       total: totalTracks,
     };
 
-    return { data: { tracks: collectionTracks, categoryCounts, allTotals } };
+    return { data: { entries, categories, allTotals } };
   },
 });
 
@@ -92,24 +52,21 @@ export default define.page<typeof handler>(({ data, state, url }) => (
     <Head>
       <title>Collection — fruiz</title>
     </Head>
-    <div class="max-w-xl mx-auto flex flex-col gap-6">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-[18px] lg:max-w-[832px] lg:gap-6">
       <SiteHeader user={state.session.user} currentPath={url.pathname} />
-      <h1 class="text-3xl font-semibold text-base-900 dark:text-base-100">
-        Collection
-      </h1>
-      {data.tracks.length === 0
+      {data.entries.length === 0
         ? (
           <PlateauCard class="text-base-800 dark:text-base-100">
             <p class="text-center">
-              No tracks collected yet. Play some quizzes and guess correctly to
-              build your collection!
+              There are no tracks to collect yet. Once an admin adds some, every
+              one you guess correctly shows up here.
             </p>
           </PlateauCard>
         )
         : (
           <CollectionView
-            tracks={data.tracks}
-            categoryCounts={data.categoryCounts}
+            entries={data.entries}
+            categories={data.categories}
             allTotals={data.allTotals}
           />
         )}

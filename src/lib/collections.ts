@@ -46,7 +46,10 @@ export interface CategoryCollectionStatsRow {
 /**
  * Collection totals for every category that has tracks, including the ones this
  * player has not collected from yet (`collected: 0`). The menu needs those rows
- * so a category can show an empty progress bar rather than none at all.
+ * so a category can show an empty progress bar rather than none at all, and the
+ * collection page offers them all as filters: now that uncollected tracks show
+ * as locked slots, a `0 / 52` category is the most informative filter there is
+ * rather than dead weight.
  */
 export async function getCollectionStatsForAllCategories(
   db: DB,
@@ -78,18 +81,6 @@ export async function getCollectionStatsForAllCategories(
   }));
 }
 
-/**
- * Categories this player actually holds tracks in — what the collection page
- * offers as filters, where an always-empty filter would be dead weight.
- */
-export async function getCollectionStatsByCategory(
-  db: DB,
-  userId: string,
-): Promise<CategoryCollectionStatsRow[]> {
-  const rows = await getCollectionStatsForAllCategories(db, userId);
-  return rows.filter((row) => row.collected > 0);
-}
-
 /** Collected-track counts keyed by category slug, for the menu's progress bars. */
 export async function getCollectedCountsBySlug(
   db: DB,
@@ -110,4 +101,71 @@ export async function getCategorizedTrackCount(db: DB): Promise<number> {
     })
     .from(trackCategories);
   return Number(rows[0]?.total ?? 0);
+}
+
+export interface CollectionCatalogEntry {
+  trackId: string;
+  title: string;
+  collected: boolean;
+  categories: string[];
+  playbackGainDb: number | null;
+  playbackGainSourceSize: number | null;
+  playbackGainSourceMtimeMs: number | null;
+}
+
+/**
+ * Every categorized track, ordered by title, flagged with whether this player
+ * has collected it.
+ *
+ * The collection page needs the uncollected ones so it can show them as locked
+ * slots in the alphabetical position their titles would occupy. Those titles
+ * are read here but must not be serialized to the browser — the route projects
+ * them away and keeps only the divider letter.
+ *
+ * Two reads rather than one join: `count(distinct …)` is not needed for a
+ * per-track flag, and a membership lookup avoids the join fan-out that a track
+ * in several categories would otherwise produce. Ordering is done in TypeScript
+ * so it stays `localeCompare`, matching what the page has always shown, rather
+ * than SQLite's binary collation.
+ */
+export async function getCollectionCatalog(
+  db: DB,
+  userId: string,
+): Promise<CollectionCatalogEntry[]> {
+  const [allTracks, collectedRows] = await Promise.all([
+    db.query.tracks.findMany({
+      columns: {
+        id: true,
+        title: true,
+        playbackGainDb: true,
+        playbackGainSourceSize: true,
+        playbackGainSourceMtimeMs: true,
+      },
+      with: { categories: { columns: { name: true } } },
+    }),
+    db.query.collectedTracks.findMany({
+      where: { userId },
+      columns: { trackId: true },
+    }),
+  ]);
+
+  const collectedTrackIds = new Set(collectedRows.map((row) => row.trackId));
+
+  const catalog: CollectionCatalogEntry[] = [];
+  for (const track of allTracks) {
+    // Uncategorized tracks are excluded from `getCategorizedTrackCount`, so
+    // leaving them out here too keeps the list and the totals agreeing.
+    if (track.categories.length === 0) continue;
+    catalog.push({
+      trackId: track.id,
+      title: track.title,
+      collected: collectedTrackIds.has(track.id),
+      categories: track.categories.map((category) => category.name),
+      playbackGainDb: track.playbackGainDb,
+      playbackGainSourceSize: track.playbackGainSourceSize,
+      playbackGainSourceMtimeMs: track.playbackGainSourceMtimeMs,
+    });
+  }
+  catalog.sort((left, right) => left.title.localeCompare(right.title));
+  return catalog;
 }
