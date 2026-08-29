@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  DENO_VERSION: 2.8.1
+  DENO_VERSION: 2.9.6
 
 jobs:
   audit:
