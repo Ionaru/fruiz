@@ -76,6 +76,24 @@ The [`CollectionView`](../src/islands/CollectionView.tsx) island lets the user
 filter tracks by category, search within the collection, and play clips on
 demand. Playback uses the same `AudioPlayer` island as the quiz page (spec 06).
 
+### Collection progress on the main menu
+
+The home page shows how far along each category's collection is, so a player can
+see where there is still something to win before picking a quiz.
+
+- The handler calls `getCollectedCountsBySlug(db, userId)` only when a user is
+  signed in, and passes `null` otherwise. A guest's category cards render no bar
+  and no collected count — there is no collection to measure.
+- Unlike the collection page, the menu needs the categories a player has **not**
+  started, so it reads `getCollectionStatsForAllCategories` (every category with
+  tracks, `collected: 0` included) rather than the filtered
+  `getCollectionStatsByCategory`. A category missing from the map is treated as
+  zero rather than as "unknown", so a newly seeded category shows an empty bar
+  instead of silently dropping its progress row.
+- The denominator is the category's whole pool
+  (`AvailableQuizOption.totalTrackCount`), which is also what hard mode plays —
+  not the easy subset.
+
 ### Mid-quiz progress popup
 
 When the collection POST returns `201 Created`, `QuizController` updates
@@ -117,7 +135,8 @@ Application types:
   `CategoryCollectionProgress`, `formatCategoryProgressLine`.
 - [`src/lib/collections.ts`](../src/lib/collections.ts) —
   `getCategoryCollectionStats`, `CategoryCollectionStatsRow`,
-  `getCollectionStatsByCategory`, `getCategorizedTrackCount`.
+  `getCollectionStatsForAllCategories`, `getCollectionStatsByCategory`,
+  `getCollectedCountsBySlug`, `getCategorizedTrackCount`.
 - [`src/routes/collection.tsx`](../src/routes/collection.tsx) —
   `CollectionTrack`, `CategoryCount`.
 
@@ -130,6 +149,8 @@ Application types:
   - [`src/routes/api/collection/[id].ts`](../src/routes/api/collection/[id].ts)
     — POST endpoint.
   - [`src/routes/collection.tsx`](../src/routes/collection.tsx) — listing page.
+  - [`src/routes/index.tsx`](../src/routes/index.tsx) — main menu; reads the
+    per-category collected counts for signed-in players.
 - **Islands (client)**
   - [`src/islands/CollectionView.tsx`](../src/islands/CollectionView.tsx).
   - [`src/islands/GuessResultModal.tsx`](../src/islands/GuessResultModal.tsx) —
@@ -139,9 +160,15 @@ Application types:
 - **Components (SSR)**
   - [`src/components/collection/CategoryFilterButton.tsx`](../src/components/collection/CategoryFilterButton.tsx),
     [`src/components/collection/CollectionTrackItem.tsx`](../src/components/collection/CollectionTrackItem.tsx).
+  - [`src/components/quiz/QuizCategoryCard.tsx`](../src/components/quiz/QuizCategoryCard.tsx)
+    — renders the menu's per-category progress.
 - **Tests**
   - [`tests/unit/lib/collections_test.ts`](../tests/unit/lib/collections_test.ts)
     — rollup behavior, filtering, totals.
+  - [`tests/unit/lib/collection_stats_test.ts`](../tests/unit/lib/collection_stats_test.ts)
+    — the filtered/unfiltered split and per-player isolation of the counts.
+  - [`tests/unit/components/quiz_category_card_test.tsx`](../tests/unit/components/quiz_category_card_test.tsx)
+    — progress shown for players, absent for guests.
 
 ## Constraints and invariants
 

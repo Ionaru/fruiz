@@ -7,3 +7,11 @@ export function formatSlugFromName(name: string): string {
     .replace(/^-+|-+$/g, "");
   return s.length > 0 ? s : "category";
 }
+
+/**
+ * Readable label for a slug when no stored display name is available — a quiz
+ * saved in the browser can outlive the category it was started from.
+ */
+export function nameFromSlug(slug: string): string {
+  return slug.replace(/-+/g, " ").trim();
+}

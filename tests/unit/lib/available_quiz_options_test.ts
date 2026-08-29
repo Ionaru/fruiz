@@ -76,6 +76,7 @@ Deno.test("getAvailableQuizOptions: reports per-difficulty track counts", async 
     { mode: "easy", trackCount: 25 },
     { mode: "hard", trackCount: 35 },
   ]);
+  assertEquals(options[0].totalTrackCount, 35);
 });
 
 Deno.test("getAvailableQuizOptions: omits a difficulty below MIN_TRACKS", async () => {
@@ -86,4 +87,6 @@ Deno.test("getAvailableQuizOptions: omits a difficulty below MIN_TRACKS", async 
   assertEquals(options.length, 1);
   assertExists(options[0]);
   assertEquals(options[0].difficulties, [{ mode: "hard", trackCount: 25 }]);
+  // The menu still prints a category total even where easy is not on offer.
+  assertEquals(options[0].totalTrackCount, 25);
 });

@@ -97,6 +97,21 @@ On first `useSignalEffect` run, the island reads
 Subsequent renders write the current progress back to `localStorage` on every
 state change.
 
+### Resume cards on the menu
+
+Each resumable quiz is one card in the home page's `Resume` section:
+
+- The category's **display name**, not its slug. `localStorage` only holds the
+  slug, so the island resolves it against the categories the server sent and
+  falls back to `nameFromSlug` when a saved quiz outlives its category.
+- Difficulty and answered count on one line (`Hard · 7 of 20`), over a progress
+  bar tinted by difficulty — green for easy, red for hard.
+- **Resume** is the labelled primary action. Copy-link and delete sit beside it
+  as icon-only buttons, each carrying a visually-hidden text label rather than
+  an `aria-label` (spec 01's accessibility rule). Delete removes the
+  `localStorage` key without a confirmation step; the principle IV confirmation
+  requirement covers admin mutations, not browser-local progress.
+
 ### Ending the quiz
 
 The quiz ends when every row has a terminal status (`correct`, `incorrect`, or
@@ -183,6 +198,8 @@ In-progress quiz discovery on the home page uses `InProgressQuizEntry` (also in
     gate).
   - [`src/lib/challengeShare.ts`](../src/lib/challengeShare.ts) —
     `buildChallengeShareText` (the copy-ready challenge message).
+  - [`src/lib/formatSlug.ts`](../src/lib/formatSlug.ts) — `nameFromSlug`, the
+    fallback label for a saved quiz whose category is no longer offered.
 - **Islands (client)**
   - [`src/islands/QuizController.tsx`](../src/islands/QuizController.tsx) —
     settings gate, replay gate, skip/next/end actions, popup result flow,
@@ -195,12 +212,19 @@ In-progress quiz discovery on the home page uses `InProgressQuizEntry` (also in
   - [`src/components/quiz/SettingsGate.tsx`](../src/components/quiz/SettingsGate.tsx)
     — the gate UI (no client behavior of its own).
   - [`src/components/quiz/InProgressQuizItem.tsx`](../src/components/quiz/InProgressQuizItem.tsx)
-    — individual resume row.
+    — individual resume card.
+  - [`src/components/ui/ProgressBar.tsx`](../src/components/ui/ProgressBar.tsx)
+    — the answered-question bar on that card (shared with the menu's collection
+    progress).
 - **Tests**
   - [`tests/unit/lib/quiz_playback_test.ts`](../tests/unit/lib/quiz_playback_test.ts)
     — progress helpers (skip-advance, resume, default progress).
   - [`tests/unit/lib/challenge_share_test.ts`](../tests/unit/lib/challenge_share_test.ts)
     — challenge share message composition.
+  - [`tests/unit/components/in_progress_quiz_item_test.tsx`](../tests/unit/components/in_progress_quiz_item_test.tsx)
+    — resume card copy, difficulty tint, and icon-button labelling.
+  - [`tests/unit/lib/format_slug_test.ts`](../tests/unit/lib/format_slug_test.ts)
+    — `nameFromSlug` fallback labelling.
   - [`tests/integration/routes/share_resume_test.ts`](../tests/integration/routes/share_resume_test.ts)
     — bare URL → settings gate behavior.
 
