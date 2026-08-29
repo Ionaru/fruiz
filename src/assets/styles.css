@@ -131,16 +131,16 @@ html.preload *::after {
       box-shadow:
         0 0 var(--glow-inner-blur) var(--glow-inner-spread)
         color-mix(
-          in oklab,
-          var(--glow-color) var(--glow-inner-alpha),
-          transparent
-        ),
+        in oklab,
+        var(--glow-color) var(--glow-inner-alpha),
+        transparent
+      ),
         0 0 var(--glow-outer-blur) var(--glow-outer-spread)
         color-mix(
-          in oklab,
-          var(--glow-color) var(--glow-outer-alpha),
-          transparent
-        );
+        in oklab,
+        var(--glow-color) var(--glow-outer-alpha),
+        transparent
+      );
     }
   }
 
