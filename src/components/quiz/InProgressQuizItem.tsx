@@ -24,7 +24,12 @@ export function InProgressQuizItem(props: Readonly<InProgressQuizItemProps>) {
   return (
     <li class="plateau rounded-2xl px-4 py-3.5">
       <div class="flex items-baseline justify-between gap-2.5">
-        <p class="min-w-0 truncate font-medium capitalize">{categoryName}</p>
+        <div class="min-w-0 truncate font-medium flex gap-2 items-baseline">
+          {categoryName}
+          <span class="text-xs tabular-nums opacity-50">
+            {entry.slug}
+          </span>
+        </div>
         <span class="shrink-0 text-xs tabular-nums opacity-50">
           <span class="capitalize">{entry.difficulty}</span>
           {` · ${entry.answered} of ${entry.total}`}
