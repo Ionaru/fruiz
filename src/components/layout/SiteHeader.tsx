@@ -29,13 +29,16 @@ const labelClass: Record<LabelVisibility, string | undefined> = {
 
 /**
  * The destinations stay the same on every page so the bar does not reshuffle as
- * you navigate. Home is the one exception: it is dropped on the home page,
- * where it would only link to itself. What each visitor sees still depends on
- * their session, but never on which page they are looking at.
+ * you navigate. The exceptions are the two that would link to the page you are
+ * already on: home is dropped on the home page, and the guest sign-in call to
+ * action is dropped on the account page it points at. What each visitor sees
+ * otherwise depends on their session, but never on which page they are looking
+ * at.
  */
 export function SiteHeader(props: Readonly<SiteHeaderProps>) {
   const { user, currentPath } = props;
   const isHomePage = currentPath === "/";
+  const isAccountPage = currentPath === "/account";
   const logo = (
     <img
       src="/logo.svg"
@@ -108,27 +111,26 @@ export function SiteHeader(props: Readonly<SiteHeaderProps>) {
             <span class={labelClass.never}>Admin</span>
           </PillLink>
         )}
-        {user !== null
-          ? (
-            <PillLink
-              href="/account"
-              icon={FaUser}
-              shape={labelShape.never}
-              title="Account"
-            >
-              <span class={labelClass.never}>Account</span>
-            </PillLink>
-          )
-          : (
-            <PillLink
-              href="/account"
-              icon={FaUser}
-              shape={labelShape.always}
-              class="h-11"
-            >
-              Sign in
-            </PillLink>
-          )}
+        {user !== null && (
+          <PillLink
+            href="/account"
+            icon={FaUser}
+            shape={labelShape.never}
+            title="Account"
+          >
+            <span class={labelClass.never}>Account</span>
+          </PillLink>
+        )}
+        {user === null && !isAccountPage && (
+          <PillLink
+            href="/account"
+            icon={FaUser}
+            shape={labelShape.always}
+            class="h-11"
+          >
+            Sign in
+          </PillLink>
+        )}
       </nav>
     </header>
   );
