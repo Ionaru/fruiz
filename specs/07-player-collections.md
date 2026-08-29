@@ -135,9 +135,13 @@ no uncollected title survives it.
   ~4.8px the smaller relief reaches. At `.plateau`'s full depth the reach is
   ~11.7px, and every card's shadow was being washed by the next card's highlight
   — so the cards with nothing after them stood out.
-- **Locked slots are flat, not recessed.** A page that is mostly gaps read as
-  busy with a dent per gap. Only the lock badge keeps its recess, so the row
-  still reads as a slot rather than as empty space.
+- **Locked slots have no surface at all.** A page that is mostly gaps read as
+  busy with a tile per gap, so the slot sits straight on the page background the
+  way the progress block does, keeping only a collected row's padding so the
+  text and the badge stay in the same columns. Its lock badge is the row's one
+  piece of relief — a dent pressed into the page rather than a disc laid on it —
+  so the slot reads as a place with something missing rather than as a hole in
+  the list.
 - **The pill row's shadows are not clipped.** `overflow-x: auto` clips both
   axes, so `CategoryFilterList` insets matched padding on all four sides and
   cancels it with an equal negative margin.

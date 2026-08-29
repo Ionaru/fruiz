@@ -49,16 +49,35 @@ Deno.test("CollectionLockedItem: the repeated hint is not announced 126 times", 
   assert(hiddenIndex !== -1, "the hint line should be aria-hidden");
 });
 
-Deno.test("CollectionLockedItem: the card is flat, and only the badge is recessed", () => {
+Deno.test("CollectionLockedItem: the slot has no surface of its own", () => {
   const html = render(<CollectionLockedItem />);
-  const cardClasses = html.match(/<div class="([^"]*)"/)?.[1] ?? "";
-  assertStringIncludes(cardClasses, "shadow-none");
+  const slotClasses = html.match(/<div class="([^"]*)"/)?.[1] ?? "";
   assert(
-    !cardClasses.includes("nm-dent-sm"),
-    "the card itself should carry no recess",
+    !slotClasses.includes("plateau"),
+    "a locked slot should sit on the page, not on a card of its own",
   );
-  // The lock badge keeps the row's one piece of relief.
-  assertStringIncludes(html, "nm-dent-sm");
+  assert(
+    !slotClasses.includes("nm-"),
+    "a locked slot should carry no relief of its own",
+  );
+});
+
+Deno.test("CollectionLockedItem: the badge is a dent in the page, with no fill", () => {
+  const html = render(<CollectionLockedItem />);
+  const badgeClasses = html.match(/<span class="([^"]*)"/)?.[1] ?? "";
+  assertStringIncludes(badgeClasses, "nm-dent-sm");
+  assert(
+    !badgeClasses.includes("plateau"),
+    "the badge should have no surface to lift it off the background",
+  );
+});
+
+Deno.test("CollectionLockedItem: keeps a collected row's padding so the columns line up", () => {
+  const slotClasses =
+    render(<CollectionLockedItem />).match(/<div class="([^"]*)"/)?.[1] ?? "";
+  for (const shared of ["gap-3", "py-2.5", "pl-4", "pr-3"]) {
+    assertStringIncludes(slotClasses, shared);
+  }
 });
 
 Deno.test("CollectionLetterDivider: is a heading the section can be labelled by", () => {
