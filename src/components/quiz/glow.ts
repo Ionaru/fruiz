@@ -5,13 +5,16 @@ const difficultyColor: Record<DifficultyMode, string> = {
   hard: "glow-red",
 };
 
+// The category-select buttons carry the colour on the Easy / Hard label itself,
+// so the halo only has to hint at difficulty rather than announce it. A strong
+// glow behind two full-width buttons sitting side by side bled into one another.
 export const difficultyGlowClass: Record<DifficultyMode, string> = {
-  easy: `glow glow-strong ${difficultyColor.easy}`,
-  hard: `glow glow-strong ${difficultyColor.hard}`,
+  easy: `glow glow-soft ${difficultyColor.easy}`,
+  hard: `glow glow-soft ${difficultyColor.hard}`,
 };
 
-// Hard mode gets the animated rainbow halo on the player header (soft glow),
-// while the category-select buttons (strong glow) keep the red accent.
+// Hard mode gets the animated rainbow halo on the player header, while the
+// category-select buttons above keep the red accent.
 const RAINBOW_GLOW = "glow-rainbow glow-rainbow-animate";
 
 export const difficultyGlowSoftClass: Record<DifficultyMode, string> = {

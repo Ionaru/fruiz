@@ -31,6 +31,12 @@ export interface DifficultyOption {
 
 export interface AvailableQuizOption {
   category: CategoryRow;
+  /**
+   * The category's whole pool, which is also what hard mode plays. Reported
+   * separately from `difficulties` so the menu can print a category total even
+   * for a difficulty that is not currently offered.
+   */
+  totalTrackCount: number;
   difficulties: DifficultyOption[];
 }
 
@@ -94,7 +100,7 @@ export async function getAvailableQuizOptions(
       }
     }
     if (difficulties.length > 0) {
-      out.push({ category, difficulties });
+      out.push({ category, totalTrackCount: total, difficulties });
     }
   }
   out.sort((left, right) =>

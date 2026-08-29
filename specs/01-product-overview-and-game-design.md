@@ -88,6 +88,35 @@ change the track list.
   whitespace. The same rule is used for both submit eligibility and scoring (see
   spec 05).
 
+### Main menu
+
+The home page is the only screen a player has to understand before they can
+play, so it answers three questions in order: what can I carry on with, what can
+I start, and what does each difficulty actually mean.
+
+- **Sections.** `Resume` (only when the browser holds saved progress) and
+  `Start new quiz`, each introduced by a quiet small-caps heading. The cards
+  carry the weight; the headings only say which group you are looking at.
+- **Category card.** The category name with its whole pool beside it
+  (`52 tracks`). Signed-in players also get a collection progress bar and a
+  collected count for that category; signed-out visitors get neither, having no
+  collection to measure against.
+- **Difficulty.** Two equal-width buttons filling the card. The word `Easy` /
+  `Hard` carries the colour, backed by a softened halo — a strong glow behind
+  two adjacent full-width buttons bleeds from one into the other. Easy states
+  the size of its own pool (`32 well-known tracks`) because that is the number
+  that differs; hard reads `All tracks` rather than repeating the total already
+  printed at the top of the card. The narrower autocomplete pool easy also
+  applies (spec 02) is deliberately not spelled out here — it is a detail that
+  matters while playing, not while choosing.
+- **Signed-out visitors** see a strip under the header explaining what an
+  account buys ("keep every track you guess right in a collection"). The sign-in
+  action itself stays in the header, so the strip only has to persuade.
+- **Layout.** One column on phones, with `Resume` above `Start new quiz`. From
+  the `lg` breakpoint the menu widens and splits: categories two-up on the left,
+  resume in a fixed side column. Source order follows the phone, since that is
+  the design baseline.
+
 ### Mobile design baseline
 
 - Single-column layouts under phone widths.
@@ -138,9 +167,19 @@ Game-level concepts only — implementation details live in the subsystem specs.
   exceptions are the destinations that would link to the current page: home is
   dropped on the home page, and a guest's "Sign in" call to action is dropped on
   `/account`, which is where it points.
+- [`src/components/layout/SignInPromptStrip.tsx`](../src/components/layout/SignInPromptStrip.tsx)
+  — what an account buys, shown to guests in place of the collection
+  destination.
 - [`src/components/quiz/QuizCategoryCard.tsx`](../src/components/quiz/QuizCategoryCard.tsx),
   [`src/components/quiz/StartNewQuizSection.tsx`](../src/components/quiz/StartNewQuizSection.tsx)
   — category-and-difficulty picker.
+- [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts) — the
+  difficulty halos: softened on the menu's paired buttons, strong on quiz
+  results, rainbow for hard on the player header.
+- [`src/components/ui/SectionHeading.tsx`](../src/components/ui/SectionHeading.tsx),
+  [`src/components/ui/ProgressBar.tsx`](../src/components/ui/ProgressBar.tsx) —
+  the menu's small-caps section labels and its hairline progress indicator,
+  which also reports answered-question progress on a resumable quiz.
 - [`deno.json`](../deno.json) — stack and task definitions (`deno task dev`,
   `build`, `start`, `check`, `test`, `db:sync`, `playback-gain:backfill`,
   `update`).
