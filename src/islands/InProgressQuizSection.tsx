@@ -135,9 +135,11 @@ export default function InProgressQuizSection(
   if (entries.value.length === 0) return null;
 
   return (
-    <section class={["space-y-3", props.class].filter(Boolean).join(" ")}>
+    <section
+      class={["flex flex-col gap-3", props.class].filter(Boolean).join(" ")}
+    >
       <SectionHeading>Resume</SectionHeading>
-      <ul class="space-y-3">
+      <ul class="flex flex-col gap-3">
         {entries.value.map((entry) => (
           <InProgressQuizItem
             key={entry.storageKey}
