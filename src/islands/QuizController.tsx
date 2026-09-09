@@ -22,6 +22,7 @@ import type {
   QuizProgressTrack,
   QuizTrackPayload,
 } from "../lib/types.ts";
+import { planVisibleBandScroll, readVisibleBand } from "../lib/visibleBand.ts";
 import AnswerInput from "./AnswerInput.tsx";
 import { AudioPlayer } from "./AudioPlayer.tsx";
 import { ChallengeShareModal } from "./ChallengeShareModal.tsx";
@@ -29,6 +30,9 @@ import { GuessResultModal } from "./GuessResultModal.tsx";
 import QuizTrackNav from "./QuizTrackNav.tsx";
 import { QuizResults } from "../components/quiz/QuizResults.tsx";
 import { SettingsGate } from "../components/quiz/SettingsGate.tsx";
+
+/** Breathing room kept between the action row and the edge of the visible band. */
+const ACTION_ROW_CLEARANCE = 8;
 
 interface CategoryProgress {
   categoryName: string;
@@ -66,6 +70,8 @@ export default function QuizController(props: Readonly<Props>) {
   const shareOpen = useSignal(false);
   const didHydrateStorage = useSignal(false);
   const popupResult = useSignal<PopupResult | null>(null);
+  const answerFocused = useSignal(false);
+  const actionsEl = useSignal<HTMLDivElement | null>(null);
 
   const trackMap = Object.fromEntries(
     props.tracks.map((track) => [track.id, track]),
@@ -155,6 +161,43 @@ export default function QuizController(props: Readonly<Props>) {
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
+  });
+
+  // While the player is typing, the on-screen keyboard (and on Chrome for
+  // Android the autofill accessory bar above it) can leave Skip / Submit under
+  // the fold with nothing on screen to say so. Nudge the page just far enough to
+  // bring the row back, and never so far that the field being typed into goes
+  // under the top edge in its place.
+  //
+  // Only keyboard geometry changes re-run this. Following `visualViewport`
+  // scroll as well would re-nudge every time the player panned the page, which
+  // is a fight they should win. The scroll is deliberately instant: it lands
+  // during the keyboard's own animation, where a second, slower animation would
+  // only read as lag.
+  useSignalEffect(() => {
+    if (!answerFocused.value) return;
+    const actions = actionsEl.value;
+    if (!actions) return;
+    const nudge = () => {
+      const field = document.activeElement;
+      if (!(field instanceof HTMLElement)) return;
+      const delta = planVisibleBandScroll({
+        band: readVisibleBand(),
+        bringIntoView: actions.getBoundingClientRect(),
+        keepInView: field.getBoundingClientRect(),
+        edgeClearance: ACTION_ROW_CLEARANCE,
+      });
+      if (delta === 0) return;
+      globalThis.scrollBy({ top: delta });
+    };
+    nudge();
+    const viewport = globalThis.visualViewport;
+    viewport?.addEventListener("resize", nudge);
+    globalThis.addEventListener("resize", nudge);
+    return () => {
+      viewport?.removeEventListener("resize", nudge);
+      globalThis.removeEventListener("resize", nudge);
+    };
   });
 
   // --- actions ---
@@ -451,6 +494,9 @@ export default function QuizController(props: Readonly<Props>) {
             onValue={(nextValue) => {
               answerDraft.value = nextValue;
             }}
+            onFocusChange={(focused) => {
+              answerFocused.value = focused;
+            }}
           />
           {showEndQuiz && (
             <p class="text-sm opacity-80 text-center">
@@ -458,7 +504,12 @@ export default function QuizController(props: Readonly<Props>) {
               to count them as incorrect, or answer a skipped clip above.
             </p>
           )}
-          <div class="flex flex-wrap gap-3 justify-center">
+          <div
+            class="flex flex-wrap gap-3 justify-center"
+            ref={(element) => {
+              actionsEl.value = element;
+            }}
+          >
             {showEndQuiz && (
               <Button
                 variant="danger"

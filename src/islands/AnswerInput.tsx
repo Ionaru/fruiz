@@ -6,8 +6,8 @@ import { suggestMatches } from "../lib/guess_match.ts";
 import {
   planSuggestionPopup,
   type SuggestionPopupLayout,
-  type VisibleBand,
 } from "../lib/suggestionPopupLayout.ts";
+import { readVisibleBand } from "../lib/visibleBand.ts";
 
 interface AnswerInputProps {
   instanceId: string;
@@ -19,6 +19,12 @@ interface AnswerInputProps {
   /** Optional id of helper text for screen readers (e.g. submit gating hint). */
   ariaDescribedBy?: string;
   onValue: (value: string) => void;
+  /**
+   * Whether the field holds focus, which on a phone is the same question as
+   * whether the on-screen keyboard is up. `QuizController` uses it to keep the
+   * Skip / Submit row out from under the keyboard.
+   */
+  onFocusChange?: (focused: boolean) => void;
 }
 
 const MAX_MATCHES = 20;
@@ -37,19 +43,6 @@ const MIN_POPUP_HEIGHT = 44;
 const FLIP_BELOW_HEIGHT = MIN_POPUP_HEIGHT * 3;
 /** How far a pointer may travel and still count as a tap rather than a scroll. */
 const TAP_SLOP = 10;
-
-/**
- * The part of the layout viewport the user can actually see. With the on-screen
- * keyboard up that is a band in the middle of the page, not the whole viewport,
- * and `visualViewport` is the only cross-browser way to learn its size.
- */
-function readVisibleBand(): VisibleBand {
-  const viewport = globalThis.visualViewport;
-  if (!viewport) {
-    return { top: 0, height: document.documentElement.clientHeight };
-  }
-  return { top: viewport.offsetTop, height: viewport.height };
-}
 
 export default function AnswerInput(props: Readonly<AnswerInputProps>) {
   const inputId = `answer-${props.instanceId}`;
@@ -217,9 +210,14 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
   };
 
   const onFocus = () => {
+    props.onFocusChange?.(true);
     if (props.disabled) return;
     if (props.value.trim() === "") return;
     isOpen.value = true;
+  };
+
+  const onBlur = () => {
+    props.onFocusChange?.(false);
   };
 
   const activeDescendant = expanded && currentActive >= 0
@@ -270,6 +268,7 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
             aria-describedby={props.ariaDescribedBy}
             onInput={onInput}
             onFocus={onFocus}
+            onBlur={onBlur}
             onKeyDown={onKeyDown}
           />
           {expanded && (

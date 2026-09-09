@@ -1,32 +1,17 @@
+import type { AnchorBounds, VisibleBand } from "./visibleBand.ts";
+
 /**
  * Geometry for the answer combobox's suggestion popup.
  *
- * On a phone the on-screen keyboard covers the bottom of the screen without
- * reflowing the page: Chrome's default `interactive-widget=resizes-visual`, and
- * every version of iOS Safari, shrink only the *visual* viewport while the
- * layout viewport keeps its full height. So the browser believes an absolutely
- * positioned popup is on screen while the keyboard is painted over it, and
- * `scrollIntoView` finds nothing to do. `window.visualViewport` is the only
- * cross-browser signal for the space that is really visible, so these helpers
- * work from its numbers instead of from viewport units or `env()` insets.
+ * The popup is absolutely positioned, so on a phone it is laid out in a viewport
+ * the on-screen keyboard does not shrink. It is therefore sized against the
+ * visible band rather than against the viewport; see
+ * [`./visibleBand.ts`](./visibleBand.ts) for why that distinction exists and
+ * where the numbers come from.
  *
  * Pure and free of DOM access, so it can be unit-tested: the island takes the
  * measurements and applies the result.
  */
-
-/** The slice of the layout viewport the user can actually see, in client coordinates. */
-export interface VisibleBand {
-  /** Distance from the top of the layout viewport (`visualViewport.offsetTop`). */
-  top: number;
-  /** Visible height; shrinks when the on-screen keyboard opens. */
-  height: number;
-}
-
-/** The anchor element's vertical extent, in client coordinates. */
-export interface AnchorBounds {
-  top: number;
-  bottom: number;
-}
 
 /** Which side of the anchor the popup hangs off. */
 export type SuggestionPlacement = "below" | "above";
