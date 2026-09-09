@@ -12,7 +12,19 @@ export default define.page(function App({ Component }) {
     <html lang="en" class="preload">
       <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {
+          /* `interactive-widget=resizes-content` makes the on-screen keyboard
+            shrink the layout viewport, so the page reflows above it instead of
+            being covered by it and everything below the focused field stays
+            reachable by ordinary page scrolling. Chrome 108+ and Firefox 132+
+            honour it; Safari ignores the key entirely, which is why the answer
+            combobox sizes its suggestion popup from `visualViewport` rather
+            than relying on this (see src/lib/suggestionPopupLayout.ts). */
+        }
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+        />
         <title>fruiz</title>
       </head>
       <body>
