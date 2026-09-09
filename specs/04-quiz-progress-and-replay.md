@@ -78,6 +78,11 @@ currentTrackId)`:
 `findNextTrackAfterSkip` against the current progress to skip past finalized
 rounds.
 
+Skip, Submit, Next and "End quiz" share one row under the answer field. On a
+phone the on-screen keyboard can cover that row while the player is typing, so
+`QuizController` nudges the page to keep it inside the visible band; the
+geometry and its limits live in spec 05.
+
 ### Resume on reload
 
 On first `useSignalEffect` run, the island reads

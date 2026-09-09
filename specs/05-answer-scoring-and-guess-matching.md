@@ -165,6 +165,44 @@ document's scroll range, which moves the page, which re-triggers the
 measurement, measured as a visible jump between placements before the idea was
 dropped. Capping alone reaches the same settled layout without it.
 
+#### Keeping Skip / Submit above the keyboard
+
+Sizing the popup only fixes the popup. The Skip / Submit row sits _below_ the
+field in the same card, so on a phone the keyboard can cover it whether or not
+the dropdown is open, and on Chrome for Android the autofill accessory bar takes
+another strip on top of that (see the risk below). A player who cannot see
+Submit has no way to know it is there.
+
+`QuizController` therefore keeps that row inside the visible band while the
+answer field holds focus:
+
+- `AnswerInput` reports focus and blur through `onFocusChange`, which on a phone
+  is the same question as whether the keyboard is up. `TrackSuggestionForm`
+  omits the prop, so the suggestion page is unaffected.
+- `planVisibleBandScroll` in
+  [`src/lib/visibleBand.ts`](../src/lib/visibleBand.ts) takes the band, the
+  action row's bounds and the focused field's bounds, and returns how far to
+  scroll. The clamp is the point: the nudge stops at the distance that would put
+  the field's own top at the top of the band, so freeing the buttons can never
+  hide the field being typed into. Zero means leave the page alone.
+- The island applies the result with `scrollBy`, on focus and on
+  `visualViewport` / window `resize`.
+
+Two choices worth keeping:
+
+- **Only resize re-runs it.** Following `visualViewport` `scroll` as well would
+  re-nudge every time the player panned the page, which is a fight they should
+  win.
+- **The scroll is instant, not smooth.** It lands during the keyboard's own
+  animation, where a second, slower animation reads as lag; an instant landing
+  is invisible.
+
+This depends on the document having somewhere to scroll to, which
+`interactive-widget=resizes-content` guarantees on Chrome and Firefox by
+reflowing the page into the shorter viewport. Under iOS Safari, where the layout
+viewport keeps its full height, the nudge still runs but is limited by whatever
+scroll range the document happens to have.
+
 ### Edge cases
 
 - **Title in the pool but not in the current quiz** → submit allowed, answer
@@ -203,11 +241,16 @@ No new tables or columns. The relevant data flows:
   - [`src/lib/suggestionPopupLayout.ts`](../src/lib/suggestionPopupLayout.ts):
     `planSuggestionPopup`; pure geometry, no DOM access, so the island can be
     fed measurements and the maths can be unit-tested.
+  - [`src/lib/visibleBand.ts`](../src/lib/visibleBand.ts): the `VisibleBand` /
+    `AnchorBounds` shapes both planners work in, `readVisibleBand` (the single
+    DOM read, so every island measures the band the same way), and
+    `planVisibleBandScroll`.
 - **Islands (client)**
   - [`src/islands/AnswerInput.tsx`](../src/islands/AnswerInput.tsx) — combobox
     UI, keyboard handling, suggestion list rendering.
   - [`src/islands/QuizController.tsx`](../src/islands/QuizController.tsx) —
-    Submit gating, scoring, popup result wiring (see spec 04).
+    Submit gating, scoring, popup result wiring (see spec 04), and the
+    action-row nudge that keeps Skip / Submit inside the visible band.
 - **Components (SSR)**
   - [`src/components/quiz/AnswerSuggestionOption.tsx`](../src/components/quiz/AnswerSuggestionOption.tsx)
     — single suggestion row, carrying the `aria-selected` string above.
@@ -227,6 +270,10 @@ No new tables or columns. The relevant data flows:
   - [`tests/unit/lib/suggestion_popup_layout_test.ts`](../tests/unit/lib/suggestion_popup_layout_test.ts)
     covers popup capping and flipping, against measurements taken from a phone
     with the keyboard raised.
+  - [`tests/unit/lib/visible_band_scroll_test.ts`](../tests/unit/lib/visible_band_scroll_test.ts)
+    covers the action-row nudge over the same phone profile: no scroll when the
+    row is already visible, the clearance line, the clamp that protects the
+    focused field, and the uncovered-viewport no-op.
 
 ## Constraints and invariants
 
@@ -255,8 +302,11 @@ No new tables or columns. The relevant data flows:
   covers the popup geometry: capping to the room below the field, capping to the
   content when that is smaller, flipping above when that side has more room,
   staying below on a tie, the one-row floor, and the uncovered-viewport case.
-  Those tests use measurements taken from a 360x740 phone profile with a 320px
-  keyboard raised.
+  `visible_band_scroll_test.ts` covers the action-row nudge: the already-visible
+  no-op, the clearance line, a row entirely below the band, the clamp that keeps
+  the focused field on screen, and the case where freeing the row could only be
+  bought by hiding the field. Those tests use measurements taken from a 412x915
+  Android profile with the keyboard raised.
 - **Manual:**
   - Type a normalized variant ("walle", "WALL-E", "Wall·E") and confirm Submit
     enables and answers score correctly.
@@ -274,9 +324,26 @@ No new tables or columns. The relevant data flows:
     browser (which honours `interactive-widget`) and iOS Safari (which does
     not), because only the second exercises the `visualViewport` path on its
     own.
+  - **On a real phone, with the field focused and no dropdown open:** confirm
+    Skip and Submit are both fully on screen rather than under the keyboard, and
+    that the answer field is still visible after the nudge. On Chrome for
+    Android, do this with saved passwords / cards / addresses present so the
+    autofill accessory bar is showing, since it takes a strip the page cannot
+    remove and it is the case that motivated the nudge.
 
 ## Open questions and known risks
 
+- **The autofill accessory bar is not ours to remove.** On Chrome for Android a
+  bar of manual-fallback icons (passwords, payment methods, addresses) sits
+  between the page and the keyboard. It is offered on any focused editable and
+  is gated on whether _the viewer_ has saved data of each kind, not on anything
+  about the field, so the answer field already carries the only lever a page
+  has: `autocomplete="off"`, which Chrome deliberately ignores for autofill.
+  Attribute tricks aimed at it (`autocomplete="new-password"`, randomized
+  `name`s, `readonly`-until-focus) target value filling rather than the bar, and
+  each would cost the field something for screen readers or password managers.
+  Treat the strip as part of the keyboard: the nudge above is the response to
+  it, not a workaround for it.
 - **No fuzzy matching.** Two answers that differ by one letter still count as
   different. If players complain about edge cases (subtitles, roman numerals,
   articles), a constrained Levenshtein pass _before_ the normalized equality
