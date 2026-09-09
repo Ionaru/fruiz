@@ -14,7 +14,8 @@ This subsystem owns:
 - The autocomplete ranking helper (`suggestMatches`).
 - The category-scoped suggestion pool hydrated onto the quiz page.
 - The autocomplete UX in `AnswerInput` (combobox, keyboard navigation,
-  pointer-outside dismissal).
+  tap-outside dismissal, and sizing the suggestion popup against the space the
+  on-screen keyboard leaves visible).
 
 The settings gate, the skip flow, and the replay-limit gate live in spec 04. The
 "did this answer earn a collection slot" flow lives in spec 07.
@@ -113,10 +114,56 @@ limit in `AnswerInput` is `MAX_MATCHES = 20`.
 - Up / Down arrows move `activeIndex` through the matches, with wrap-around.
 - `Enter` commits the active suggestion. `Escape` closes the dropdown. `Tab`
   closes the dropdown without committing.
-- A pointer event outside the container closes the dropdown.
+- A **tap** outside the container closes the dropdown: a press and release that
+  both land outside it and travel no further than `TAP_SLOP` (10 px). A drag is
+  a scroll, not a dismissal, and `pointercancel` (the browser taking the gesture
+  over to scroll) never closes it. Closing on `pointerdown` instead would cancel
+  a scroll-to-see-more gesture the instant the finger landed.
 - Hover on an option pre-activates it so a subsequent click commits.
 - Selected suggestions write the title back through `onValue`, which the parent
   (`QuizController`) routes to `answerDraft`.
+
+#### Sizing the dropdown against the on-screen keyboard
+
+The suggestion popup is absolutely positioned, so on a phone it is laid out in a
+viewport the keyboard does not shrink. Under Chrome's default
+`interactive-widget=resizes-visual`, and under every version of iOS Safari, the
+keyboard shrinks only the **visual** viewport: the layout viewport keeps its
+full height, the browser believes the popup is on screen, and `scrollIntoView`
+finds nothing to do. A fixed `max-height` therefore ran the list under the
+keyboard, and the hidden rows could only be reached by panning the page.
+
+Two layers address this, and the second does not depend on the first:
+
+1. **The page reflows where the platform allows it.** `src/routes/_app.tsx` sets
+   `interactive-widget=resizes-content` on the viewport meta, so the keyboard
+   shrinks the layout viewport and the page lays out above it. Chrome 108+ and
+   Firefox 132+ honour the key; Safari ignores it entirely.
+2. **The popup is measured against the space that is really visible.**
+   `planSuggestionPopup` in
+   [`src/lib/suggestionPopupLayout.ts`](../src/lib/suggestionPopupLayout.ts)
+   takes the anchor's bounds and the visible band (`visualViewport.offsetTop`
+   and `.height`, the only cross-browser signal for it) and returns a placement
+   plus a `max-height`. The island applies that as an inline style, re-measuring
+   on `visualViewport` `resize` / `scroll`, on window `resize`, and whenever the
+   match list changes.
+
+The popup hangs **below** the field and flips **above** only when that side has
+strictly more room, so the common case keeps reading order. It never shrinks
+below one option row (`MIN_POPUP_HEIGHT`), so a badly squeezed viewport gets a
+short scrollable list rather than an invisible one. When `visualViewport` is
+absent the band falls back to `document.documentElement.clientHeight`, which
+makes the helper a no-op on desktop.
+
+Rows past the cap are reached by scrolling **inside** the list, which now
+genuinely overflows; `overscroll-behavior: contain` keeps that scroll from
+chaining to the page.
+
+Deliberately not done: no `scrollIntoView`-style nudge that lifts the field to
+make room. The popup is absolutely positioned, so growing it grows the
+document's scroll range, which moves the page, which re-triggers the
+measurement, measured as a visible jump between placements before the idea was
+dropped. Capping alone reaches the same settled layout without it.
 
 ### Edge cases
 
@@ -153,6 +200,9 @@ No new tables or columns. The relevant data flows:
     `guessMatchesSuggestionPool`, `suggestMatches`.
   - [`src/lib/categories.ts`](../src/lib/categories.ts) —
     `getDistinctTitlesForCategory` for the per-category suggestion pool.
+  - [`src/lib/suggestionPopupLayout.ts`](../src/lib/suggestionPopupLayout.ts):
+    `planSuggestionPopup`; pure geometry, no DOM access, so the island can be
+    fed measurements and the maths can be unit-tested.
 - **Islands (client)**
   - [`src/islands/AnswerInput.tsx`](../src/islands/AnswerInput.tsx) — combobox
     UI, keyboard handling, suggestion list rendering.
@@ -161,6 +211,8 @@ No new tables or columns. The relevant data flows:
 - **Components (SSR)**
   - [`src/components/quiz/AnswerSuggestionOption.tsx`](../src/components/quiz/AnswerSuggestionOption.tsx)
     — single suggestion row, carrying the `aria-selected` string above.
+  - [`src/routes/_app.tsx`](../src/routes/_app.tsx): the viewport meta carrying
+    `interactive-widget=resizes-content`.
 - **Tests**
   - [`tests/unit/lib/normalize_test.ts`](../tests/unit/lib/normalize_test.ts) —
     NFD, punctuation, whitespace cases.
@@ -172,6 +224,9 @@ No new tables or columns. The relevant data flows:
     — `aria-selected` renders as `"true"` / `"false"`.
   - [`tests/unit/islands/answer_input_test.tsx`](../tests/unit/islands/answer_input_test.tsx)
     — the combobox's rendered ARIA contract.
+  - [`tests/unit/lib/suggestion_popup_layout_test.ts`](../tests/unit/lib/suggestion_popup_layout_test.ts)
+    covers popup capping and flipping, against measurements taken from a phone
+    with the keyboard raised.
 
 ## Constraints and invariants
 
@@ -196,7 +251,12 @@ No new tables or columns. The relevant data flows:
   set, whitespace collapsing, exact / startsWith / contains ranking, ordering
   stability, and gate behavior on empty / matching / non-matching input.
   `answer_suggestion_option_test.tsx` and `answer_input_test.tsx` cover the
-  rendered ARIA state strings described above.
+  rendered ARIA state strings described above. `suggestion_popup_layout_test.ts`
+  covers the popup geometry: capping to the room below the field, capping to the
+  content when that is smaller, flipping above when that side has more room,
+  staying below on a tie, the one-row floor, and the uncovered-viewport case.
+  Those tests use measurements taken from a 360x740 phone profile with a 320px
+  keyboard raised.
 - **Manual:**
   - Type a normalized variant ("walle", "WALL-E", "Wall·E") and confirm Submit
     enables and answers score correctly.
@@ -206,6 +266,14 @@ No new tables or columns. The relevant data flows:
   - On mobile, confirm the suggestion dropdown is reachable by tap and keyboard,
     that `Escape` dismisses it, and that the active option is scrolled into view
     as it changes.
+  - **On a real phone with the on-screen keyboard raised** (this is the case the
+    render-to-string harness cannot reach): type a query with more matches than
+    fit, and confirm the list ends above the keyboard rather than under it, that
+    dragging inside the list scrolls the list, and that dragging outside it
+    scrolls the page without dismissing it. Worth doing on both an Android
+    browser (which honours `interactive-widget`) and iOS Safari (which does
+    not), because only the second exercises the `visualViewport` path on its
+    own.
 
 ## Open questions and known risks
 
