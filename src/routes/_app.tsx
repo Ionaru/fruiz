@@ -1,7 +1,8 @@
 import { define } from "../utils.ts";
+import { SiteMeta } from "../components/layout/SiteMeta.tsx";
 import PreloadGuard from "../islands/PreloadGuard.tsx";
 
-export default define.page(function App({ Component }) {
+export default define.page(function App({ Component, url }) {
   const revision = (
     Deno.env.get("FRUIZ_GIT_REVISION") ??
       Deno.env.get("DENO_DEPLOYMENT_ID") ??
@@ -26,7 +27,7 @@ export default define.page(function App({ Component }) {
           content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
         />
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-        <title>fruiz</title>
+        <SiteMeta url={url} />
       </head>
       <body>
         <Component />

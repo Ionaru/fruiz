@@ -8,6 +8,12 @@ import {
 } from "../../../../lib/categories.ts";
 import { decodeSlug } from "../../../../lib/slug.ts";
 import { getOrCreateQuizInstance } from "../../../../lib/quizInstances.ts";
+import {
+  buildPageTitle,
+  buildQuizDescription,
+  buildQuizTitle,
+  resolveCanonicalOrigin,
+} from "../../../../lib/siteMeta.ts";
 import { QuizPlayer } from "../../../../components/quiz/QuizPlayer.tsx";
 import QuizController from "../../../../islands/QuizController.tsx";
 
@@ -49,8 +55,9 @@ export const handler = define.handlers({
     );
     const tracksPayload = quizInstance.tracks;
     const quizPath = `/quiz/${categorySlug}/${slugParam}`;
-    const origin = new URL(ctx.req.url).origin;
-    const shareDescription = `20-track ${category.name} quiz on fruiz`;
+    // Not `url.origin`: behind the reverse proxy that is the internal hop, and
+    // an unfurler has to be able to fetch what `og:url` points at.
+    const canonicalOrigin = resolveCanonicalOrigin(url);
 
     return {
       data: {
@@ -63,9 +70,9 @@ export const handler = define.handlers({
         quizPath,
         loggedIn: ctx.state.session.user !== null,
         shareMeta: {
-          title: `${category.name} quiz`,
-          description: shareDescription,
-          url: `${origin}${quizPath}`,
+          title: buildQuizTitle(category.name),
+          description: buildQuizDescription(category.name, difficulty),
+          url: `${canonicalOrigin}${quizPath}`,
         },
       },
     };
@@ -75,12 +82,13 @@ export const handler = define.handlers({
 export default define.page<typeof handler>(({ data, state, url }) => (
   <>
     <Head>
-      <title>{data.category.name} quiz — Fruiz</title>
+      <title>{buildPageTitle(data.shareMeta.title)}</title>
       <meta name="description" content={data.shareMeta.description} />
       <meta property="og:title" content={data.shareMeta.title} />
       <meta property="og:description" content={data.shareMeta.description} />
-      <meta property="og:type" content="website" />
       <meta property="og:url" content={data.shareMeta.url} />
+      <meta name="twitter:title" content={data.shareMeta.title} />
+      <meta name="twitter:description" content={data.shareMeta.description} />
     </Head>
     <QuizPlayer
       category={data.category}

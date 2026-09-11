@@ -50,9 +50,10 @@ inspection; if so, sign listen URLs with a short-lived HMAC over
 
 ### Dynamic OG images
 
-The quiz route serves a static image for social shares (spec 02). A future
-enhancement renders per-quiz cards (`/og/{slug}.png`) with the category name,
-difficulty, and code.
+Every route serves the same static share image (spec 13). A future enhancement
+renders per-quiz cards (`/og/{slug}.png`) with the category name, difficulty,
+and code. That needs a rasteriser, an endpoint that validates its path segments
+before rendering, and a bounded cache, so it is its own change.
 
 ## Operational improvements
 

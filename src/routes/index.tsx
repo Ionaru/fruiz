@@ -1,4 +1,3 @@
-import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
 import { db } from "../db/db.ts";
 import {
@@ -61,9 +60,6 @@ export default define.page<typeof handler>(({ data, state, url }) => {
   );
   return (
     <PageShell>
-      <Head>
-        <title>fruiz - musical quiz</title>
-      </Head>
       <div class="mx-auto flex w-full max-w-xl flex-col gap-5 lg:max-w-[832px] lg:gap-6">
         <SiteHeader user={user} currentPath={url.pathname} />
         {data.homeLimitQuery !== null && (

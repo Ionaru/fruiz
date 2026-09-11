@@ -22,6 +22,7 @@ gates, etc.) live in [`../AGENTS.md`](../AGENTS.md).
 | 10 | [Sessions and request lifecycle](./10-sessions-and-request-lifecycle.md)                 | Session middleware, cookie handling, logger, `ctx.state` shape                                                |
 | 11 | [Track suggestions and moderation](./11-track-suggestions.md)                            | Player track suggestion form, admin moderation queue, approve/deny with note                                  |
 | 12 | [Telemetry and metrics](./12-telemetry-and-metrics.md)                                   | OpenTelemetry traces/metrics/logs, runtime + framework auto-instrumentation, custom domain spans and counters |
+| 13 | [Link previews and share metadata](./13-link-previews-and-share-metadata.md)             | Open Graph / Twitter Card tags, canonical origin resolution, the static share image, noindex paths            |
 | 90 | [Roadmap](./90-roadmap.md)                                                               | Known future work and risks                                                                                   |
 
 ## Numbering
