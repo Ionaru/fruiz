@@ -36,9 +36,13 @@ body {
      differently, and some re-crop it towards square on mobile. */
   padding: 64px 80px;
   background-color: #222a31;
+  /* The logo's notes and speaker rings are filled #222a31, the same hex as the
+     ground below. Where a note overhangs the speaker it would be painted the
+     colour it sits on and vanish, so the warm pool behind the logo is what
+     makes them legible. Dimming it hides the notes; see specs/13. */
   background-image:
-    radial-gradient(circle at 22% 38%, rgba(254, 212, 2, 0.18), transparent
-    58%),
+    radial-gradient(circle at 22% 38%, rgba(254, 212, 2, 0.45), transparent
+    50%),
     radial-gradient(circle at 88% 92%, rgba(255, 255, 255, 0.07), transparent
     55%);
   font-family: "Liberation Sans", "DejaVu Sans", Arial, sans-serif;

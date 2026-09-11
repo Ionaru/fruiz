@@ -235,6 +235,13 @@ URL or a throwaway query after a change.
   duplicated tags, and most parsers take the first occurrence, so a quiz link
   would degrade to the generic site card instead of breaking visibly. The manual
   duplicate check above is what catches it.
+- **Risk: the logo's notes are the card's own background colour.** The musical
+  notes and speaker rings in `logo.svg` are filled `#222a31`, the same hex as
+  the card ground. Where a note overhangs the speaker it would be painted the
+  colour it sits on and disappear. The warm pool behind the logo in
+  `tools/og_card.html` is what separates them; toning it down silently costs the
+  notes. A future card that moves the logo off that pool needs another answer,
+  such as lifting the ground colour or a light halo on the logo.
 - **Risk: `theme-color` is not confined to link previews.** It also colours the
   address bar on Android Chrome, so the value is a site-wide visual choice, not
   only a Discord one.
