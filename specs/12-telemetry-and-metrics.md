@@ -80,21 +80,28 @@ It is explicitly **not** responsible for:
   Relevant variables: the enable flag (`OTEL_DENO`), service name
   (`OTEL_SERVICE_NAME`), exporter endpoint (`OTEL_EXPORTER_OTLP_ENDPOINT`),
   protocol (`OTEL_EXPORTER_OTLP_PROTOCOL`), authentication headers
-  (`OTEL_EXPORTER_OTLP_HEADERS`), resource attributes
+  (`OTEL_EXPORTER_OTLP_HEADERS`), metric temporality
+  (`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`), resource attributes
   (`OTEL_RESOURCE_ATTRIBUTES`), and console-capture mode (`OTEL_DENO_CONSOLE`).
+- Deployments set the temporality preference to `delta`, so metrics are exported
+  with **delta** temporality rather than the runtime default of cumulative and
+  each export carries only the change since the previous one. See the decision
+  below for why, and for its effect on `http.server.active_requests`.
 - The default export is OTLP `http/protobuf` to a local collector endpoint; a
   deployment repoints the endpoint at any OTLP-compatible collector. The choice
   of trace/metric/log backend is out of scope and lives entirely in that
   collector — the application stays vendor-neutral.
-- Local development sets the traces exporter to the console
-  (`OTEL_TRACES_EXPORTER=console`) to print spans to standard error without a
-  collector.
+- Local development sets the exporter protocol to the console
+  (`OTEL_EXPORTER_OTLP_PROTOCOL=console`) to print spans, logs, and metrics to
+  standard error without a collector.
 
 ### Edge cases
 
-- **Short-lived processes.** Batch and CLI runs may exit before a batching
-  exporter flushes. Such a process MUST flush and shut down the telemetry
-  provider before exiting, or its spans and metrics are lost.
+- **Short-lived processes.** The runtime flushes on exit: spans, logs, and
+  synchronous metric instruments are exported when a batch or CLI process ends,
+  so such a process needs no explicit flush or provider shutdown. Asynchronous
+  (observable) instruments are not collected on that path, so batch/CLI work
+  MUST report through synchronous instruments, as the catalog below does.
 - **Disabled path.** With the enable flag unset no provider is registered;
   helper calls resolve to no-op implementations and add no latency or allocation
   on request hot paths.
@@ -133,6 +140,10 @@ Custom span/metric catalog (functional operation → signal → attributes):
 | A track suggestion is reviewed                                  | `fruiz.suggestion.reviewed` counter                                | decision (approved/denied)                                                     |
 | Passkey registration completes                                  | `fruiz.auth.passkey.registered` counter                            | outcome (success/failure)                                                      |
 | Passkey authentication completes                                | `fruiz.auth.passkey.authenticated` counter                         | outcome (success/failure)                                                      |
+
+The names in this catalog are a published interface: renaming a metric, an
+attribute key, or an attribute value is a breaking change for every dashboard
+and alert built on it.
 
 ## Key components
 
@@ -183,7 +194,7 @@ paths.
 - **Unit:** with no SDK registered, acquiring the tracer/meter, opening and
   closing spans, and incrementing counters all succeed and raise no error —
   confirming the no-op contract and the helper's span/counter shape.
-- **Manual:** run with the enable flag set and the traces exporter pointed at
+- **Manual:** run with the enable flag set and the exporter protocol pointed at
   the console; load the home page and start a quiz, and confirm the root request
   span carries the matched-route attribute and that the custom quiz span and
   `fruiz.quiz.*` counters appear. Run the playback-gain backfill and confirm
@@ -210,9 +221,26 @@ paths.
   output is still captured as OpenTelemetry logs. This change MUST also update
   `10-sessions-and-request-lifecycle.md` and the "Structured logging" item in
   `90-roadmap.md` in the same change.
+- **Decision: delta metric temporality.** Deployments set the metric temporality
+  preference to delta instead of the runtime default of cumulative. A backend
+  that derives increase or rate from a cumulative series does so by differencing
+  consecutive points, which yields nothing for the first point of each series,
+  and two of this service's series are mostly first points. The playback-gain
+  backfill runs at every container start with identical resource attributes and
+  exports its cumulative totals once as it exits, so repeat runs read as no
+  change. Every deploy changes `service.version`, which starts new series whose
+  first increment is dropped; that is most visible on low-volume counters such
+  as the passkey and suggestion-review events. Delta points are summed as they
+  arrive, so neither case undercounts. The runtime applies the preference to
+  every instrument kind, so the non-monotonic `http.server.active_requests` is
+  exported as a delta too: it reports a per-interval net change and MUST NOT be
+  charted as a current value.
 - **Risk — PII / secret leakage in attributes.** The attribute allow-list is
   review-enforced; a careless attribute set with user input or a full URL would
   leak. Keep attributes to the catalog's low-cardinality dimensions.
-- **Risk — exporter flush on short-lived processes.** Batch/CLI runs can exit
-  before a batching exporter flushes, silently dropping their telemetry; each
-  such process must explicitly flush and shut down the provider before exit.
+- **Risk: observable instruments in short-lived processes.** The runtime exports
+  spans, logs, and synchronous instruments on exit, so batch/CLI runs need no
+  explicit flush. Asynchronous (observable) instruments are not collected on
+  that path, so a signal reported only through one would be silently dropped
+  from every short-lived run. The catalog uses synchronous instruments
+  exclusively and MUST keep doing so for batch/CLI work.
