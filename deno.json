@@ -9,6 +9,7 @@
     "start": "deno serve -A _fresh/server.js",
     "db:sync": "deno x drizzle-kit push",
     "playback-gain:backfill": "deno run -A tools/playback_gain_backfill.ts",
+    "og:render": "deno run -A tools/render_og_card.ts",
     "update": "deno run -A -r jsr:@fresh/update ."
   },
   "lint": {

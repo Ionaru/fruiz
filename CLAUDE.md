@@ -24,6 +24,7 @@ workflow.
 | Single test by name                 | `deno test -A --filter "name fragment" tests/`    |
 | Apply Drizzle schema to SQLite      | `deno task db:sync`                               |
 | Backfill playback gain              | `deno task playback-gain:backfill`                |
+| Regenerate the share image          | `deno task og:render`                             |
 | Fresh framework upgrade             | `deno task update`                                |
 
 CI (`.github/workflows/cd.yaml`) runs `deno audit`, `deno task check`, and

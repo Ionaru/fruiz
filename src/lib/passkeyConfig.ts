@@ -1,6 +1,7 @@
 import { db } from "../db/db.ts";
 import type { PasskeyConfig } from "@ionaru/fresh-passkeys/server";
 import type { State } from "../utils.ts";
+import { getRpId, getRpName } from "./appConfig.ts";
 import { validateUsername } from "./auth.ts";
 import { insertUserPasskeyAndSession } from "./completeRegistration.ts";
 import {
@@ -13,14 +14,6 @@ import {
   passkeyAuthenticatedCounter,
   passkeyRegisteredCounter,
 } from "./telemetry.ts";
-
-function getRpId(): string {
-  return Deno.env.get("FRUIZ_RP_ID") ?? "localhost";
-}
-
-function getRpName(): string {
-  return Deno.env.get("FRUIZ_RP_NAME") ?? "Musical Quiz";
-}
 
 /**
  * Fruiz-specific wiring for the passkey plugin: the Drizzle store plus the

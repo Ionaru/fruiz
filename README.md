@@ -82,6 +82,7 @@ to upload tracks, or seed a music folder with `deno run -A tools/seed-music.ts`.
 | All tests                           | `deno task test`                   |
 | Apply Drizzle schema to SQLite      | `deno task db:sync`                |
 | Backfill playback gain              | `deno task playback-gain:backfill` |
+| Regenerate the share image          | `deno task og:render`              |
 | Fresh framework upgrade             | `deno task update`                 |
 
 ## Repo layout
@@ -106,14 +107,14 @@ vite.config.ts      Vite build configuration
 
 The app reads the following environment variables:
 
-| Variable               | Default        | Purpose                                                        |
-| ---------------------- | -------------- | -------------------------------------------------------------- |
-| `FRUIZ_DEBUG`          | unset          | Set to `true` to enable Drizzle query logging.                 |
-| `FRUIZ_SECURE_COOKIES` | unset          | Set to `1` to mark session cookies `Secure` (non-dev only).    |
-| `FRUIZ_RP_ID`          | `localhost`    | WebAuthn Relying Party ID. Set to your deployed domain.        |
-| `FRUIZ_RP_NAME`        | `Musical Quiz` | WebAuthn RP display name shown in the passkey prompt.          |
-| `FRUIZ_GIT_REVISION`   | unset          | Git SHA injected into the page footer; CI sets this on deploy. |
-| `DENO_DEPLOYMENT_ID`   | unset          | Fallback identifier used when `FRUIZ_GIT_REVISION` is unset.   |
+| Variable               | Default        | Purpose                                                                                         |
+| ---------------------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| `FRUIZ_DEBUG`          | unset          | Set to `true` to enable Drizzle query logging.                                                  |
+| `FRUIZ_SECURE_COOKIES` | unset          | Set to `1` to mark session cookies `Secure` (non-dev only).                                     |
+| `FRUIZ_RP_ID`          | `localhost`    | Deployed domain. WebAuthn Relying Party ID, and the canonical origin for share links (spec 13). |
+| `FRUIZ_RP_NAME`        | `Musical Quiz` | WebAuthn RP display name shown in the passkey prompt.                                           |
+| `FRUIZ_GIT_REVISION`   | unset          | Git SHA injected into the page footer; CI sets this on deploy.                                  |
+| `DENO_DEPLOYMENT_ID`   | unset          | Fallback identifier used when `FRUIZ_GIT_REVISION` is unset.                                    |
 
 `compose.yaml` reads four more at the compose layer:
 
@@ -145,9 +146,11 @@ host path. A bare volume name is rejected by Compose as an undefined volume.
 `FRUIZ_SECURE_COOKIES` are passed straight through from the environment, so when
 they are missing Compose does not set them in the container at all and the app
 quietly uses its own fallbacks: passkey registration and login break against the
-real domain, and session cookies lose `Secure`. Neither trips the healthcheck,
-so `/` still returns 200 and the deploy still reports success. Confirm them
-against the resolved config rather than the deploy log:
+real domain, session cookies lose `Secure`, and share links fall back to the
+request's own origin, which behind the reverse proxy is the unreachable internal
+hop, so Discord and friends render no preview card (spec 13). None of that trips
+the healthcheck, so `/` still returns 200 and the deploy still reports success.
+Confirm them against the resolved config rather than the deploy log:
 
 ```bash
 docker compose config | grep -E 'FRUIZ_RP_ID|FRUIZ_SECURE_COOKIES'
