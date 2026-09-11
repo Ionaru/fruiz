@@ -18,7 +18,7 @@ This subsystem owns:
 - The mirrored-bar visualizer driven from the analyser node.
 - The QuizPlayer page shell: difficulty-colored glow halo, mobile-first layout,
   and the shared site header (spec 01).
-- The track-grid navigation and result modal.
+- The track-strip navigation and result modal.
 - The keyboard space-bar shortcut for play / stop on the active track.
 
 The progress state and skip / submit flow live in spec 04. Audio file serving
@@ -236,12 +236,12 @@ Pattern details worth knowing:
 
 ### Track navigation and result modal
 
-- [`src/islands/QuizTrackNav.tsx`](../src/islands/QuizTrackNav.tsx) — the grid /
-  list of 20 track buttons with status badges. Clicking a track sets it as
-  active.
-- [`src/components/quiz/TrackGridButton.tsx`](../src/components/quiz/TrackGridButton.tsx),
-  [`src/components/quiz/TrackIndicatorButton.tsx`](../src/components/quiz/TrackIndicatorButton.tsx)
-  — individual track row / cell with status color and icon.
+- [`src/islands/QuizTrackNav.tsx`](../src/islands/QuizTrackNav.tsx) — a single
+  row: a previous / next button on either side of a strip of 20 track indicators
+  with status colors. Clicking an indicator sets that track as active; the
+  arrows step one track at a time and are disabled at either end.
+- [`src/components/quiz/TrackIndicatorButton.tsx`](../src/components/quiz/TrackIndicatorButton.tsx)
+  — an individual indicator cell with its status color.
 - [`src/islands/GuessResultModal.tsx`](../src/islands/GuessResultModal.tsx) —
   modal shown after submit. Displays correct vs incorrect with the matching
   `resultGlowClass`, the canonical title, an optional collection progress line
@@ -292,8 +292,7 @@ output is a Web Audio graph and a rendered `<canvas>` pair — no persistence.
     — layout wrapper for the active track row.
   - [`src/components/quiz/glow.ts`](../src/components/quiz/glow.ts) — glow class
     maps.
-  - [`src/components/quiz/TrackGridButton.tsx`](../src/components/quiz/TrackGridButton.tsx),
-    [`src/components/quiz/TrackIndicatorButton.tsx`](../src/components/quiz/TrackIndicatorButton.tsx),
+  - [`src/components/quiz/TrackIndicatorButton.tsx`](../src/components/quiz/TrackIndicatorButton.tsx),
     [`src/components/quiz/QuizResults.tsx`](../src/components/quiz/QuizResults.tsx),
     [`src/components/quiz/QuizResultRow.tsx`](../src/components/quiz/QuizResultRow.tsx),
     [`src/components/quiz/GuessResultContent.tsx`](../src/components/quiz/GuessResultContent.tsx).
