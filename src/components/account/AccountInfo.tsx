@@ -1,3 +1,5 @@
+import { ButtonLink } from "../ui/ButtonLink.tsx";
+
 export interface AccountInfoProps {
   username: string;
   isAdmin?: boolean;
@@ -23,18 +25,8 @@ export function AccountInfo(props: Readonly<AccountInfoProps>) {
           </a>
         </p>
       )}
-      <a
-        href="/collection"
-        class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-      >
-        My collection
-      </a>
-      <a
-        href="/suggest"
-        class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-      >
-        Suggest a track
-      </a>
+      <ButtonLink href="/collection">My collection</ButtonLink>
+      <ButtonLink href="/suggest">Suggest a track</ButtonLink>
     </div>
   );
 }

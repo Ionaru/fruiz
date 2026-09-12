@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+  assertStringIncludes,
+} from "@std/assert";
 import { render } from "preact-render-to-string";
 import { CategoryFilterButton } from "../../../src/components/collection/CategoryFilterButton.tsx";
 import { CategoryFilterList } from "../../../src/components/collection/CategoryFilterList.tsx";
@@ -114,9 +119,23 @@ Deno.test("CategoryFilterList: the scroller insets its own padding so shadows ar
     />,
   );
   // `overflow-x: auto` clips both axes, so the padding and the negative margin
-  // that cancels it have to match on all four sides.
-  assertStringIncludes(html, "-m-1.5");
-  assertStringIncludes(html, "p-1.5");
+  // that cancels it have to match on all four sides. The inset is sized for a
+  // pill's hover relief (~11.7px), which is deeper than its resting one.
+  assertStringIncludes(html, "-m-3");
+  assertStringIncludes(html, "p-3");
+});
+
+Deno.test("CategoryFilterButton: takes its shallow relief from a class, not a utility", () => {
+  // The relief tiers live in `styles.css` because Tailwind's utilities layer
+  // outranks its components layer: an `nm-protrude-*` utility here would win
+  // against the hover and pressed rules, which set the same custom properties,
+  // and leave the pill with no interactive states at all.
+  const html = filterButton(false);
+  assertStringIncludes(html, "plateau plateau-shallow");
+  assertFalse(
+    /\bnm-(protrude|dent)\b|\bnm-(protrude|dent)-/.test(html),
+    "relief utilities in markup silently disable the interactive states",
+  );
 });
 
 Deno.test("CategoryFilterList: the filters are a group of toggles, not navigation", () => {

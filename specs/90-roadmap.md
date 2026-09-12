@@ -111,12 +111,13 @@ is washed by the next card's highlight, so the cards with no such neighbour —
 the last in the list, the one before a flat or dented sibling, and any card
 `.glow` lifts into the positioned paint step — read markedly heavier than the
 rest. The collection list fixed this locally by dropping its rows and filter
-pills to `nm-protrude-sm` and widening the gap to 10px (spec 07).
+pills to `.plateau-shallow` and widening the gap to 10px (spec 07).
 
 [`src/components/quiz/InProgressQuizItem.tsx`](../src/components/quiz/InProgressQuizItem.tsx)
 still has it: `.plateau` cards in a `flex flex-col gap-3` list on the home page.
-Either apply the same treatment or decide the relief belongs in `.plateau`'s own
-definition, rather than leaving two card lists that do not match.
+Either give them `.plateau-shallow` too or decide the relief belongs in
+`.plateau`'s own definition, rather than leaving two card lists that do not
+match.
 
 ### Janitor for in-progress quiz keys
 

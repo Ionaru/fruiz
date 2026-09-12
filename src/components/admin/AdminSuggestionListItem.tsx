@@ -18,18 +18,17 @@ export function AdminSuggestionListItem(
 ) {
   return (
     <li>
-      <PlateauCard padding="none" class="rounded-xl px-4 py-3">
-        <a
-          href={`/admin/suggestions/${id}`}
-          class="flex flex-wrap items-center justify-between gap-2 no-underline"
-        >
-          <span class="font-medium min-w-0 break-words">{title}</span>
-          <span class="flex items-center gap-2 text-xs opacity-80">
-            <CategoryBadge name={categoryName} />
-            <span>by {username}</span>
-            <SuggestionStatusBadge status={status} />
-          </span>
-        </a>
+      <PlateauCard
+        href={`/admin/suggestions/${id}`}
+        padding="none"
+        class="rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2"
+      >
+        <span class="font-medium min-w-0 break-words">{title}</span>
+        <span class="flex items-center gap-2 text-xs opacity-80">
+          <CategoryBadge name={categoryName} />
+          <span>by {username}</span>
+          <SuggestionStatusBadge status={status} />
+        </span>
       </PlateauCard>
     </li>
   );

@@ -29,7 +29,7 @@ export function CategoryFilterButton(
       aria-pressed={isActive ? "true" : "false"}
       aria-label={`${label}, ${collected} of ${total} collected`}
       onClick={props.onSelect}
-      class={`plateau nm-protrude-sm flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13.5px] lg:w-full lg:justify-between lg:gap-2.5 lg:rounded-xl lg:px-3.5 ${
+      class={`plateau plateau-shallow flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13.5px] lg:w-full lg:justify-between lg:gap-2.5 lg:rounded-xl lg:px-3.5 ${
         isActive ? "info" : ""
       }`}
     >

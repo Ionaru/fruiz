@@ -11,14 +11,13 @@ export function AdminCategoryListItem(
 ) {
   return (
     <li>
-      <PlateauCard padding="none" class="rounded-xl px-4 py-3">
-        <a
-          href={`/admin/categories/${id}`}
-          class="flex justify-between gap-2 no-underline"
-        >
-          <span class="font-medium">{name}</span>
-          <span class="text-sm opacity-80">{slug}</span>
-        </a>
+      <PlateauCard
+        href={`/admin/categories/${id}`}
+        padding="none"
+        class="rounded-xl px-4 py-3 flex justify-between gap-2"
+      >
+        <span class="font-medium">{name}</span>
+        <span class="text-sm opacity-80">{slug}</span>
       </PlateauCard>
     </li>
   );
