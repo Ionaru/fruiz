@@ -110,6 +110,22 @@ spare.
 Within a rank, the original input order is preserved (stable sort). The default
 limit in `AnswerInput` is `MAX_MATCHES = 20`.
 
+#### Pool order
+
+Because the sort is stable, the pool's own order decides how equally good
+matches are listed, so every pool is built by `toTitleSuggestionPool` in
+[`src/lib/titleSuggestionPool.ts`](../src/lib/titleSuggestionPool.ts): each
+title once, ordered with `localeCompare` rather than SQLite's binary collation
+(the same choice `getCollectionCatalog` makes in spec 07, so "arcade night"
+files among the A's instead of after every capital).
+
+Both dropdowns go through it. The quiz's pool is ordered there rather than in
+`getDistinctTitlesForCategory`'s SQL, and the suggestion page (spec 11) applies
+it in the browser to what `/api/categories/{key}/tracks` returns, which is
+served grouped by difficulty. Without that the same category ranked differently
+in the two dropdowns: searching "Command & Conquer: Red Alert" on the suggestion
+page listed Red Alert 3 above Red Alert 2 because its track is easy.
+
 #### Shorthand search
 
 Players know a title by its abbreviation long before they can spell it out, so
@@ -301,6 +317,10 @@ No new tables or columns. The relevant data flows:
     so it is safe in the island bundle both call sites reach it from.
   - [`src/lib/categories.ts`](../src/lib/categories.ts) —
     `getDistinctTitlesForCategory` for the per-category suggestion pool.
+  - [`src/lib/titleSuggestionPool.ts`](../src/lib/titleSuggestionPool.ts) —
+    `toTitleSuggestionPool`, the one order every suggestion pool is built in;
+    pure string work, no DOM and no DB, so the suggestion page's island can
+    apply it to a fetched pool too.
   - [`src/lib/suggestionPopupLayout.ts`](../src/lib/suggestionPopupLayout.ts):
     `planSuggestionPopup`; pure geometry, no DOM access, so the island can be
     fed measurements and the maths can be unit-tested.
@@ -366,21 +386,26 @@ No new tables or columns. The relevant data flows:
 ## Verification approach
 
 - **Unit:** `normalize_test.ts`, `guess_match_test.ts`,
-  `suggest_matches_test.ts`, `title_shorthand_test.ts`. Together they cover: NFD
-  decomposition, punctuation set, whitespace collapsing, exact / startsWith /
-  contains / shorthand ranking, ordering stability, and gate behavior on empty /
-  matching / non-matching input. `guess_match_test.ts` also pins the invariant
-  above from the other side: a shorthand is never submittable.
-  `answer_suggestion_option_test.tsx` and `answer_input_test.tsx` cover the
-  rendered ARIA state strings described above. `suggestion_popup_layout_test.ts`
-  covers the popup geometry: capping to the room below the field, capping to the
-  content when that is smaller, flipping above when that side has more room,
-  staying below on a tie, the one-row floor, and the uncovered-viewport case.
-  `visible_band_scroll_test.ts` covers the action-row nudge: the already-visible
-  no-op, the clearance line, a row entirely below the band, the clamp that keeps
-  the focused field on screen, and the case where freeing the row could only be
-  bought by hiding the field. Those tests use measurements taken from a 412x915
-  Android profile with the keyboard raised.
+  `suggest_matches_test.ts`, `title_shorthand_test.ts`,
+  `title_suggestion_pool_test.ts`. Together they cover: NFD decomposition,
+  punctuation set, whitespace collapsing, exact / startsWith / contains /
+  shorthand ranking, ordering stability, and gate behavior on empty / matching /
+  non-matching input. `guess_match_test.ts` also pins the invariant above from
+  the other side: a shorthand is never submittable.
+  `title_suggestion_pool_test.ts` covers the pool order: alphabetical, one entry
+  per title, independent of the order the titles arrived in, and the Red Alert
+  case from the two dropdowns. `distinct_titles_test.ts` asserts the same order
+  coming out of the database. `answer_suggestion_option_test.tsx` and
+  `answer_input_test.tsx` cover the rendered ARIA state strings described above.
+  `suggestion_popup_layout_test.ts` covers the popup geometry: capping to the
+  room below the field, capping to the content when that is smaller, flipping
+  above when that side has more room, staying below on a tie, the one-row floor,
+  and the uncovered-viewport case. `visible_band_scroll_test.ts` covers the
+  action-row nudge: the already-visible no-op, the clearance line, a row
+  entirely below the band, the clamp that keeps the focused field on screen, and
+  the case where freeing the row could only be bought by hiding the field. Those
+  tests use measurements taken from a 412x915 Android profile with the keyboard
+  raised.
 - **Manual:**
   - Type a normalized variant ("walle", "WALL-E", "Wall·E") and confirm Submit
     enables and answers score correctly.

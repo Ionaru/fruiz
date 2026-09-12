@@ -51,6 +51,10 @@ function seedDb(): DB {
     { id: "t-easy-1", title: "Easy One", difficulty: "easy" as const },
     { id: "t-easy-2", title: "Easy Two", difficulty: "easy" as const },
     { id: "t-hard-1", title: "Hard One", difficulty: "hard" as const },
+    // A lowercase title (SQLite's binary collation would file it after every
+    // capital) and a second track sharing an existing title.
+    { id: "t-hard-2", title: "arcade night", difficulty: "hard" as const },
+    { id: "t-hard-3", title: "Easy Two", difficulty: "hard" as const },
   ];
   for (const r of rows) {
     db.insert(tracks).values({
@@ -78,7 +82,9 @@ Deno.test('getDistinctTitlesForCategory: "easy" returns only easy titles', async
 
 Deno.test("getDistinctTitlesForCategory: hard/omitted return full pool", async () => {
   const db = seedDb();
-  const full = ["Easy One", "Easy Two", "Hard One"];
+  // Alphabetical with each title once: the order `toTitleSuggestionPool` gives
+  // the suggestion page's dropdown too, so the two rank a category the same.
+  const full = ["arcade night", "Easy One", "Easy Two", "Hard One"];
   assertEquals(await getDistinctTitlesForCategory(db, "cat-1", "hard"), full);
   assertEquals(await getDistinctTitlesForCategory(db, "cat-1"), full);
 });

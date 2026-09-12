@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { DB } from "../db/db.ts";
 import { categories, trackCategories, tracks } from "../db/schema.ts";
 import { filenameFromAudioUrl } from "./audioFilePath.ts";
+import { toTitleSuggestionPool } from "./titleSuggestionPool.ts";
 import type { DifficultyMode } from "./types.ts";
 
 const MIN_TRACKS = 20;
@@ -203,10 +204,12 @@ export async function getDistinctTitlesForCategory(
     .selectDistinct({ title: tracks.title })
     .from(tracks)
     .innerJoin(trackCategories, eq(trackCategories.trackId, tracks.id))
-    .where(where)
-    .orderBy(tracks.title);
+    .where(where);
 
-  return rows.map((row) => row.title);
+  // Ordering lives in `toTitleSuggestionPool`, not in an `ORDER BY`, so this
+  // pool and the suggestion page's (which is assembled in the browser) come out
+  // in the same order.
+  return toTitleSuggestionPool(rows.map((row) => row.title));
 }
 
 /**
