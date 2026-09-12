@@ -5,6 +5,7 @@ import { SelectInput } from "../components/ui/SelectInput.tsx";
 import { TextInput } from "../components/ui/TextInput.tsx";
 import { normalizeAnswer } from "../lib/normalize.ts";
 import { isValidSuggestionUrl } from "../lib/suggestionValidation.ts";
+import { toTitleSuggestionPool } from "../lib/titleSuggestionPool.ts";
 import type { CategoryRow } from "../lib/categories.ts";
 import AnswerInput from "./AnswerInput.tsx";
 
@@ -25,7 +26,9 @@ export default function TrackSuggestionForm(
   const submitting = useSignal(false);
 
   // Populate the autocomplete pool for the chosen category from the existing
-  // API (reads only titles; no DB access in the browser).
+  // API (reads only titles; no DB access in the browser). The endpoint serves
+  // its rows grouped by difficulty, so the titles go through
+  // `toTitleSuggestionPool` to reach the order the quiz's dropdown uses.
   useSignalEffect(() => {
     const key = selectedCategoryKey.value;
     if (key === "") {
@@ -39,8 +42,8 @@ export default function TrackSuggestionForm(
       .then((body) => {
         if (cancelled) return;
         const tracks = Array.isArray(body?.tracks) ? body.tracks : [];
-        existingTitles.value = tracks.map((entry: { title: string }) =>
-          String(entry.title)
+        existingTitles.value = toTitleSuggestionPool(
+          tracks.map((entry: { title: string }) => String(entry.title)),
         );
       })
       .catch(() => {

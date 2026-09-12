@@ -29,7 +29,11 @@ has no effect on the corpus; an admin still adds the track by hand through
   `/account/login`, non-admins → `/account`.
 - **Pick a category.** The form lists every category (not just quiz-eligible
   ones). On selection the island fetches `GET /api/categories/{slug}/tracks` and
-  feeds the returned titles into the reused `AnswerInput` autocomplete.
+  feeds the returned titles into the reused `AnswerInput` autocomplete. That
+  endpoint serves its rows grouped by difficulty, so the titles go through
+  `toTitleSuggestionPool` (spec 05) first: the dropdown then lists equally good
+  matches in the order the quiz's dropdown does, instead of putting a category's
+  easy titles ahead of its hard ones.
 - **Duplicate check (informational).** Given a category is chosen, When the
   typed search value normalizes to an existing title, Then a "already exists"
   hint shows. It does **not** block submission — the check is advisory. Because
@@ -76,7 +80,8 @@ must exist first.
   also imported by the island), `src/db/schema.ts`, `src/db/relations.ts`, the
   handlers in `src/routes/suggest.tsx` and `src/routes/admin/suggestions/`.
 - **Islands (client):** `src/islands/TrackSuggestionForm.tsx` (reuses
-  `src/islands/AnswerInput.tsx`).
+  `src/islands/AnswerInput.tsx`, and `src/lib/titleSuggestionPool.ts` for the
+  pool order it shares with the quiz).
 - **Components (SSR):** `src/components/SuggestionStatusBadge.tsx`,
   `src/components/SuggestionStatusList.tsx`,
   `src/components/admin/AdminSuggestionListItem.tsx`,
@@ -91,9 +96,9 @@ must exist first.
   `src/lib/adminReads.ts` (`listAdminCategories`),
   `src/routes/api/categories/[key]/tracks.ts`, `src/lib/adminSession.ts`
   (`requireAdminSessionOrRedirect`).
-- **Tests:** `tests/unit/lib/trackSuggestions_test.ts`. Admin-route gating is
-  covered by the shared `requireAdminSessionOrRedirect` in
-  `tests/admin_gate_test.ts`.
+- **Tests:** `tests/unit/lib/trackSuggestions_test.ts`,
+  `tests/unit/lib/title_suggestion_pool_test.ts`. Admin-route gating is covered
+  by the shared `requireAdminSessionOrRedirect` in `tests/admin_gate_test.ts`.
 
 ## Constraints and invariants
 
@@ -116,6 +121,9 @@ must exist first.
   `isValidSuggestionUrl` (http/https accept; empty/garbage/non-http reject) and
   `validateSuggestionInput` (trim, `missing_title`, `invalid_url`) from the pure
   `src/lib/suggestionValidation.ts`.
+  `tests/unit/lib/title_suggestion_pool_test.ts` covers the pool order this page
+  shares with the quiz, including the ordering the endpoint's difficulty
+  grouping used to produce here.
 - **Gate:** the admin suggestion routes reuse `requireAdminSessionOrRedirect`,
   whose guest→login / non-admin→account behavior is asserted in
   `tests/admin_gate_test.ts`. The player route uses the same inline
