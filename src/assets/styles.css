@@ -70,6 +70,21 @@ html.preload *::after {
   }
 
   /*
+    The shallower resting relief, for controls and cards packed into a list
+    where `.plateau`'s full depth would push a shadow into the neighbour's
+    highlight (spec 07).
+
+    It is a class rather than the `nm-protrude-sm` utility it replaces because
+    utilities outrank the components layer. An element that set its relief that
+    way silently won against the interactive rules below (they set the same
+    custom properties) and ended up with no hover or pressed state at all.
+    Keeping every relief tier in this layer keeps that cascade one-directional.
+  */
+  .plateau-shallow {
+    @apply nm-protrude-sm;
+  }
+
+  /*
     The same raised surface, but only from `lg`. The collection's progress block
     is bare on phones, where it is the page heading rather than a card, and
     becomes a sidebar card on desktop.
@@ -129,10 +144,47 @@ html.preload *::after {
     }
   }
 
-  button.plateau {
+  /*
+    One hover and pressed treatment for every control built on a plateau. The
+    selector lists the elements that are controls by virtue of their tag rather
+    than naming `button` alone: a link styled as a button is as tappable as a
+    button, and half the app's controls are links. Anything tappable lifts under
+    the cursor and presses in while held, so a surface reports what it is
+    without each call site restating the rule.
+
+    `:is()` takes the specificity of its most specific argument, which keeps
+    this at `button.plateau`'s old weight. A caller's own classes still win
+    where they are meant to.
+
+    `@variant hover` compiles to `@media (hover: hover)`, which keeps the lift
+    off touch screens, where a hover state sticks to the last thing tapped.
+  */
+  :is(a, button, label, summary).plateau {
     @apply cursor-pointer;
+
     @variant hover {
       @apply nm-protrude-md;
+    }
+
+    @variant active {
+      @apply nm-dent-sm;
+    }
+  }
+
+  /*
+    A shallow control steps the same way, one tier up from where it rests, so
+    the lift stays in proportion to a surface that is deliberately flatter than
+    the rest.
+
+    The pressed state is the same dent at both tiers, and it has to be restated
+    here rather than left to the rule above: pressing a control also hovers it,
+    and between two rules of equal specificity the later one wins. A lone hover
+    override here would therefore beat the pressed state above and the control
+    would stay lifted while held.
+  */
+  :is(a, button, label, summary).plateau-shallow {
+    @variant hover {
+      @apply nm-protrude;
     }
 
     @variant active {

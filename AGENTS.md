@@ -209,6 +209,24 @@ route `handler` functions. It MUST NOT move into islands or client bundles.
   Pattern: `const sig = useSignal(prop); sig.value = prop;` then read
   `sig.value` inside the effect.
 
+## Interactive surfaces
+
+The raised surface every card and control is built from is `.plateau` in
+[`src/assets/styles.css`](./src/assets/styles.css). Two rules follow from it:
+
+- **Controls get their hover and pressed states from the stylesheet, never from
+  a call site.** One rule in `styles.css` styles every `a`, `button`, `label`
+  and `summary` that carries `.plateau`, so a link styled as a button behaves
+  like a button. Build a control from one of those elements, give it `.plateau`,
+  and it is done. Shared shapes already do this: `Button`, `ButtonLink`,
+  `PillLink`, and `PlateauCard` when given an `href`.
+- **Relief tiers are `.plateau` and `.plateau-shallow`; markup MUST NOT set an
+  `nm-protrude-*` utility.** Tailwind emits its utilities layer after its
+  components layer, so a relief utility on an element outranks the interactive
+  rules (they set the same custom properties) and silently leaves the control
+  with no hover or pressed state.
+  `tests/unit/components/relief_tier_source_test.ts` enforces this.
+
 ## Code design principles
 
 - Apply Clean Code: descriptive names, small focused functions/modules,

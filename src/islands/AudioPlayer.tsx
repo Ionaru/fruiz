@@ -623,7 +623,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
       The meter sits on the control line rather than under the title. That buys
       it the row's full height instead of a 14px sliver, and it leaves both
       label lines in place, so the card is the same height idle, playing and
-      paused. `nm-protrude-sm` keeps the card's relief inside the list gap: at
+      paused. `plateau-shallow` keeps the card's relief inside the list gap: at
       the full `.plateau` depth a card's shadow reaches into its neighbour's
       highlight, and the cards with no neighbour to wash them — the last of a
       letter run, one before a locked slot, the playing row — read heavier than
@@ -632,7 +632,7 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
     const showsMeter = isPlaying || isPaused;
     return (
       <div
-        class={`plateau nm-protrude-sm flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3 ${
+        class={`plateau plateau-shallow flex items-center gap-3 rounded-[14px] py-2.5 pl-4 pr-3 ${
           isPlaying ? "glow glow-soft glow-green" : ""
         }`}
       >

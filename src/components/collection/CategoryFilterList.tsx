@@ -38,7 +38,11 @@ export function CategoryFilterList(props: Readonly<CategoryFilterListProps>) {
         // has to be matched on all four sides: the padding gives the pills'
         // shadows room inside the scroll container and the negative margin
         // takes the same space back out of the layout.
-        class="-m-1.5 flex gap-2.5 overflow-x-auto p-1.5 lg:m-0 lg:flex-col lg:overflow-x-visible lg:p-0"
+        //
+        // 12px is sized for the deepest relief a pill reaches, which is its
+        // hover state (~11.7px) rather than its resting one (~4.8px). At the
+        // resting size the lift was clipped flat against the scroller's edge.
+        class="-m-3 flex gap-2.5 overflow-x-auto p-3 lg:m-0 lg:flex-col lg:overflow-x-visible lg:p-0"
       >
         <CategoryFilterButton
           label="All"

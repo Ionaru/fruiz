@@ -129,6 +129,11 @@ I start, and what does each difficulty actually mean.
 
 - Single-column layouts under phone widths.
 - Touch-friendly targets; no hover-only interactions.
+- Every control reports the same two states, whichever element it is built from:
+  it lifts under a cursor and presses in while held. The hover half is gated on
+  `@media (hover: hover)` so a tap does not leave the last control lifted; the
+  pressed half is what a touch device actually gets, and it is never the only
+  signal a control carries.
 - Audio playback waits for a user gesture (iOS/Android requirement).
 - The copy action in the "Challenge a friend" popup MUST work with the mobile
   clipboard API and MUST show visible feedback for both the copied and failed

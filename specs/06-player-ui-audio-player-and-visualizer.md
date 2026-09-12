@@ -158,13 +158,13 @@ unchanged:
   resting bars, with the glow off — because a position kept is worth nothing if
   the row will not say what it is.
 
-  The card carries `nm-protrude-sm` rather than `.plateau`'s full relief. At the
-  full depth a card's shadow reaches ~11.7px, further than the list gap, so each
-  card's cast shadow is washed by the next card's highlight — and the cards with
-  no such neighbour (the last of a letter run, one before a locked slot, the
-  playing row, which `.glow` lifts into the positioned paint step) read markedly
-  heavier than the rest. The smaller relief reaches ~4.8px, inside the list's
-  10px gap, so no card's appearance depends on what follows it.
+  The card carries `.plateau-shallow` rather than `.plateau`'s full relief. At
+  the full depth a card's shadow reaches ~11.7px, further than the list gap, so
+  each card's cast shadow is washed by the next card's highlight — and the cards
+  with no such neighbour (the last of a letter run, one before a locked slot,
+  the playing row, which `.glow` lifts into the positioned paint step) read
+  markedly heavier than the rest. The smaller relief reaches ~4.8px, inside the
+  list's 10px gap, so no card's appearance depends on what follows it.
 
 ### Audio visualizer island
 

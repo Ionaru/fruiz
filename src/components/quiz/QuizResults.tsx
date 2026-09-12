@@ -1,4 +1,5 @@
 import { Button } from "../Button.tsx";
+import { ButtonLink } from "../ui/ButtonLink.tsx";
 import { QuizResultRow } from "./QuizResultRow.tsx";
 import { scoreFromProgress } from "../../lib/quizProgress.ts";
 import type { QuizProgress, QuizTrackPayload } from "../../lib/types.ts";
@@ -29,12 +30,9 @@ export function QuizResults(props: Readonly<QuizResultsProps>) {
           Play a new quiz
         </Button>
         {props.loggedIn && (
-          <a
-            href="/collection"
-            class="flex-1 plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-          >
+          <ButtonLink href="/collection" class="flex-1">
             Collection
-          </a>
+          </ButtonLink>
         )}
       </div>
       <div class="plateau rounded-2xl p-6 space-y-2 text-center">

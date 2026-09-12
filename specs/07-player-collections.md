@@ -135,10 +135,10 @@ no uncollected title survives it.
   (see spec 06's `row` bullet). A track with no categories is one line shorter,
   which is a property of the track, not of its state.
 - **No card's appearance depends on its neighbours.** Collected rows and filter
-  pills use `nm-protrude-sm` and the list gap is 10px, which is wider than the
+  pills use `.plateau-shallow` and the list gap is 10px, which is wider than the
   ~4.8px the smaller relief reaches. At `.plateau`'s full depth the reach is
-  ~11.7px, and every card's shadow was being washed by the next card's highlight
-  — so the cards with nothing after them stood out.
+  ~11.7px, and every card's shadow was being washed by the next card's
+  highlight, so the cards with nothing after them stood out.
 - **Locked slots have no surface at all.** A page that is mostly gaps read as
   busy with a tile per gap, so the slot sits straight on the page background the
   way the progress block does, keeping only a collected row's padding so the
@@ -148,7 +148,13 @@ no uncollected title survives it.
   the list.
 - **The pill row's shadows are not clipped.** `overflow-x: auto` clips both
   axes, so `CategoryFilterList` insets matched padding on all four sides and
-  cancels it with an equal negative margin.
+  cancels it with an equal negative margin. The inset is 12px, sized for the
+  deepest relief a pill reaches: its hover state (~11.7px), not its resting one,
+  so the lift is not cut off flat against the scroller's edge. Padding and
+  margin cancel exactly, so the size of the inset does not move anything.
+- **A filter pill reports hover and pressed like every other control.** It is a
+  `<button>` on a plateau, so the shared rule in `styles.css` gives it the lift
+  and the dent; its shallow resting tier only changes how far the lift travels.
 - **Selecting a filter does not resize it.** The active pill is signalled by the
   `info` tint, a stronger count contrast and `aria-pressed` — never by weight,
   which would make the pill wider and shove the row along.

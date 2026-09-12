@@ -1,6 +1,7 @@
 import { Head } from "fresh/runtime";
 import { AccountTopNav } from "../../components/layout/AccountTopNav.tsx";
 import { PageShell } from "../../components/layout/PageShell.tsx";
+import { ButtonLink } from "../../components/ui/ButtonLink.tsx";
 import { PlateauCard } from "../../components/ui/PlateauCard.tsx";
 import { define } from "../../utils.ts";
 import AccountManage from "../../islands/AccountManage.tsx";
@@ -37,18 +38,8 @@ export default define.page<typeof handler>(({ data, state, url }) => (
             Register a new account or sign in with your passkey.
           </p>
           <div class="flex flex-col gap-3">
-            <a
-              href="/account/register"
-              class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-            >
-              Register
-            </a>
-            <a
-              href="/account/login"
-              class="plateau rounded-xl px-4 py-3 text-center no-underline font-medium min-h-11 flex items-center justify-center text-base-900 dark:text-base-100"
-            >
-              Sign in
-            </a>
+            <ButtonLink href="/account/register">Register</ButtonLink>
+            <ButtonLink href="/account/login">Sign in</ButtonLink>
           </div>
         </PlateauCard>
       )
