@@ -1,4 +1,5 @@
 import { normalizeAnswer } from "./normalize.ts";
+import { matchTitleShorthand, shorthandKey } from "./titleShorthand.ts";
 
 /**
  * Whether `raw` matches at least one title in `suggestions` using the same
@@ -27,12 +28,26 @@ function matchRank(normalizedTitle: string, normalizedQuery: string): number {
 }
 
 /**
+ * Rank a title the query only reaches as a shorthand (`cod`, `civ 6`,
+ * `half life`). Ranked below every literal match, so a shorthand hit only ever
+ * fills a slot no title match wanted.
+ * 3 = the shorthand covers the whole title, 4 = it covers part of it.
+ */
+function shorthandRank(title: string, queryKey: string): number {
+  const match = matchTitleShorthand(title, queryKey);
+  if (match === "whole") return 3;
+  if (match === "partial") return 4;
+  return -1;
+}
+
+/**
  * Filter `suggestions` down to the best matches for `raw`, using the same
  * normalization as scoring (`normalizeAnswer`).
  *
- * Returns up to `limit` titles, ranked exact > startsWith > contains, stable
- * within each tier (input order preserved). Returns `[]` for empty or
- * whitespace-only input so the caller can treat "no query" as "no dropdown".
+ * Returns up to `limit` titles, ranked exact > startsWith > contains > shorthand
+ * (see `titleShorthand.ts`), stable within each tier (input order preserved).
+ * Returns `[]` for empty or whitespace-only input so the caller can treat
+ * "no query" as "no dropdown".
  */
 export function suggestMatches(
   raw: string,
@@ -43,10 +58,12 @@ export function suggestMatches(
   const normalizedQuery = normalizeAnswer(raw);
   if (normalizedQuery === "") return [];
 
+  const queryKey = shorthandKey(raw);
   const ranked: { title: string; rank: number; index: number }[] = [];
   let index = 0;
   for (const title of suggestions) {
-    const rank = matchRank(normalizeAnswer(title), normalizedQuery);
+    let rank = matchRank(normalizeAnswer(title), normalizedQuery);
+    if (rank < 0) rank = shorthandRank(title, queryKey);
     if (rank >= 0) ranked.push({ title, rank, index });
     index++;
   }

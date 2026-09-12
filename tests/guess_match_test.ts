@@ -43,3 +43,18 @@ Deno.test("guessMatchesSuggestionPool: diacritic-insensitive", () => {
   assertEquals(guessMatchesSuggestionPool("Pokémon", ["Pokemon"]), true);
   assertEquals(guessMatchesSuggestionPool("beyonce", ["Beyoncé"]), true);
 });
+
+Deno.test("guessMatchesSuggestionPool: a shorthand is not a submittable answer", () => {
+  // Shorthand widens discovery only. The player still commits the real title,
+  // so the submit gate and scoring keep comparing whole titles.
+  assertEquals(guessMatchesSuggestionPool("cod", ["Call of Duty"]), false);
+  assertEquals(
+    guessMatchesSuggestionPool("csgo", ["Counter-Strike: Global Offensive"]),
+    false,
+  );
+  assertEquals(
+    guessMatchesSuggestionPool("gta4", ["Grand Theft Auto IV"]),
+    false,
+  );
+  assertEquals(guessMatchesSuggestionPool("half life", ["Half-Life"]), false);
+});

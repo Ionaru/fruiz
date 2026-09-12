@@ -1,4 +1,5 @@
 import { normalizeAnswer } from "./normalize.ts";
+import { matchTitleShorthand, shorthandKey } from "./titleShorthand.ts";
 
 /**
  * A track the player has collected. It is playable, and its title is shown.
@@ -63,11 +64,17 @@ export function groupLetterForTitle(title: string): string {
  * Whether a title matches a search query, using the same normalization as
  * guess scoring (`normalizeAnswer`) so searching behaves the way answering
  * does: accents, case and punctuation are ignored.
+ *
+ * A query that is no substring of the title still matches when it is a
+ * shorthand for it (`csgo`, `civ 6`, `half life`) — the same rule the answer
+ * field's autocomplete uses, so one search box does not behave unlike the
+ * other.
  */
 export function matchesCollectionSearch(title: string, query: string): boolean {
   const normalizedQuery = normalizeAnswer(query);
   if (normalizedQuery === "") return true;
-  return normalizeAnswer(title).includes(normalizedQuery);
+  if (normalizeAnswer(title).includes(normalizedQuery)) return true;
+  return matchTitleShorthand(title, shorthandKey(query)) !== null;
 }
 
 export interface CollectionFilter {

@@ -12,6 +12,8 @@ This subsystem owns:
 - The canonical string normalization (`normalizeAnswer`).
 - The submit-eligibility predicate (`guessMatchesSuggestionPool`).
 - The autocomplete ranking helper (`suggestMatches`).
+- The shorthand matcher (`matchTitleShorthand`) that lets a title be found by
+  its common abbreviation.
 - The category-scoped suggestion pool hydrated onto the quiz page.
 - The autocomplete UX in `AnswerInput` (combobox, keyboard navigation,
   tap-outside dismissal, and sizing the suggestion popup against the space the
@@ -97,10 +99,68 @@ typed.
 - Rank 0: exact normalized match.
 - Rank 1: title starts with the normalized query.
 - Rank 2: title contains the normalized query.
+- Rank 3: the query is a shorthand covering the whole title.
+- Rank 4: the query is a shorthand covering part of it.
 - Anything else is filtered out.
+
+Ranks 3 and 4 are only reached by a title that no literal tier wanted, so a
+shorthand hit never displaces a title match — it fills a slot that was going
+spare.
 
 Within a rank, the original input order is preserved (stable sort). The default
 limit in `AnswerInput` is `MAX_MATCHES = 20`.
+
+#### Shorthand search
+
+Players know a title by its abbreviation long before they can spell it out, so
+`suggestMatches` has a tier that matches one. `matchTitleShorthand` in
+[`src/lib/titleShorthand.ts`](../src/lib/titleShorthand.ts) takes the query's
+`shorthandKey` — `normalizeAnswer` with spaces removed, so `GTA 4` and `gta4`
+are the same thing — and tries to consume it by walking the title's words **in
+order and consecutively**, taking a prefix of each:
+
+| Query       | Title                            | Consumed as                   |
+| ----------- | -------------------------------- | ----------------------------- |
+| `cod`       | Call of Duty                     | `c`·`o`·`d`                   |
+| `civ 6`     | Civilization VI                  | `civ`·`6` (`6` ≡ `VI`)        |
+| `csgo`      | Counter-Strike: Global Offensive | `c`·`s`·`g`·`o`               |
+| `cnc`       | Command & Conquer                | `c`·`n`·`c` (`n` ≡ `&`)       |
+| `rct`       | RollerCoaster Tycoon             | `r`·`c`·`t` (camelCase split) |
+| `half life` | Half-Life                        | `half`·`life`                 |
+
+One rule therefore covers acronyms, truncated words, and the space-stripped
+title — a fixed list of generated acronyms would have covered only the first.
+The run may start at any word, which is what lets `lotr` reach
+`The Lord of the Rings` and `botw` reach
+`The Legend of Zelda: Breath of the Wild` without an article or subtitle rule. A
+run that started at the first word and ended at the last is rank 3; any other is
+rank 4.
+
+Words come from the **raw** title, not the normalized one. `normalizeAnswer`
+deletes a hyphen without leaving a separator, so a normalized
+`Counter-Strike: Global Offensive` is `counterstrike global offensive` and would
+offer `cgo` instead of `csgo`. Splitting the raw title means:
+
+- Apostrophes are **removed** rather than split on, so `Assassin's Creed` is two
+  words and answers to `ac` rather than growing a stray `s`.
+- A camelCase run splits (`RollerCoaster` → `Roller`·`Coaster`), but an all-caps
+  one does not (`FIFA 23` → `fifa23`).
+- `&` is a word of its own that reads as `n`, `and`, or itself, and may also be
+  passed over — so `Command & Conquer` answers to `cnc`, `c&c` and `cc`.
+
+Numbers are the one thing that must be typed in **full**: a word matches by
+prefix, but `2077` is not reachable by `2`. Without that, `ff1` would reach
+`Final Fantasy XIII` through the leading digit of `13`. An upper-case roman
+numeral also carries its arabic value and vice versa, so `Grand Theft Auto IV`
+answers to both `gta iv` and `gta 4`. Only an upper-case token is read as a
+numeral, because titles write sequel numbers as `IV` while `Mix` and `Did` are
+words that merely spell one — which is what keeps `I Am Legend`, `X-Men` and
+`V for Vendetta` matching as `ial`, `xm` and `vfv`.
+
+Two floors keep the tier quiet: the query key must be at least two characters,
+and words are never skipped. Dropping a word would make `metal gear 5` reach
+`Metal Gear Solid V`, and would also make the rule loose enough to match a large
+slice of any pool.
 
 `AnswerInput` (island) implements a WAI-ARIA combobox pattern:
 
@@ -236,6 +296,9 @@ No new tables or columns. The relevant data flows:
   - [`src/lib/normalize.ts`](../src/lib/normalize.ts) — `normalizeAnswer`.
   - [`src/lib/guess_match.ts`](../src/lib/guess_match.ts) —
     `guessMatchesSuggestionPool`, `suggestMatches`.
+  - [`src/lib/titleShorthand.ts`](../src/lib/titleShorthand.ts) —
+    `shorthandKey`, `matchTitleShorthand`; pure string work, no DOM and no DB,
+    so it is safe in the island bundle both call sites reach it from.
   - [`src/lib/categories.ts`](../src/lib/categories.ts) —
     `getDistinctTitlesForCategory` for the per-category suggestion pool.
   - [`src/lib/suggestionPopupLayout.ts`](../src/lib/suggestionPopupLayout.ts):
@@ -262,7 +325,10 @@ No new tables or columns. The relevant data flows:
   - [`tests/guess_match_test.ts`](../tests/guess_match_test.ts) — submit-gate
     predicate.
   - [`tests/suggest_matches_test.ts`](../tests/suggest_matches_test.ts) —
-    ranking and ordering.
+    ranking and ordering, including the two shorthand tiers.
+  - [`tests/unit/lib/title_shorthand_test.ts`](../tests/unit/lib/title_shorthand_test.ts)
+    — the shorthand rules: every abbreviation from the issue, word splitting,
+    numerals, and the floors that keep the tier quiet.
   - [`tests/unit/components/answer_suggestion_option_test.tsx`](../tests/unit/components/answer_suggestion_option_test.tsx)
     — `aria-selected` renders as `"true"` / `"false"`.
   - [`tests/unit/islands/answer_input_test.tsx`](../tests/unit/islands/answer_input_test.tsx)
@@ -281,6 +347,12 @@ No new tables or columns. The relevant data flows:
   `AGENTS.md`). Submit gating, scoring, and autocomplete ranking MUST share
   `normalizeAnswer`. Any future change to the normalization rule takes effect
   everywhere at once.
+- **Shorthand widens discovery, never the gate.** `suggestMatches` and
+  `matchesCollectionSearch` consult `matchTitleShorthand`;
+  `guessMatchesSuggestionPool` and the scoring comparison deliberately do not.
+  Typing `cod` opens a dropdown but leaves Submit disabled — the player still
+  commits the real title, so equality keeps comparing whole titles and
+  `normalizeAnswer` stays the single rule for "is this answer right".
 - **Players cannot submit freeform answers.** The Submit button's `disabled`
   attribute and the `onSubmit` handler both enforce
   `guessMatchesSuggestionPool`. Defense in depth: removing the client-side
@@ -294,9 +366,11 @@ No new tables or columns. The relevant data flows:
 ## Verification approach
 
 - **Unit:** `normalize_test.ts`, `guess_match_test.ts`,
-  `suggest_matches_test.ts`. Together they cover: NFD decomposition, punctuation
-  set, whitespace collapsing, exact / startsWith / contains ranking, ordering
-  stability, and gate behavior on empty / matching / non-matching input.
+  `suggest_matches_test.ts`, `title_shorthand_test.ts`. Together they cover: NFD
+  decomposition, punctuation set, whitespace collapsing, exact / startsWith /
+  contains / shorthand ranking, ordering stability, and gate behavior on empty /
+  matching / non-matching input. `guess_match_test.ts` also pins the invariant
+  above from the other side: a shorthand is never submittable.
   `answer_suggestion_option_test.tsx` and `answer_input_test.tsx` cover the
   rendered ARIA state strings described above. `suggestion_popup_layout_test.ts`
   covers the popup geometry: capping to the room below the field, capping to the
@@ -313,6 +387,10 @@ No new tables or columns. The relevant data flows:
   - Type a title that exists in the category but not in the current quiz —
     confirm Submit enables and the answer is recorded as `incorrect` against the
     active track.
+  - Type a shorthand for a title in the category (`cod`, `civ 6`, `half life`).
+    Confirm the full title appears in the dropdown, that Submit stays disabled
+    until it is selected, and that selecting it then scores exactly as typing
+    the title out does.
   - On mobile, confirm the suggestion dropdown is reachable by tap and keyboard,
     that `Escape` dismisses it, and that the active option is scrolled into view
     as it changes.
@@ -345,11 +423,26 @@ No new tables or columns. The relevant data flows:
   Treat the strip as part of the keyboard: the nudge above is the response to
   it, not a workaround for it.
 - **No fuzzy matching.** Two answers that differ by one letter still count as
-  different. If players complain about edge cases (subtitles, roman numerals,
-  articles), a constrained Levenshtein pass _before_ the normalized equality
-  check is the natural place to add it — but doing so would also widen the
-  submit gate. Plan both sides at once.
+  different. If players complain about edge cases, a constrained Levenshtein
+  pass _before_ the normalized equality check is the natural place to add it —
+  but doing so would also widen the submit gate. Plan both sides at once. The
+  shorthand tier is deliberately not that change: it is exact, and it only
+  widens what the dropdown offers, so it needed no matching change on the gate.
+- **Shorthand cannot reach a letter inside a word.**
+  `PlayerUnknown's Battlegrounds` answers to `pub` but never to `pubg`, because
+  the `g` sits mid-word. A title stored with a lower-case roman numeral
+  (`Civilization Vi`) is likewise not read as a numeral. Both are accepted
+  misses; a curated per-title abbreviation list, stored alongside the track, is
+  the natural extension point if they start to matter.
+- **Shorthand hits are the first to be cut by `MAX_MATCHES`.** A short query
+  with 20 or more substring hits never surfaces its shorthand match. Title
+  matches are stronger evidence, so this is the intended trade rather than a
+  bug.
 - **Normalization performance.** Each render normalizes the full suggestion pool
-  inside `suggestMatches`. Today's pools are short enough that this is not
-  visible; if a category grows past a few thousand titles, precompute a
-  normalized array once and reuse it.
+  inside `suggestMatches`, and splits into words every title the literal tiers
+  did not claim. Both are a few regex passes over a short string, and measured
+  at roughly 6µs per title, so today's pools are not visibly affected. If a
+  category grows past a few thousand titles, precompute the normalized titles
+  and their word splits once per pool and reuse them; no cache is kept inside
+  `titleShorthand.ts` itself, deliberately, since a mutable singleton in a
+  client-bundled pure module costs test isolation for very little.

@@ -111,6 +111,10 @@ no uncollected title survives it.
 - Search runs client-side over collected titles, normalized with
   `normalizeAnswer` — the same normalization as guess scoring, so searching
   behaves the way answering does.
+- A query that is no substring of the title still matches when it is a
+  **shorthand** for it (`csgo`, `civ 6`, `half life`). This is the same
+  `matchTitleShorthand` rule the answer field's autocomplete uses (spec 05), so
+  the two search boxes do not behave unlike each other.
 - **An active query hides every locked slot.** They have no title to match, and
   leaving 126 identical "Not collected yet" cards among three real hits would
   bury the results. A line under the field says so when it applies.
@@ -230,6 +234,8 @@ Application types:
   - [`src/lib/collectionEntries.ts`](../src/lib/collectionEntries.ts) — the
     `CollectionEntry` union, `toCollectionEntries` (the privacy boundary),
     letter grouping, search matching, and filtering.
+  - [`src/lib/titleShorthand.ts`](../src/lib/titleShorthand.ts) — the shorthand
+    search rule; owned by spec 05, consumed here.
 - **Routes**
   - [`src/routes/api/collection/[id].ts`](../src/routes/api/collection/[id].ts)
     — POST endpoint.
@@ -292,7 +298,8 @@ Application types:
 - **Unit:** the stats helpers and totals (`collections_test.ts`,
   `collection_stats_test.ts`); the catalog read against an in-memory SQLite
   database (`collection_catalog_test.ts`); grouping, search, filtering and the
-  serialization invariant (`collection_entries_test.ts`); and the collection's
+  serialization invariant (`collection_entries_test.ts`, which also covers
+  shorthand search and that it still drops locked slots); and the collection's
   SSR components (`tests/unit/components/collection_*.tsx`).
 - **Integration:** none directly. Authentication is exercised by
   `admin_auth_test.ts` and `session_logout_test.ts` (spec 08).
@@ -322,7 +329,8 @@ Application types:
   - Scroll the filter pills — no pill's shadow is sliced off by the row's edges
     — and select one: it must not change width or shove its neighbours.
   - Search — locked slots disappear, dividers survive, and a query that matches
-    nothing offers a way back out.
+    nothing offers a way back out. Search a collected title by its shorthand
+    (`csgo`, `half life`) and confirm it is found and locked slots still vanish.
   - **Confirm the quiz is unchanged**: stopping a clip still rewinds to the clip
     start, and replay limits still count. This is the regression the pause work
     would most plausibly cause.
