@@ -31,16 +31,13 @@ function isComment(line: string): boolean {
  * list.
  *
  * Tailwind emits its utilities layer after its components layer, so an
- * `nm-protrude-*` utility on an element outranks the rules in `styles.css` that
- * give a plateau its hover and pressed states, because they set the same
- * custom properties. The override is silent: the control simply stops
- * reacting to the pointer, which is how the collection's filter pills lost
- * theirs. `.plateau` and `.plateau-shallow` are the two supported tiers, and
- * each carries its own interactive states.
+ * `nm-protrude-*` utility outranks the `styles.css` rules that give a plateau
+ * its hover and pressed states (they set the same custom properties) and
+ * silently leaves the control unreactive. `.plateau` and `.plateau-shallow` are
+ * the two supported tiers, each carrying its own interactive states (spec 07).
  *
- * `nm-dent-*` is deliberately not covered: a dent is a surface pressed into the
- * page (inputs, the search field, a locked badge), not a tier of the raised
- * scale, and none of the elements it is used on are controls.
+ * `nm-dent-*` is not covered: a dent is a surface pressed into the page, not a
+ * tier of the raised scale, and nothing it is used on is a control.
  */
 Deno.test("raised relief tiers are not set from markup", async () => {
   const sourceFiles = await collectSourceFiles(new URL("src/", workspaceRoot));

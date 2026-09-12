@@ -12,11 +12,10 @@ import {
 import { deleteUserAccount } from "../../../src/lib/deleteAccount.ts";
 
 /**
- * Builds an in-memory database with the minimal schema needed to exercise the
- * cascade from `users` to its dependent tables. SQLite enforces foreign keys
- * (and therefore `ON DELETE CASCADE`) only when the pragma is on; `node:sqlite`
- * enables it by default, but we set it explicitly so the test documents the
- * invariant it relies on.
+ * In-memory database with the minimal schema needed to exercise the cascade
+ * from `users` to its dependent tables. SQLite enforces `ON DELETE CASCADE`
+ * only with the foreign-keys pragma on; `node:sqlite` enables it by default,
+ * but it is set explicitly so the test states the invariant it relies on.
  */
 function createSeededDb() {
   const client = new DatabaseSync(":memory:");

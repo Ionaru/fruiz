@@ -3,12 +3,11 @@ import { useSignalEffect } from "@preact/signals";
 /**
  * Removes the `preload` class from `<html>` once the first styled frame has
  * painted, re-enabling CSS transitions. The class is set server-side in
- * routes/_app.tsx so transitions stay suppressed during the initial (and, in
- * dev, the re-injected) render — otherwise the broad `transition-all` on
- * `.plateau` surfaces animates from default to styled state, visible as a flash
- * when navigating with the HTTP cache disabled.
+ * routes/_app.tsx: without it the broad `transition-all` on `.plateau` animates
+ * from default to styled state, visible as a flash when the stylesheet is
+ * applied after the first unstyled render.
  *
- * Renders no markup; it exists only to run this client-side side effect.
+ * Renders no markup.
  */
 export default function PreloadGuard() {
   useSignalEffect(() => {

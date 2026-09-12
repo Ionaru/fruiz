@@ -1,10 +1,9 @@
 /**
  * The two lines of a collection row's label column.
  *
- * They are separate exports because the row's card is rendered by
- * `AudioPlayer` — the glow, the waveform swap and the pause glyph all depend on
- * playback state that only the island holds — so it takes the title and the
- * subtitle as slots rather than a single block.
+ * Separate exports because the row's card is rendered by `AudioPlayer`, which
+ * holds the playback state the glow and glyphs depend on, so it takes the title
+ * and the subtitle as slots rather than a single block.
  */
 
 export interface CollectionTrackTitleProps {

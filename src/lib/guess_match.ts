@@ -44,10 +44,9 @@ function shorthandRank(title: string, queryKey: string): number {
  * Filter `suggestions` down to the best matches for `raw`, using the same
  * normalization as scoring (`normalizeAnswer`).
  *
- * Returns up to `limit` titles, ranked exact > startsWith > contains > shorthand
- * (see `titleShorthand.ts`), stable within each tier (input order preserved).
- * Returns `[]` for empty or whitespace-only input so the caller can treat
- * "no query" as "no dropdown".
+ * Returns up to `limit` titles, ranked exact > startsWith > contains >
+ * shorthand (see `titleShorthand.ts`), stable within each tier. Empty or
+ * whitespace-only input returns `[]`, so "no query" reads as "no dropdown".
  */
 export function suggestMatches(
   raw: string,

@@ -14,11 +14,10 @@ const stylesheet = await Deno.readTextFile(
 );
 
 /**
- * The hover and pressed relief is attached to a selector in `styles.css`, so
- * nothing in a rendered component can assert it directly. These tests pin the
- * two halves of the contract instead: the selector covers every element a
- * control is built from, and every control carries `plateau` so the selector
- * reaches it.
+ * The hover and pressed relief lives on a selector in `styles.css`, so no
+ * rendered component can assert it directly. These tests pin the two halves
+ * instead: the selector covers every element a control is built from, and every
+ * control carries `plateau` so the selector reaches it.
  */
 
 /** The body of the rule that gives plateau controls their interactive states. */

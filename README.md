@@ -166,12 +166,10 @@ port `8000`. `/app/data` is a volume so the SQLite database and uploaded audio
 survive container restarts.
 
 `.github/workflows/cd.yaml` runs `deno audit`, `deno task check` and
-`deno task test` on every push and pull request, builds and pushes
-`ghcr.io/ionaru/fruiz` on merges to `main`, then deploys over SSH: the checkout
-on the server is moved to the built commit, the image is pulled by its short
-SHA, and `docker compose up --wait` blocks until the container reports healthy.
-On start the compose command runs `deno task db:sync` and
-`deno task playback-gain:backfill` before `deno task start`.
+`deno task test` on every push and pull request, then on merges to `main` builds
+and pushes `ghcr.io/ionaru/fruiz` and deploys it over SSH. The container runs
+`deno task db:sync` and `deno task playback-gain:backfill` before
+`deno task start`, so it only reports healthy once both have finished.
 
 ## Self-hosting
 

@@ -23,7 +23,6 @@ export function ChallengeShareModal(props: Readonly<ChallengeShareModalProps>) {
   const dialogRef = useSignal<HTMLDialogElement | null>(null);
   const copyStatus = useSignal<CopyStatus>("idle");
 
-  // Open the dialog as modal on mount, close on unmount.
   useSignalEffect(() => {
     const dialog = dialogRef.value;
     if (!dialog) return;

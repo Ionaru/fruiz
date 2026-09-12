@@ -114,9 +114,8 @@ Deno.test("the tagline is rendered only on the home page", () => {
 
 /*
  * The wordmark outranks the tagline: the bar must never show the two of them
- * ellipsised side by side, which is what happened while both could shrink. The
- * geometry that enforces it only exists in a browser, so these two tests guard
- * the markup that produces it.
+ * ellipsised side by side. The geometry that enforces it only exists in a
+ * browser, so these tests guard the markup that produces it.
  */
 
 Deno.test("the tagline is shown whole or not at all", () => {

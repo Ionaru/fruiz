@@ -2,10 +2,9 @@ import type { AnchorHTMLAttributes } from "preact";
 import type { IconType } from "react-icons";
 
 /**
- * `pill` is the default label-and-icon shape. `icon` is a fixed circular target
- * that only shows its icon, and `icon-then-pill` starts as that circle and
- * grows into a labelled pill from the `sm` breakpoint up. The icon-based shapes
- * expect the label to be passed as visually-hidden text so the link keeps an
+ * `pill` is the default label-and-icon shape, `icon` a fixed circular target,
+ * and `icon-then-pill` that circle growing into a labelled pill from `sm` up.
+ * The icon shapes expect a visually-hidden label, so the link keeps an
  * accessible name at every width.
  */
 export type PillShape = "pill" | "icon" | "icon-then-pill";

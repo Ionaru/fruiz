@@ -2,22 +2,13 @@
  * Pure helpers that turn an `AnalyserNode`'s raw frequency bins into per-bar
  * magnitudes for the {@link AudioVisualizer}.
  *
- * Why this exists: `getByteFrequencyData` returns *linear* frequency bins (each
- * bin spans the same number of Hz). Music energy is heavily bass-weighted and
- * pitch perception is logarithmic, so a direct bin → bar mapping leaves the low
- * bars pinned at full height and the high bars almost flat regardless of the
- * track. These helpers fix that with two steps:
+ * `getByteFrequencyData` returns linear frequency bins, but music energy is
+ * bass-weighted and pitch perception is logarithmic, so mapping bins to bars
+ * directly pins the low bars at full height and leaves the high ones flat. Two
+ * steps fix that: log-spaced bands, and a per-bar treble tilt.
  *
- *  1. **Log-spaced bands** — bars are spread across log-spaced bin ranges (≈ one
- *     constant pitch ratio per bar, like octaves on a piano) instead of equal Hz
- *     slices, so the bass no longer dominates most of the bars.
- *  2. **Treble tilt** — a per-bar gain that ramps up toward the high end to
- *     counter music's natural bass-heavy spectral tilt, so the high bars visibly
- *     react.
- *
- * Bin index is linear in frequency (`freq = binIndex * sampleRate / fftSize`),
- * so log-spacing the bin indices is equivalent to log-spacing the frequencies —
- * no sample rate needed here.
+ * Bin index is linear in frequency, so log-spacing the indices log-spaces the
+ * frequencies and no sample rate is needed here.
  */
 
 /** Lowest bin included in the lowest bar. Bin 0 (DC offset) is skipped. */
@@ -29,18 +20,16 @@ export const SPECTRUM_MIN_BIN = 1;
  */
 export const SPECTRUM_MAX_BIN_FRACTION = 0.75;
 /**
- * Treble lift. The highest bar's magnitude is multiplied by `1 + SPECTRUM_TILT`
- * and the lowest by `1` (linearly interpolated between). Raise for livelier
- * highs, lower toward 0 for a faithful, bass-dominant display. Kept modest so
- * the lifted highs do not clamp to full height.
+ * Treble lift: the highest bar is multiplied by `1 + SPECTRUM_TILT`, the lowest
+ * by `1`, interpolated between. Raise for livelier highs, lower toward 0 for a
+ * faithful, bass-dominant display. Kept modest so the highs do not clamp.
  */
 export const SPECTRUM_TILT = 1.0;
 
 /**
- * Highest bin to include, given the analyser's bin count. Kept above
- * {@link SPECTRUM_MIN_BIN} where possible, but the final clamp to `binCount - 1`
- * wins so the result is never a bin index past the analyser buffer (matters only
- * for tiny FFT sizes; production uses 512 bins → 384).
+ * Highest bin to include, given the analyser's bin count. The clamp to
+ * `binCount - 1` wins over the {@link SPECTRUM_MIN_BIN} floor, so the result is
+ * never an index past the analyser buffer (only reachable at tiny FFT sizes).
  */
 export function resolveMaxBin(binCount: number): number {
   const fractioned = Math.floor(binCount * SPECTRUM_MAX_BIN_FRACTION);

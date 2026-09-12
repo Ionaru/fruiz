@@ -16,10 +16,9 @@ import {
 } from "./telemetry.ts";
 
 /**
- * Fruiz-specific wiring for the passkey plugin: the Drizzle store plus the
- * identity/session hooks. The plugin owns the WebAuthn ceremonies; this keeps
- * the user model, the atomic registration transaction and the session cookie
- * on the host side.
+ * Fruiz-specific wiring for the passkey plugin: the Drizzle store and the
+ * identity/session hooks. The plugin owns the WebAuthn ceremonies; the user
+ * model, the registration transaction and the session cookie stay host-side.
  */
 export function buildPasskeyConfig(): PasskeyConfig<State> {
   return {

@@ -44,7 +44,7 @@ export function filenameFromAudioUrl(audioUrl: string): string {
  * Falls back to the extension-less filename when that leaves nothing.
  *
  * Shared by the music-folder seeder and the admin new-track form, so a track
- * created either way starts from the same title.
+ * starts from the same title either way.
  */
 export function trackTitleFromAudioUrl(audioUrl: string): string {
   const filename = filenameFromAudioUrl(audioUrl);

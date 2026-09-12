@@ -2,9 +2,8 @@ import type { ButtonHTMLAttributes } from "preact";
 
 /**
  * `pill` is the fully rounded default. `card` is the softer-cornered rectangle
- * the difficulty buttons use, where two buttons sit side by side and share a
- * card's worth of width — a full pill radius at that size reads as a lozenge
- * rather than as a tappable panel.
+ * the difficulty buttons use: two side by side share a card's width, where a
+ * full pill radius reads as a lozenge rather than a tappable panel.
  */
 export type ButtonShape = "pill" | "card";
 

@@ -3,12 +3,10 @@
  * share card (spec 13).
  *
  * Link unfurlers will not render SVG, so the card is authored as HTML and
- * rasterised once at authoring time rather than on every request. Chrome's
- * `--screenshot` flag is not good enough here: it sizes the output canvas from
- * `--window-size` but lays the page out in the window's smaller content area,
- * leaving a blank strip along the bottom. Driving the browser over the DevTools
- * Protocol sets the viewport exactly, so the PNG comes out at exactly
- * OG_IMAGE_WIDTH x OG_IMAGE_HEIGHT.
+ * rasterised once at authoring time. Chrome's `--screenshot` sizes the canvas
+ * from `--window-size` but lays the page out in the window's smaller content
+ * area, leaving a blank strip along the bottom; the DevTools Protocol sets the
+ * viewport exactly instead.
  *
  * Usage:
  *   deno task og:render

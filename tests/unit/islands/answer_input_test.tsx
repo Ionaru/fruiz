@@ -16,14 +16,12 @@ function comboboxTag(value: string, suggestions: string[]): string {
 }
 
 // Only the closed state is reachable from a server render: `isOpen` starts
-// false and flips solely inside browser event handlers, so no `render()` call
-// can open the dropdown.
+// false and flips solely inside browser event handlers.
 //
-// Unlike the option rows, this attribute reaches the element through
-// TextInput's prop spread rather than the JSX precompile path, so a raw
-// boolean already serializes as "false" here. These tests therefore pin the
-// rendered contract; they are not a guard against the boolean creeping back.
-// The guard that does bite lives in answer_suggestion_option_test.tsx.
+// This attribute reaches the element through TextInput's prop spread rather
+// than the JSX precompile path, so a raw boolean already serializes as "false".
+// These tests pin the rendered contract; the guard against the boolean is in
+// answer_suggestion_option_test.tsx.
 Deno.test("AnswerInput: the combobox reports its collapsed state as a literal string", () => {
   assertStringIncludes(
     comboboxTag("Wall", ["Wall-E", "Waldo"]),

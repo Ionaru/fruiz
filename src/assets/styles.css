@@ -4,23 +4,18 @@
 @source inline("shadow-none");
 
 /* Opt the document into both color schemes so the browser paints its own
-   widgets to match `prefers-color-scheme`, the same signal Tailwind's `dark:`
-   variant uses. Without this the UA assumes a light page and renders native
-   chrome light even in dark mode: the `<select>` option popup (glaringly so on
-   the admin track forms, which list every audio file), scrollbars, spinner
-   buttons and the like. */
+   widgets to match `prefers-color-scheme`. Without this the UA assumes a light
+   page and renders native chrome light even in dark mode: the `<select>` option
+   popup, scrollbars, spinner buttons and the like. */
 :root {
   color-scheme: light dark;
 }
 
-/* Suppress CSS transitions during the initial page load. The broad
-   `transition-all` used by `.plateau` (and other interactive surfaces) would
-   otherwise animate from its default to its styled state on first paint —
-   visible as a flash when navigating with the HTTP cache disabled, because the
-   stylesheet is (re)applied after the first unstyled render. The `preload`
-   class is removed by a small inline script in routes/_app.tsx once the first
-   styled frame has painted. Keyframe animations (spinner, glow) are
-   intentionally left untouched. */
+/* Suppress CSS transitions during the initial page load: the broad
+   `transition-all` on `.plateau` would otherwise animate from default to styled
+   state on first paint, visible as a flash when the stylesheet is applied after
+   the first unstyled render. `PreloadGuard` drops the class once that frame has
+   painted. Keyframe animations (spinner, glow) are left untouched. */
 html.preload *,
 html.preload *::before,
 html.preload *::after {
@@ -74,11 +69,11 @@ html.preload *::after {
     where `.plateau`'s full depth would push a shadow into the neighbour's
     highlight (spec 07).
 
-    It is a class rather than the `nm-protrude-sm` utility it replaces because
-    utilities outrank the components layer. An element that set its relief that
-    way silently won against the interactive rules below (they set the same
-    custom properties) and ended up with no hover or pressed state at all.
-    Keeping every relief tier in this layer keeps that cascade one-directional.
+    A class rather than the `nm-protrude-sm` utility, because utilities outrank
+    the components layer: an element setting its relief that way silently beats
+    the interactive rules below (same custom properties) and ends up with no
+    hover or pressed state. Keeping every tier here keeps that cascade
+    one-directional.
   */
   .plateau-shallow {
     @apply nm-protrude-sm;
@@ -89,10 +84,9 @@ html.preload *::after {
     is bare on phones, where it is the page heading rather than a card, and
     becomes a sidebar card on desktop.
 
-    This has to be its own class: `.plateau` lives in the components layer, and
-    Tailwind only applies variants to utilities, so `lg:plateau` would silently
-    generate nothing. The underlying `nm-*` utilities do take variants, so the
-    body is a copy of `.plateau`'s above and must be kept in step with it.
+    Its own class because Tailwind only applies variants to utilities, so
+    `lg:plateau` would silently generate nothing. The `nm-*` utilities do take
+    variants, so the body copies `.plateau`'s and must be kept in step with it.
   */
   .plateau-from-lg {
     @variant lg {
@@ -146,18 +140,15 @@ html.preload *::after {
 
   /*
     One hover and pressed treatment for every control built on a plateau. The
-    selector lists the elements that are controls by virtue of their tag rather
-    than naming `button` alone: a link styled as a button is as tappable as a
-    button, and half the app's controls are links. Anything tappable lifts under
-    the cursor and presses in while held, so a surface reports what it is
+    selector names the tags that are controls rather than `button` alone: a link
+    styled as a button is as tappable as one, so a surface reports what it is
     without each call site restating the rule.
 
-    `:is()` takes the specificity of its most specific argument, which keeps
-    this at `button.plateau`'s old weight. A caller's own classes still win
-    where they are meant to.
+    `:is()` takes the specificity of its most specific argument, keeping this at
+    `button.plateau`'s weight so a caller's own classes still win.
 
-    `@variant hover` compiles to `@media (hover: hover)`, which keeps the lift
-    off touch screens, where a hover state sticks to the last thing tapped.
+    `@variant hover` compiles to `@media (hover: hover)`, keeping the lift off
+    touch screens where a hover state sticks to the last thing tapped.
   */
   :is(a, button, label, summary).plateau {
     @apply cursor-pointer;
@@ -172,15 +163,13 @@ html.preload *::after {
   }
 
   /*
-    A shallow control steps the same way, one tier up from where it rests, so
-    the lift stays in proportion to a surface that is deliberately flatter than
-    the rest.
+    A shallow control steps one tier up from where it rests, so the lift stays
+    in proportion to a flatter surface.
 
-    The pressed state is the same dent at both tiers, and it has to be restated
-    here rather than left to the rule above: pressing a control also hovers it,
-    and between two rules of equal specificity the later one wins. A lone hover
-    override here would therefore beat the pressed state above and the control
-    would stay lifted while held.
+    The pressed state is restated here rather than left to the rule above:
+    pressing a control also hovers it, and between two rules of equal
+    specificity the later one wins, so a lone hover override would beat the
+    pressed state above and leave the control lifted while held.
   */
   :is(a, button, label, summary).plateau-shallow {
     @variant hover {

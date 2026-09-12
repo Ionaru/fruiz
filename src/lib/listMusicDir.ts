@@ -21,10 +21,10 @@ function posixRel(...parts: string[]): string {
 }
 
 /**
- * Normalizes a stored `tracks.audio_url` so it can be compared with the paths
- * `listAudioFilesInMusicDir` returns: trims, converts backslashes, and drops a
- * leading slash. Comparison stays case-sensitive on purpose so it agrees
- * exactly with the membership check the track form handlers already apply.
+ * Normalizes a stored `tracks.audio_url` for comparison with the paths
+ * `listAudioFilesInMusicDir` returns: trimmed, backslashes converted, leading
+ * slash dropped. Case-sensitive on purpose, to agree exactly with the
+ * membership check the track form handlers apply.
  */
 function comparableAudioPath(audioUrl: string): string {
   return audioUrl.trim().replaceAll("\\", "/").replace(/^\/+/, "");

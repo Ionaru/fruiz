@@ -20,10 +20,9 @@ export interface CollectedEntry {
  * A track the player has not collected yet, shown as a locked slot in the
  * position its title would occupy.
  *
- * The title is deliberately absent: the slot marks that something is missing
- * without naming it, so the collection page never answers a quiz question. Only
- * the divider letter and the categories travel, because grouping and filtering
- * need them and neither identifies the track.
+ * The title is deliberately absent, so the collection page never answers a quiz
+ * question. Only the divider letter and the categories travel: grouping and
+ * filtering need them and neither identifies the track.
  */
 export interface LockedEntry {
   kind: "locked";
@@ -41,15 +40,13 @@ export interface LetterSection {
 
 /**
  * Divider letter for a title: its first character, uppercased. Digits stay
- * themselves rather than folding into a shared "#" bucket, so "1-2-Switch"
- * groups under "1". A blank title falls back to "#" so it still lands
- * somewhere.
+ * themselves rather than folding into a "#" bucket, so "1-2-Switch" groups
+ * under "1"; a blank title falls back to "#".
  *
- * Accents are stripped first, and that is not cosmetic. Titles are ordered with
- * `localeCompare`, which files "Ángel" among the A's — but its raw first
- * character is "Á", so without folding it would open a second divider wedged
- * between two runs of A's, and the grouping pass (which assumes a letter's
- * entries are contiguous) would emit "A", "Á", "A".
+ * Accents are stripped first because titles are ordered with `localeCompare`,
+ * which files "Ángel" among the A's. Unfolded, its "Á" would open a second
+ * divider wedged between two runs of A's, and the grouping pass assumes a
+ * letter's entries are contiguous.
  */
 export function groupLetterForTitle(title: string): string {
   const firstCharacter = title.trim().charAt(0);
@@ -66,9 +63,8 @@ export function groupLetterForTitle(title: string): string {
  * does: accents, case and punctuation are ignored.
  *
  * A query that is no substring of the title still matches when it is a
- * shorthand for it (`csgo`, `civ 6`, `half life`) — the same rule the answer
- * field's autocomplete uses, so one search box does not behave unlike the
- * other.
+ * shorthand for it (`csgo`, `civ 6`), the same rule the answer field's
+ * autocomplete uses.
  */
 export function matchesCollectionSearch(title: string, query: string): boolean {
   const normalizedQuery = normalizeAnswer(query);
@@ -87,10 +83,9 @@ export interface CollectionFilter {
 /**
  * Narrow the catalog to what the current filter and search should show.
  *
- * A locked slot has no title to match, so an active search drops every locked
- * slot rather than leaving unexplained gaps in the results. With no query the
- * locked slots stay, which is what makes a letter group read as a set to
- * complete.
+ * A locked slot has no title to match, so an active search drops them all
+ * rather than leaving unexplained gaps. With no query they stay, which is what
+ * makes a letter group read as a set to complete.
  */
 export function filterCollectionEntries(
   entries: readonly CollectionEntry[],
@@ -155,9 +150,8 @@ export function formatHiddenTracksLine(hidden: number): string {
 /**
  * A catalog row as the server reads it, titles and all.
  *
- * Declared structurally here rather than imported from `collections.ts` so this
- * module — which ships to the browser — never pulls the database layer into its
- * import graph.
+ * Declared structurally rather than imported from `collections.ts`, so this
+ * module (which ships to the browser) never pulls in the database layer.
  */
 export interface CatalogTrack {
   trackId: string;
@@ -172,10 +166,9 @@ export interface CatalogTrack {
 /**
  * Project the server's catalog into what the browser is allowed to see.
  *
- * This is the page's privacy boundary. An uncollected track keeps its position
- * and its divider letter, because that is what makes a letter group read as a
- * set with gaps, but loses its title and its id — sending either would turn the
- * collection into an answer key for the quiz.
+ * The page's privacy boundary. An uncollected track keeps its position and its
+ * divider letter, so a letter group still reads as a set with gaps, but loses
+ * its title and id: either would turn the collection into a quiz answer key.
  */
 export function toCollectionEntries(
   catalog: readonly CatalogTrack[],

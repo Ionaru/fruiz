@@ -21,8 +21,8 @@ export interface CategoryFilterListProps {
  * sidebar list from `lg`. They are toggles rather than links, so this is a
  * `role="group"` and not a `<nav>`.
  *
- * Every category is offered, including ones nothing has been collected from —
- * a fully locked category is now the most informative filter on the page.
+ * Every category is offered, including ones nothing has been collected from: a
+ * fully locked category is the most informative filter on the page.
  */
 export function CategoryFilterList(props: Readonly<CategoryFilterListProps>) {
   const { options, allTotals, activeName } = props;
@@ -34,14 +34,11 @@ export function CategoryFilterList(props: Readonly<CategoryFilterListProps>) {
       <div
         role="group"
         aria-label="Filter tracks by category"
-        // `overflow-x: auto` forces the other axis to clip too, so the inset
-        // has to be matched on all four sides: the padding gives the pills'
-        // shadows room inside the scroll container and the negative margin
-        // takes the same space back out of the layout.
-        //
-        // 12px is sized for the deepest relief a pill reaches, which is its
-        // hover state (~11.7px) rather than its resting one (~4.8px). At the
-        // resting size the lift was clipped flat against the scroller's edge.
+        // `overflow-x: auto` forces the other axis to clip too, so the inset is
+        // matched on all four sides: the padding gives the pills' shadows room
+        // inside the scroll container and the negative margin takes it back out
+        // of the layout. 12px is sized for a pill's deepest relief, its hover
+        // state, or the lift is clipped flat against the scroller's edge.
         class="-m-3 flex gap-2.5 overflow-x-auto p-3 lg:m-0 lg:flex-col lg:overflow-x-visible lg:p-0"
       >
         <CategoryFilterButton

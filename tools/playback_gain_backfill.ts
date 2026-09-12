@@ -1,9 +1,9 @@
 /**
- * Recomputes `playback_gain_db` for tracks that need it (new/changed files or missing gain).
- * Uses stored file size + mtime to skip unchanged files. Requires `ffmpeg` on PATH when measuring.
+ * Recomputes `playback_gain_db` for tracks with a new, changed or unmeasured
+ * file, skipping unchanged ones by their stored size and mtime. Needs `ffmpeg`
+ * on PATH to measure.
  *
- * Run from repo root: `deno task playback-gain:backfill`
- * Force full re-measure: `deno task playback-gain:backfill -- --force`
+ * `deno task playback-gain:backfill`, or `-- --force` to re-measure everything.
  */
 import { db } from "../src/db/db.ts";
 import {

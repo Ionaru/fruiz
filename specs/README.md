@@ -19,7 +19,7 @@ gates, etc.) live in [`../AGENTS.md`](../AGENTS.md).
 | 07 | [Player collections](./07-player-collections.md)                                         | Player-curated track collections, collection progress                                                         |
 | 08 | [Account authentication and passkeys](./08-admin-authentication-and-passkeys.md)         | Public passkey registration, discoverable login, admin gate                                                   |
 | 09 | [Admin content management](./09-admin-content-management.md)                             | Track / category CRUD, audio upload, music library scan                                                       |
-| 10 | [Sessions and request lifecycle](./10-sessions-and-request-lifecycle.md)                 | Session middleware, cookie handling, logger, `ctx.state` shape                                                |
+| 10 | [Sessions and request lifecycle](./10-sessions-and-request-lifecycle.md)                 | Session middleware, cookie handling, `ctx.state` shape                                                        |
 | 11 | [Track suggestions and moderation](./11-track-suggestions.md)                            | Player track suggestion form, admin moderation queue, approve/deny with note                                  |
 | 12 | [Telemetry and metrics](./12-telemetry-and-metrics.md)                                   | OpenTelemetry traces/metrics/logs, runtime + framework auto-instrumentation, custom domain spans and counters |
 | 13 | [Link previews and share metadata](./13-link-previews-and-share-metadata.md)             | Open Graph / Twitter Card tags, canonical origin resolution, the static share image, noindex paths            |

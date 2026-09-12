@@ -16,5 +16,4 @@ app.use(sessionMiddleware);
 // Passkey auth endpoints, registered by the fresh-passkeys plugin before fs routes.
 passkeyAuth(app, buildPasskeyConfig());
 
-// Include file-system based routes here
 app.fsRoutes();

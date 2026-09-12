@@ -2,18 +2,14 @@
  * The part of the page the on-screen keyboard leaves visible, and the geometry
  * the quiz islands derive from it.
  *
- * On a phone the keyboard covers the bottom of the screen without reflowing the
- * page: under Chrome's default `interactive-widget=resizes-visual`, and under
- * every version of iOS Safari, it shrinks only the *visual* viewport while the
- * layout viewport keeps its full height. So the browser believes content down
- * there is on screen while the keyboard is painted over it, and `scrollIntoView`
+ * The keyboard shrinks only the *visual* viewport (Chrome's default
+ * `interactive-widget=resizes-visual`, and every version of iOS Safari), so the
+ * browser believes content underneath it is on screen and `scrollIntoView`
  * finds nothing to do. `window.visualViewport` is the only cross-browser signal
- * for the space that is really visible, so everything here works from its
- * numbers instead of from viewport units or `env()` insets.
+ * for what is really visible, so nothing here uses viewport units or `env()`.
  *
- * `readVisibleBand` is the one DOM read in this module, kept here so every
- * island measures the band the same way. The planners below it are pure, so the
- * maths can be unit-tested by feeding them measurements.
+ * `readVisibleBand` is the module's one DOM read; the planners below it are
+ * pure so the maths can be unit-tested from measurements.
  */
 
 /** The slice of the layout viewport the user can actually see, in client coordinates. */
@@ -54,15 +50,13 @@ export interface VisibleBandScrollInput {
 }
 
 /**
- * How far to scroll the page down so `bringIntoView` clears the bottom of the
- * visible band, without pushing `keepInView` off the top of it. Zero means
- * leave the page alone: either nothing is hidden, or freeing the one element
- * would only hide the other.
+ * How far to scroll down so `bringIntoView` clears the bottom of the visible
+ * band without pushing `keepInView` off the top of it. Zero means leave the
+ * page alone: either nothing is hidden, or freeing the one would hide the other.
  *
- * The clamp is what makes this safe to run while the player is typing. The
- * field being typed into is the element that must never move out of sight, so
- * the nudge stops at the point where its top would reach the top of the band,
- * even when that leaves part of the target still covered.
+ * The clamp is what makes this safe while the player is typing: the nudge stops
+ * where `keepInView`'s top reaches the top of the band, even when that leaves
+ * part of the target covered.
  */
 export function planVisibleBandScroll(input: VisibleBandScrollInput): number {
   const bandBottom = input.band.top + input.band.height;

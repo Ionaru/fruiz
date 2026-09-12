@@ -10,11 +10,10 @@ export interface SectionHeadingProps {
  * quieter than the category names beneath it: the cards are what you act on, so
  * the heading only has to say which group you are looking at.
  *
- * The heading carries no margin utility of its own. Tailwind's preflight
- * already zeroes the browser's default heading margins, and an explicit `m-0`
- * here would silently win over a parent's spacing: `space-y-*` is emitted as a
- * zero-specificity `:where()` rule, so any margin class on a child cancels it.
- * Spacing is the parent section's job.
+ * The heading carries no margin utility of its own: preflight already zeroes
+ * the browser's default, and an explicit `m-0` would silently cancel a parent's
+ * `space-y-*`, which is emitted as a zero-specificity `:where()` rule. Spacing
+ * is the parent section's job.
  */
 export function SectionHeading(props: Readonly<SectionHeadingProps>) {
   const classes = [

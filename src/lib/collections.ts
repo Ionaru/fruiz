@@ -47,9 +47,8 @@ export interface CategoryCollectionStatsRow {
  * Collection totals for every category that has tracks, including the ones this
  * player has not collected from yet (`collected: 0`). The menu needs those rows
  * so a category can show an empty progress bar rather than none at all, and the
- * collection page offers them all as filters: now that uncollected tracks show
- * as locked slots, a `0 / 52` category is the most informative filter there is
- * rather than dead weight.
+ * collection page offers them all as filters: because uncollected tracks show
+ * as locked slots, a `0 / 52` category is the most informative filter there is.
  */
 export async function getCollectionStatsForAllCategories(
   db: DB,
@@ -122,11 +121,9 @@ export interface CollectionCatalogEntry {
  * are read here but must not be serialized to the browser — the route projects
  * them away and keeps only the divider letter.
  *
- * Two reads rather than one join: `count(distinct …)` is not needed for a
- * per-track flag, and a membership lookup avoids the join fan-out that a track
- * in several categories would otherwise produce. Ordering is done in TypeScript
- * so it stays `localeCompare`, matching what the page has always shown, rather
- * than SQLite's binary collation.
+ * Two reads rather than one join: a membership lookup avoids the join fan-out a
+ * track in several categories would produce. Ordering is done in TypeScript so
+ * it stays `localeCompare` rather than SQLite's binary collation.
  */
 export async function getCollectionCatalog(
   db: DB,

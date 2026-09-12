@@ -6,10 +6,9 @@ import type { InProgressQuizEntry } from "../../lib/types.ts";
 export interface InProgressQuizItemProps {
   entry: InProgressQuizEntry;
   /**
-   * Display name for the entry's category. Resumable quizzes are read back from
-   * localStorage, which only holds the slug, so the name is resolved against the
-   * categories the server sent and falls back to the slug when a quiz outlives
-   * its category.
+   * Display name for the entry's category. `localStorage` holds only the slug,
+   * so this is resolved against the categories the server sent and falls back
+   * to the slug when a quiz outlives its category.
    */
   categoryName: string;
   onResume: (quizPath: string) => void;

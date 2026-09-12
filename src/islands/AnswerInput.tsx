@@ -63,11 +63,11 @@ export default function AnswerInput(props: Readonly<AnswerInputProps>) {
 
   useSignalEffect(() => {
     if (!isOpen.value) return;
-    // A touch that starts outside the popup is far more often a scroll than a
+    // A touch starting outside the popup is more often a scroll than a
     // dismissal, and closing on `pointerdown` cancels it before the browser can
-    // tell the two apart. Wait for `pointerup` and only treat a stationary
-    // press as a tap; `pointercancel` means the browser took the gesture over
-    // for scrolling, which is never a dismissal.
+    // tell them apart. Wait for `pointerup` and treat only a stationary press
+    // as a tap; `pointercancel` means the browser took the gesture for
+    // scrolling.
     let pressedOutsideAt: { x: number; y: number } | null = null;
     const startsOutside = (target: EventTarget | null) => {
       const root = containerEl.value;

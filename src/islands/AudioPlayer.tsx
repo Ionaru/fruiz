@@ -137,10 +137,10 @@ interface AudioPlayerProps {
   /**
    * Called synchronously when play is requested, before any loading begins.
    *
-   * Distinct from {@link onPlayStart}, which waits for audio to actually start
-   * and drives the quiz's replay accounting. Ownership has to be claimed at the
-   * click instead: a player that is still loading would otherwise see
-   * {@link activePlayerId} still naming the previous owner and preempt itself.
+   * Distinct from {@link onPlayStart}, which waits for audio to start and
+   * drives replay accounting. Ownership is claimed at the click instead, or a
+   * player still loading would see {@link activePlayerId} naming the previous
+   * owner and preempt itself.
    */
   onPlayRequested?: () => void;
   /** Smaller controls for dense layouts (e.g. admin lists). */
@@ -162,39 +162,35 @@ interface AudioPlayerProps {
   /** mtime of the audio file in ms since epoch — used to cache-bust the listen URL. */
   playbackGainSourceMtimeMs?: number | null;
   /**
-   * When true, no audio request is made until the user first clicks play (no
-   * eager metadata fetch). Use on list pages that render many players. Defaults
-   * to false: eager `preload="metadata"`, current behavior.
+   * When true, no audio request is made until the user first clicks play. Use
+   * on list pages that render many players. Defaults to false, meaning eager
+   * `preload="metadata"`.
    */
   lazyLoad?: boolean;
   /**
    * Offer a pause control alongside stop, and resume from where pause left off.
    *
-   * Defaults to false, which is what the quiz needs: a round only ever stops,
-   * and stopping rewinds so the next replay costs a full listen rather than
-   * resuming the tail. Free listening in the collection wants both, so it opts
-   * in and gets two controls — stop still rewinds, pause keeps the position.
+   * Defaults to false, which is what the quiz needs: stopping rewinds, so the
+   * next replay costs a full listen rather than resuming the tail. Free
+   * listening in the collection opts in and gets both controls.
    */
   resumable?: boolean;
   /**
    * Id of the player that currently owns playback, or `null` when none does.
    * When it names a different player this one stops, so a list of rows can
-   * never have two clips audible at once. Callers that render a single player
-   * omit it and nothing changes.
+   * never have two clips audible at once; single-player callers omit it.
    *
    * Being preempted always rewinds, even under {@link resumable}: pausing is
-   * something the listener chooses, and leaving stale half-played rows
-   * scattered down the list is not what starting another track means.
+   * the listener's own choice, not a side effect of starting another track.
    */
   activePlayerId?: string | null;
   /**
    * Render as a single track row — one card holding a label column, the
    * playback meter and the controls — instead of the default centred stack.
    *
-   * The player owns the card because every one of the row's playing-state
-   * changes (the glow, the meter, the elapsed time and which controls are
-   * offered) depends on state that lives in here. Both label slots are always
-   * shown: the meter sits beside the controls rather than replacing
+   * The player owns the card because every playing-state change (the glow, the
+   * meter, the elapsed time, which controls are offered) depends on state that
+   * lives in here. The meter sits beside the controls rather than replacing
    * `secondary`, so the row is exactly as tall idle as it is playing.
    */
   row?: {
@@ -262,11 +258,10 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
    * Wires the Web Audio graph for this element, once. `MediaElementSource` may
    * only be created once per element, so the identity check is load-bearing.
    *
-   * Called from `play()` rather than from a mount effect: the collection lists
-   * every categorized track, and building a source, an analyser and a gain node
-   * for each one on mount would open hundreds of Web Audio nodes to play at
-   * most one of them. A click is also the ideal moment — it is the user gesture
-   * the AudioContext needs anyway.
+   * Called from `play()` rather than on mount: the collection lists every
+   * categorized track, and wiring each one on mount would open hundreds of
+   * nodes to play at most one. A click is also the gesture the AudioContext
+   * needs anyway.
    */
   const ensureGraph = (el: HTMLMediaElement) => {
     const existing = graphSig.value;
@@ -620,14 +615,10 @@ export function AudioPlayer(props: Readonly<AudioPlayerProps>) {
 
   if (props.row) {
     /*
-      The meter sits on the control line rather than under the title. That buys
-      it the row's full height instead of a 14px sliver, and it leaves both
-      label lines in place, so the card is the same height idle, playing and
-      paused. `plateau-shallow` keeps the card's relief inside the list gap: at
-      the full `.plateau` depth a card's shadow reaches into its neighbour's
-      highlight, and the cards with no neighbour to wash them — the last of a
-      letter run, one before a locked slot, the playing row — read heavier than
-      the rest.
+      The meter sits on the control line rather than under the title, which buys
+      it the row's full height and leaves both label lines in place, so the card
+      is the same height idle, playing and paused. `plateau-shallow` keeps the
+      relief inside the list gap (spec 07).
     */
     const showsMeter = isPlaying || isPaused;
     return (
