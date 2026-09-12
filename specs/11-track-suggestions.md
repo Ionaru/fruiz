@@ -32,7 +32,11 @@ has no effect on the corpus; an admin still adds the track by hand through
   feeds the returned titles into the reused `AnswerInput` autocomplete.
 - **Duplicate check (informational).** Given a category is chosen, When the
   typed search value normalizes to an existing title, Then a "already exists"
-  hint shows. It does **not** block submission — the check is advisory.
+  hint shows. It does **not** block submission — the check is advisory. Because
+  the autocomplete is the one from spec 05, this page's dropdown also finds a
+  title by its shorthand (`csgo`), while the hint stays a `normalizeAnswer`
+  equality check. That is deliberate: the dropdown is there to help the player
+  _look_, the hint to tell them the exact title is already known.
 - **Submit.** Given a category, a non-empty title, and a valid `http`/`https`
   link, When the player submits, Then a `pending` suggestion row is stored and
   the player is redirected to `/suggest?ok=1`. Invalid input redirects to

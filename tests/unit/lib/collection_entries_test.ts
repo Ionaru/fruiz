@@ -247,3 +247,28 @@ Deno.test("toCollectionEntries: input order is preserved, so locked slots keep t
     "collected",
   ]);
 });
+
+Deno.test("matchesCollectionSearch: a shorthand finds the title", () => {
+  assertEquals(
+    matchesCollectionSearch("Counter-Strike: Global Offensive", "csgo"),
+    true,
+  );
+  assertEquals(matchesCollectionSearch("Team Fortress 2", "tf2"), true);
+  assertEquals(matchesCollectionSearch("Civilization VI", "civ 6"), true);
+  assertEquals(matchesCollectionSearch("Half-Life", "half life"), true);
+});
+
+Deno.test("matchesCollectionSearch: an unrelated query still misses", () => {
+  assertEquals(matchesCollectionSearch("Animal Crossing", "csgo"), false);
+  assertEquals(matchesCollectionSearch("Moana", "civ 6"), false);
+});
+
+Deno.test("filterCollectionEntries: a shorthand search still drops locked slots", () => {
+  const entries = [collected("Counter-Strike: Global Offensive"), locked("C")];
+  const kept = filterCollectionEntries(entries, {
+    category: null,
+    query: "csgo",
+  });
+  assertEquals(kept.length, 1);
+  assertEquals(kept[0]?.kind, "collected");
+});

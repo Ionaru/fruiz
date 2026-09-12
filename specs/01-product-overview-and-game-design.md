@@ -84,6 +84,10 @@ change the track list.
 - The autocomplete suggestion list is **category-scoped** and includes titles
   that are not in the current 20-track quiz. The player MUST select from the
   suggestion pool — freeform answers are not accepted.
+- The autocomplete also finds a title by its common shorthand (`cod`, `civ 6`,
+  `half life`). A shorthand is a way of _finding_ a title, never of answering
+  with one: the player still selects the full title before they can submit (see
+  spec 05).
 - Answer comparison is normalized: lowercase, trim, drop punctuation, collapse
   whitespace. The same rule is used for both submit eligibility and scoring (see
   spec 05).

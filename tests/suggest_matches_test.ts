@@ -76,3 +76,63 @@ Deno.test("suggestMatches: diacritic-insensitive", () => {
   assertEquals(suggestMatches("pokemon", ["Pokémon"], 20), ["Pokémon"]);
   assertEquals(suggestMatches("amélie", ["Amelie"], 20), ["Amelie"]);
 });
+
+Deno.test("suggestMatches: a shorthand finds a title it shares no substring with", () => {
+  const pool = ["Call of Duty", "Counter-Strike: Global Offensive", "Moana"];
+  assertEquals(suggestMatches("csgo", pool, 20), [
+    "Counter-Strike: Global Offensive",
+  ]);
+  assertEquals(suggestMatches("civ 6", ["Civilization VI", "Moana"], 20), [
+    "Civilization VI",
+  ]);
+  assertEquals(suggestMatches("half life", ["Half-Life", "Moana"], 20), [
+    "Half-Life",
+  ]);
+});
+
+Deno.test("suggestMatches: literal title matches rank before shorthand matches", () => {
+  const pool = ["Call of Duty", "Codename Kids Next Door"];
+  assertEquals(suggestMatches("cod", pool, 20), [
+    "Codename Kids Next Door",
+    "Call of Duty",
+  ]);
+});
+
+Deno.test("suggestMatches: a shorthand covering the whole title ranks first", () => {
+  const pool = ["Call of Duty: Modern Warfare", "Call of Duty"];
+  assertEquals(suggestMatches("cod", pool, 20), [
+    "Call of Duty",
+    "Call of Duty: Modern Warfare",
+  ]);
+});
+
+Deno.test("suggestMatches: shorthand matches are stable and honor the limit", () => {
+  const pool = [
+    "Grand Theft Auto IV",
+    "Grand Theft Auto V",
+    "Grand Theft Auto: San Andreas",
+  ];
+  assertEquals(suggestMatches("gta", pool, 2), [
+    "Grand Theft Auto IV",
+    "Grand Theft Auto V",
+  ]);
+});
+
+Deno.test("suggestMatches: a typed arabic numeral meets a roman one", () => {
+  assertEquals(suggestMatches("GTA 4", ["Grand Theft Auto IV"], 20), [
+    "Grand Theft Auto IV",
+  ]);
+});
+
+Deno.test("suggestMatches: a one-character query returns no shorthand-only hits", () => {
+  // "4" is no substring of "grand theft auto iv", so only the shorthand tier
+  // could return it — and a single character is below its floor.
+  assertEquals(suggestMatches("4", ["Grand Theft Auto IV"], 20), []);
+  assertEquals(suggestMatches("gta4", ["Grand Theft Auto IV"], 20), [
+    "Grand Theft Auto IV",
+  ]);
+});
+
+Deno.test("suggestMatches: a shorthand for nothing in the pool still returns []", () => {
+  assertEquals(suggestMatches("csgo", ["Moana", "Frozen"], 20), []);
+});
