@@ -3,14 +3,11 @@ import type { AnchorBounds, VisibleBand } from "./visibleBand.ts";
 /**
  * Geometry for the answer combobox's suggestion popup.
  *
- * The popup is absolutely positioned, so on a phone it is laid out in a viewport
- * the on-screen keyboard does not shrink. It is therefore sized against the
- * visible band rather than against the viewport; see
- * [`./visibleBand.ts`](./visibleBand.ts) for why that distinction exists and
- * where the numbers come from.
- *
- * Pure and free of DOM access, so it can be unit-tested: the island takes the
- * measurements and applies the result.
+ * The popup is absolutely positioned, so on a phone it is laid out in a
+ * viewport the on-screen keyboard does not shrink. It is therefore sized
+ * against the visible band instead; see
+ * [`./visibleBand.ts`](./visibleBand.ts) for why. Pure and DOM-free, so the
+ * island takes the measurements and applies the result.
  */
 
 /** Which side of the anchor the popup hangs off. */
@@ -55,12 +52,11 @@ function spaceAboveAnchor(input: SuggestionPopupInput) {
  * Where the popup goes and how tall it may be, so that it always ends inside the
  * visible band.
  *
- * Hanging below the anchor is the default: it matches reading order, and on the
- * quiz page it leaves the clip's play button uncovered, which matters because
- * players replay the clip while they scan the titles. The popup flips above only
- * when the room below has dropped under `flipBelowHeight` and the other side is
- * genuinely roomier, which is the case the on-screen keyboard creates. Merely
- * having more room above is not enough to move it.
+ * Hanging below the anchor is the default: it matches reading order and leaves
+ * the clip's play button uncovered, which matters because players replay the
+ * clip while they scan the titles. It flips above only when the room below has
+ * dropped under `flipBelowHeight` and the other side is genuinely roomier (the
+ * case the on-screen keyboard creates); more room above alone is not enough.
  */
 export function planSuggestionPopup(
   input: SuggestionPopupInput,

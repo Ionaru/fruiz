@@ -72,11 +72,10 @@ scale:
 
 ### Structured logging
 
-The plain per-request logger (spec 10) is removed; telemetry request spans
-(spec 12) now carry route, status, and duration, and `console.*` is captured as
-OpenTelemetry logs. Remaining work is a JSON-emitting application logger with
-redaction and, where safe, an authenticated user id on log records — for
-consumers that want structured logs rather than spans.
+Telemetry request spans (spec 12) carry route, status and duration, and
+`console.*` is captured as OpenTelemetry logs. Remaining work is a JSON-emitting
+application logger with redaction and, where safe, an authenticated user id on
+log records, for consumers that want structured logs rather than spans.
 
 ### Rate limiting
 
@@ -105,13 +104,10 @@ one into the other and replace the legacy entry with a permanent redirect.
 
 ### Neumorphic relief in tight card lists
 
-`.plateau` casts a shadow and a mirrored highlight that each reach ~11.7px
-outside the card. In a list whose gap is narrower than that, every card's shadow
-is washed by the next card's highlight, so the cards with no such neighbour —
-the last in the list, the one before a flat or dented sibling, and any card
-`.glow` lifts into the positioned paint step — read markedly heavier than the
-rest. The collection list fixed this locally by dropping its rows and filter
-pills to `.plateau-shallow` and widening the gap to 10px (spec 07).
+`.plateau`'s relief reaches further than a tight list gap, so the cards with no
+neighbour to wash their shadow read markedly heavier than the rest. Spec 07 has
+the geometry and the collection list's local fix: `.plateau-shallow` rows and
+filter pills, and a 10px gap.
 
 [`src/components/quiz/InProgressQuizItem.tsx`](../src/components/quiz/InProgressQuizItem.tsx)
 still has it: `.plateau` cards in a `flex flex-col gap-3` list on the home page.

@@ -134,11 +134,15 @@ no uncollected title survives it.
   on the control line, so a card is the same height idle, playing and paused
   (see spec 06's `row` bullet). A track with no categories is one line shorter,
   which is a property of the track, not of its state.
-- **No card's appearance depends on its neighbours.** Collected rows and filter
-  pills use `.plateau-shallow` and the list gap is 10px, which is wider than the
-  ~4.8px the smaller relief reaches. At `.plateau`'s full depth the reach is
-  ~11.7px, and every card's shadow was being washed by the next card's
-  highlight, so the cards with nothing after them stood out.
+- **No card's appearance depends on its neighbours.** This is the canonical
+  statement of the relief-tier geometry; specs 06 and 90 refer back to it.
+  `.plateau`'s shadow and its mirrored highlight each reach ~11.7px outside the
+  card, further than any gap in these lists, so each card's shadow is washed by
+  the next card's highlight and the cards with no such neighbour — the last of a
+  letter run, the one before a locked slot, and any card `.glow` lifts into the
+  positioned paint step — read markedly heavier than the rest. Collected rows
+  and filter pills therefore use `.plateau-shallow`, whose ~4.8px reach fits
+  inside the list's 10px gap.
 - **Locked slots have no surface at all.** A page that is mostly gaps read as
   busy with a tile per gap, so the slot sits straight on the page background the
   way the progress block does, keeping only a collected row's padding so the
@@ -195,12 +199,9 @@ hint — the player has already collected that track in a previous session.
   outcome.
 - **Category not provided on POST.** Without `?categorySlug=`, the `progress`
   field is `null` and the modal only shows the "added" line.
-- **Categories with zero collected tracks are kept.** They used to be filtered
-  out of the collection page's rollup, on the grounds that an always-empty
-  filter was dead weight. Locked slots reverse that: a `0 / 52` category is now
-  the most informative filter on the page, because selecting it shows exactly
-  what there is to win. `getCollectionStatsByCategory` existed only to apply
-  that filter and has been removed.
+- **Categories with zero collected tracks are kept.** A `0 / 52` category is the
+  most informative filter on the page, because selecting it shows exactly what
+  there is to win.
 - **A track in no category at all** appears nowhere: `getCollectionCatalog`
   drops it, matching `getCategorizedTrackCount`, so the list length and the
   totals cannot disagree.
@@ -347,15 +348,15 @@ Application types:
 
 ## Open questions and known risks
 
-- **Collection growth.** The page now renders a row for every categorized track,
-  not only the collected ones, so the rendered row count is the size of the
-  whole corpus regardless of how much a player has collected. Pagination or
-  virtual scrolling therefore becomes necessary sooner than it would have. The
-  payload's bulk is the category-name strings repeated on every entry; interning
-  them into a shared array, and merging runs of consecutive locked slots, are
-  the levers to pull before anything more elaborate.
-- **A headless playback engine.** `AudioPlayer` now carries a row layout as well
-  as its default stack, because the audio graph, the play state and the analyser
+- **Collection growth.** The page renders a row for every categorized track, not
+  only the collected ones, so the row count is the size of the whole corpus
+  however little a player has collected, and pagination or virtual scrolling
+  becomes necessary sooner than it otherwise would. The payload's bulk is the
+  category-name strings repeated on every entry; interning them into a shared
+  array, and merging runs of consecutive locked slots, are the levers to pull
+  first.
+- **A headless playback engine.** `AudioPlayer` carries a row layout as well as
+  its default stack, because the audio graph, the play state and the analyser
   all have to live in one island. If a third arrangement ever appears, extract
   the engine into a module both can consume rather than adding a third layout.
 - **Privacy.** Collections are private to the user today. If the product later

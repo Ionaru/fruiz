@@ -1,13 +1,12 @@
 import { FaList } from "react-icons/fa6";
 
 /**
- * Shown to guests in place of the collection destination, which they have no
- * account to reach yet. It explains what signing in buys rather than just
- * asking them to do it — the header already carries the sign-in action.
+ * Shown to guests in place of the collection destination. It explains what
+ * signing in buys rather than just asking for it; the header already carries
+ * the sign-in action.
  *
- * The icon is styled through a wrapper rather than its own `class` prop:
- * react-icons ships React's prop types, which have no `class`. The svg inherits
- * size and colour from the span.
+ * The icon is styled through a wrapper because react-icons ships React's prop
+ * types, which have no `class`. The svg inherits size and colour from the span.
  */
 export function SignInPromptStrip() {
   return (

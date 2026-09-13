@@ -4,10 +4,10 @@ import { planSuggestionPopup } from "../../../src/lib/suggestionPopupLayout.ts";
 const SPACING = { anchorGap: 8, edgeClearance: 8, flipBelowHeight: 132 };
 
 /**
- * A phone with the on-screen keyboard up: the layout viewport is still 915 tall,
- * but only a 430-tall band starting 299 down it is painted. Numbers taken from a
- * 412x915 Android profile with the answer field centred in the band, which is
- * where Blink parks a newly focused editable.
+ * A phone with the on-screen keyboard up: the layout viewport is still 915
+ * tall, but only a 430-tall band starting 299 down it is painted. From a
+ * 412x915 Android profile, field centred in the band where Blink parks a newly
+ * focused editable.
  */
 const KEYBOARD_BAND = { top: 299, height: 430 };
 const FIELD = { top: 488, bottom: 538 };

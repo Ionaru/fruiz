@@ -347,8 +347,8 @@ No new tables or columns. The relevant data flows:
   - [`tests/suggest_matches_test.ts`](../tests/suggest_matches_test.ts) —
     ranking and ordering, including the two shorthand tiers.
   - [`tests/unit/lib/title_shorthand_test.ts`](../tests/unit/lib/title_shorthand_test.ts)
-    — the shorthand rules: every abbreviation from the issue, word splitting,
-    numerals, and the floors that keep the tier quiet.
+    — the shorthand rules: acronyms, truncations and space-stripped titles, word
+    splitting, numerals, and the floors that keep the tier quiet.
   - [`tests/unit/components/answer_suggestion_option_test.tsx`](../tests/unit/components/answer_suggestion_option_test.tsx)
     — `aria-selected` renders as `"true"` / `"false"`.
   - [`tests/unit/islands/answer_input_test.tsx`](../tests/unit/islands/answer_input_test.tsx)

@@ -77,8 +77,6 @@ export default function QuizController(props: Readonly<Props>) {
     props.tracks.map((track) => [track.id, track]),
   );
 
-  // --- helpers ---
-
   const updateProgress = (next: QuizProgress) => {
     next.score = scoreFromProgress(next);
     progress.value = next;
@@ -103,8 +101,6 @@ export default function QuizController(props: Readonly<Props>) {
     );
     answerDraft.value = row?.selectedTitle ?? "";
   };
-
-  // --- effects ---
 
   useSignalEffect(() => {
     if (!didHydrateStorage.value) {
@@ -163,17 +159,14 @@ export default function QuizController(props: Readonly<Props>) {
     return () => document.removeEventListener("keydown", onKeyDown);
   });
 
-  // While the player is typing, the on-screen keyboard (and on Chrome for
-  // Android the autofill accessory bar above it) can leave Skip / Submit under
-  // the fold with nothing on screen to say so. Nudge the page just far enough to
-  // bring the row back, and never so far that the field being typed into goes
-  // under the top edge in its place.
+  // The on-screen keyboard (and Chrome for Android's autofill bar above it) can
+  // leave Skip / Submit under the fold with nothing on screen to say so. Nudge
+  // the page far enough to bring the row back, never so far that the field being
+  // typed into goes under the top edge instead.
   //
-  // Only keyboard geometry changes re-run this. Following `visualViewport`
-  // scroll as well would re-nudge every time the player panned the page, which
-  // is a fight they should win. The scroll is deliberately instant: it lands
-  // during the keyboard's own animation, where a second, slower animation would
-  // only read as lag.
+  // Only keyboard geometry re-runs this: following `visualViewport` scroll too
+  // would re-nudge every time the player panned the page. The scroll is instant
+  // because it lands during the keyboard's own animation.
   useSignalEffect(() => {
     if (!answerFocused.value) return;
     const actions = actionsEl.value;
@@ -199,8 +192,6 @@ export default function QuizController(props: Readonly<Props>) {
       globalThis.removeEventListener("resize", nudge);
     };
   });
-
-  // --- actions ---
 
   const confirmSettings = () => {
     const value = Math.max(0, Math.floor(Number(draftLimit.value)) || 0);
@@ -387,8 +378,6 @@ export default function QuizController(props: Readonly<Props>) {
       `/quiz/${props.identity.categorySlug}/${slug}${search}`,
     );
   };
-
-  // --- render ---
 
   if (settingsOpen.value) {
     return (

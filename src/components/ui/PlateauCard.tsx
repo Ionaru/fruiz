@@ -10,10 +10,9 @@ export interface PlateauCardProps {
     | "warning"
     | "info";
   /**
-   * Renders the card as a link to this destination instead of a `div`. Use it
-   * when the whole card is the target: the card then carries the hover and
-   * pressed relief `.plateau` gives every control, and its padding becomes part
-   * of the click target rather than a dead margin around a link inside it.
+   * Renders the card as a link instead of a `div`. Use it when the whole card
+   * is the target: it then carries the hover and pressed relief `.plateau`
+   * gives every control, and its padding joins the click target.
    *
    * Only for cards with nothing else interactive in them: a link may not
    * contain a button.

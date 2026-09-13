@@ -214,13 +214,10 @@ paths.
   application-level head sampler is introduced. Volume is not a concern at the
   expected request rate, and any further volume/cost control stays at the
   collector tier.
-- **Decision — request logger is removed.** The framework's per-request spans
-  supersede the plain per-request log line described in
-  `10-sessions-and-request-lifecycle.md`; that logger is dropped as part of this
-  work. Per-request observability comes from the request span, and `console.*`
-  output is still captured as OpenTelemetry logs. This change MUST also update
-  `10-sessions-and-request-lifecycle.md` and the "Structured logging" item in
-  `90-roadmap.md` in the same change.
+- **Decision — no dedicated request logger.** The framework's per-request spans
+  carry route, method, status and duration, so there is no plain per-request log
+  line (`10-sessions-and-request-lifecycle.md`). `console.*` output is captured
+  as OpenTelemetry logs.
 - **Decision: delta metric temporality.** Deployments set the metric temporality
   preference to delta instead of the runtime default of cumulative. A backend
   that derives increase or rate from a cumulative series does so by differencing

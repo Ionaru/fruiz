@@ -33,9 +33,9 @@ Deno.test("toTitleSuggestionPool: the input order never shows through", () => {
 });
 
 Deno.test("toTitleSuggestionPool: both dropdowns rank a category the same way", () => {
-  // The bug from issue #40: the suggestion page fed the autocomplete the
-  // category tracks endpoint's difficulty-then-title order, so the sequel
-  // whose track is easy jumped ahead of the one whose track is hard.
+  // The suggestion page feeds the autocomplete the category tracks endpoint's
+  // difficulty-then-title order, which would put the sequel whose track is
+  // easy ahead of the one whose track is hard.
   const quizPool = toTitleSuggestionPool([
     "Command & Conquer: Red Alert",
     "Command & Conquer: Red Alert 2",

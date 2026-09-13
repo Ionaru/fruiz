@@ -13,9 +13,8 @@ export interface CollectionProgressPanelProps {
  * The counts stay global even while a category filter is active: they are the
  * page's identity, and each filter already carries its own numbers.
  *
- * Bare on phones, where the heading sits directly on the page, and a card in
- * the sidebar from `lg` — see `.plateau-from-lg` in `styles.css` for why that
- * needs its own class rather than `lg:plateau`.
+ * Bare on phones and a sidebar card from `lg`; `.plateau-from-lg` in
+ * `styles.css` says why that needs its own class rather than `lg:plateau`.
  */
 export function CollectionProgressPanel(
   props: Readonly<CollectionProgressPanelProps>,

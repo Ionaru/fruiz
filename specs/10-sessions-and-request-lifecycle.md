@@ -70,9 +70,8 @@ otherwise miss the session hydration.
 
 There is no dedicated request logger. The telemetry baseline (spec 12) opens a
 span per request carrying the matched route pattern, method, status, and
-duration, superseding the old method-and-URL log line. `console.*` output is
-still captured as OpenTelemetry logs until structured logging lands (spec 90).
-Neither path records cookies or session ids.
+duration. `console.*` output is captured as OpenTelemetry logs until structured
+logging lands (spec 90). Neither path records cookies or session ids.
 
 ### `ctx.state` shape
 
@@ -177,10 +176,9 @@ nonce or a multi-step admin wizard) without introducing a new table.
   rather than in the session subsystem, but shares the same single-process
   constraint. Horizontal scale needs a shared challenge store — tracked
   alongside spec 08.
-- **No structured application logs yet.** The dedicated request logger is
-  removed in favour of telemetry request spans (spec 12); `console.*` is
-  captured as OpenTelemetry logs but carries no structured fields or redaction.
-  A JSON-emitting logger remains future work (Structured logging, spec 90).
+- **No structured application logs yet.** `console.*` is captured as
+  OpenTelemetry logs but carries no structured fields or redaction. A
+  JSON-emitting logger remains future work (Structured logging, spec 90).
 - **`updated_at` precision.** The sliding-window touch bumps `expires_at` and
   `updated_at` on every authenticated request. If the application gets chatty,
   the write traffic could become significant; consider rate-limiting the touch

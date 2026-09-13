@@ -6,10 +6,9 @@ import { users } from "../db/schema.ts";
 /**
  * Permanently deletes a user account by id.
  *
- * Deleting the `users` row is sufficient to remove all of a player's data:
- * `sessions`, `passkeys`, and `collected_tracks` all carry an
- * `onDelete: "cascade"` foreign key on `users.id`, so SQLite removes them
- * automatically. There is no recovery path — the deletion is irreversible.
+ * Deleting the `users` row removes all of a player's data: `sessions`,
+ * `passkeys` and `collected_tracks` each carry an `onDelete: "cascade"` foreign
+ * key on `users.id`. There is no recovery path.
  */
 export async function deleteUserAccount(
   userId: string,

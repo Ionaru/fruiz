@@ -13,13 +13,12 @@ export interface ButtonLinkProps extends AnchorHTMLAttributes {
  * A destination that reads as a button: the full-width, soft-cornered block the
  * account pages and the results screen stack beside real `Button`s.
  *
- * It exists so those five call sites cannot drift apart: they each carried
- * their own copy of this class list, and a control that looks like a button
- * has to behave like one. The hover and pressed relief comes from `.plateau`
- * in `styles.css`, which treats a link and a button alike.
+ * It exists so those call sites cannot drift apart: a control that looks like a
+ * button has to behave like one. The hover and pressed relief comes from
+ * `.plateau` in `styles.css`, which treats a link and a button alike.
  *
- * `PillLink` is the other link shape: a compact pill for navigation bars and
- * page actions. Use this one where a link sits in a column of buttons.
+ * `PillLink` is the other link shape, a compact pill for navigation bars. Use
+ * this one where a link sits in a column of buttons.
  */
 const baseClass =
   "plateau flex min-h-11 items-center justify-center rounded-xl px-4 py-3 text-center font-medium no-underline text-base-900 dark:text-base-100";

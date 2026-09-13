@@ -84,11 +84,11 @@ export default function CollectionView(props: Readonly<CollectionViewProps>) {
       {
         /*
         On phones both wrappers are `display: contents`, so their children
-        become items of the outer column and `order-*` restores the design's
-        sequence: progress, search, filters, list. From `lg` they become the two
-        column stacks, which have to flow independently — a four-cell grid would
-        make row one as tall as the progress card and push the first track row
-        far below the search field.
+        become items of the outer column and `order-*` restores the sequence:
+        progress, search, filters, list. From `lg` they are the two column
+        stacks, which must flow independently: a four-cell grid would make row
+        one as tall as the progress card and push the first track row far below
+        the search field.
       */
       }
       <div class="contents lg:flex lg:flex-col lg:gap-4">

@@ -178,9 +178,8 @@ flowchart TD
   components --> components
 ```
 
-Server-only code (DB access, auth flows, quiz selection, passkey verification,
-session helpers) MUST live under `src/db/`, `src/lib/`, `src/middlewares/`, or
-route `handler` functions. It MUST NOT move into islands or client bundles.
+Server-only code (Principle II) lives under `src/db/`, `src/lib/`,
+`src/middlewares/`, or route `handler` functions.
 
 ## Data access (Drizzle ORM)
 
@@ -198,12 +197,9 @@ route `handler` functions. It MUST NOT move into islands or client bundles.
 
 ## Client reactivity and SSR boundaries
 
-- Islands MUST use `@preact/signals` for client reactivity (`signal`,
-  `computed`, `effect`, `useSignal`, `useSignalEffect`, etc.).
-- Do NOT import `preact/hooks` or use `useState`, `useEffect`, `useRef`,
-  `useMemo`, `useCallback`, or other hook APIs anywhere in application code.
-- Do NOT move DB access, auth flows, passkey verification, or quiz-selection
-  business logic into client-side code.
+Signals only, and no business logic in the client: see Principle VII and
+Principle II.
+
 - When an island needs to react to changing props inside `useSignalEffect`,
   bridge the prop into a local signal — raw props are not reactive dependencies.
   Pattern: `const sig = useSignal(prop); sig.value = prop;` then read
@@ -229,34 +225,31 @@ The raised surface every card and control is built from is `.plateau` in
 
 ## Code design principles
 
-- Apply Clean Code: descriptive names, small focused functions/modules,
-  straightforward control flow.
-- Apply SOLID pragmatically for TypeScript modules, route handlers, and
-  component/island boundaries.
-- Apply DRY: consolidate duplicated business rules, normalization behavior, and
-  quiz-selection logic when duplication can cause divergence or inconsistent
-  behavior.
-- Use descriptive identifiers. Single-letter variables and parameters are
-  disallowed except `_` for intentionally unused bindings.
-- Lint rules `no-non-null-assertion` and `eqeqeq` are enforced on top of the
+Clean Code, SOLID, DRY and descriptive identifiers are Principle VI. On top of
+that:
+
+- Lint rules `no-non-null-assertion` and `eqeqeq` are enforced alongside the
   `fresh`, `jsx`, `workspace`, and `recommended` tags (see `deno.json`).
+- Comments explain **why**, not what: a browser or spec quirk, an invariant, the
+  reason for a workaround, a unit or a null semantic. Change history, ticket
+  numbers, and references to code that no longer exists belong in the commit
+  log, not in a comment. Keep a block to the point that is load-bearing; a
+  comment several times longer than the code it guards stops being read.
 
 ## Security and admin mutation safeguards
 
-- `/account/*` and `/admin/*` routes require a validated session loaded via the
-  session middleware (`src/middlewares/session.ts`). `/admin/*` additionally
-  requires `users.admin === true` (enforced through `src/lib/adminSession.ts`).
-- Authentication changes MUST preserve WebAuthn challenge verification and
-  credential `counter` updates.
-- Session cookies MUST be `HttpOnly`, `SameSite=Strict`, and `Secure` outside
-  development. Cookie reads and writes go through `@std/http` helpers, not
-  hand-rolled string parsing.
-- Destructive admin operations (delete track, delete category, delete passkey,
-  logout) MUST require an explicit confirmation step in the UI.
-- Quiz routes MUST keep a strict split between **path** parameters that define
-  quiz identity and **query parameters / localStorage** that define player-local
-  preferences. Invalid category slugs or malformed difficulty encodings MUST
-  redirect to a recoverable entry point rather than render a broken page.
+Where Principle IV and Principle I land in the code:
+
+- The session gate is `src/middlewares/session.ts`; the `users.admin === true`
+  check on top of it is `src/lib/adminSession.ts`.
+- Cookie reads and writes go through `@std/http` helpers, not hand-rolled string
+  parsing.
+- The destructive operations that need an explicit confirmation step are delete
+  track, delete category, delete passkey, and logout.
+- Quiz routes keep **path** parameters (quiz identity) apart from **query
+  parameters / localStorage** (player-local preferences). An invalid category
+  slug or malformed difficulty encoding redirects to a recoverable entry point
+  rather than rendering a broken page.
 
 ## Verification and completion gates
 
@@ -273,15 +266,9 @@ scope:
 CI (`.github/workflows/cd.yaml`) additionally runs `deno audit`; treat
 audit/lint/test failures as blocking unless explicitly risk-accepted in the PR.
 
-Verification is mandatory and proportional to risk:
-
-- Pure deterministic logic changes require unit tests (see `tests/unit/`).
-- Route, auth, and persistence changes require integration coverage where
-  practical (`tests/integration/`); otherwise an explicit manual validation
-  plan.
-- Mobile-facing behavior requires explicit mobile validation evidence.
-
-DB lives at `data/quiz.db`. Create `data/` before the first `deno task db:sync`.
+Verification is mandatory and proportional to risk (Principle V): unit tests in
+`tests/unit/` for pure logic, integration coverage in `tests/integration/` for
+routes, auth and persistence, and explicit evidence for mobile-facing behavior.
 
 ## Spec discipline
 

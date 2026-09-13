@@ -14,7 +14,7 @@ function countForDifficulty(
   difficulty: DifficultyMode,
 ): number {
   if (difficulty === "easy") return easy;
-  // "hard" spans the whole pool (formerly "mixed").
+  // "hard" spans the whole pool.
   return total;
 }
 

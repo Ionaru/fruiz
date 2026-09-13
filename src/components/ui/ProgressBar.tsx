@@ -25,10 +25,10 @@ function percentComplete(value: number, max: number): number {
 }
 
 /**
- * Hairline progress indicator used for collection completeness on the menu and
- * for answered-question progress on a resumable quiz. The track is deliberately
- * darker than the plateau it sits on in both colour schemes, so the bar reads as
- * a recess rather than another raised surface.
+ * Hairline progress indicator for collection completeness on the menu and
+ * answered-question progress on a resumable quiz. The track is darker than the
+ * plateau it sits on in both schemes, so the bar reads as a recess rather than
+ * another raised surface.
  */
 export function ProgressBar(props: Readonly<ProgressBarProps>) {
   const { value, max, label, tone = "info" } = props;

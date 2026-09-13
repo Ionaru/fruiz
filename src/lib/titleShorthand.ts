@@ -202,9 +202,9 @@ function consumeFrom(
  *
  * The query is consumed by walking consecutive title words and taking a prefix
  * of each, so one rule covers acronyms (`cod`), truncations (`civ 6`) and
- * space-stripped titles (`half life`). Numbers must be typed in full; words
- * match by prefix. The run may start at any word, which is what lets `lotr`
- * reach `The Lord of the Rings`.
+ * space-stripped titles (`half life`). Numbers must be typed in full. The run
+ * may start at any word, which is what lets `lotr` reach `The Lord of the
+ * Rings`.
  */
 export function matchTitleShorthand(
   title: string,

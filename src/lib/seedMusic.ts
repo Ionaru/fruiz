@@ -63,10 +63,10 @@ async function ensureCategoryId(
 }
 
 /**
- * Inserts one row per audio file in `musicDir` (default `data/music`).
- * Skips files whose `audio_url` already exists. Paths are stored with `/` so
- * `/api/listen/:id` can resolve them on all platforms.
- * If `categorySlug` is set, the category is created when missing (`categoryName` optional).
+ * Inserts one row per audio file in `musicDir` (default `data/music`), skipping
+ * files whose `audio_url` already exists. Paths are stored with `/` so
+ * `/api/listen/:id` resolves them on every platform. A `categorySlug` that does
+ * not exist yet is created.
  */
 export async function seedTracksFromMusicDir(
   drizzle: DB,

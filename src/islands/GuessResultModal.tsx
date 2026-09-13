@@ -28,7 +28,6 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
 
   const canvasRef = useSignal<HTMLCanvasElement | null>(null);
 
-  // Open the dialog as modal on mount, fire confetti for correct, close on unmount.
   useSignalEffect(() => {
     const dialog = dialogRef.value;
     if (!dialog) return;
@@ -48,11 +47,9 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
     }
     return () => {
       dialog.close();
-      // Destroy any lingering tsparticles containers. Each `confetti.create`
-      // allocates a Container with its own requestAnimationFrame loop; the
-      // library never destroys them, so they accumulate across mounts. Detached
-      // canvas + throttled rAF during tab idle + a new mount on return can
-      // stall the main thread. The modal is the only confetti consumer, so
+      // Each `confetti.create` allocates a Container with its own rAF loop and
+      // the library never destroys them, so they accumulate across mounts and
+      // can stall the main thread. The modal is the only confetti consumer, so
       // destroying every known container is safe.
       for (const container of tsParticles.items) {
         container.destroy(false);
@@ -60,7 +57,6 @@ export function GuessResultModal(props: Readonly<GuessResultModalProps>) {
     };
   });
 
-  // Auto-dismiss for incorrect guesses.
   useSignalEffect(() => {
     if (props.status !== "incorrect") return;
     const timerId = globalThis.setTimeout(

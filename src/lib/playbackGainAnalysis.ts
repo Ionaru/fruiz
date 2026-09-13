@@ -1,5 +1,5 @@
 /**
- * Per-track loudness measurement for playback normalization (Option A).
+ * Per-track loudness measurement for playback normalization.
  *
  * [ffmpeg.wasm](https://ffmpegwasm.netlify.app/) targets browsers; server-side Deno is a poor fit
  * (see ffmpegwasm/ffmpeg.wasm#110). This module shells out to a system `ffmpeg` binary instead.
@@ -134,10 +134,10 @@ export type LoudnormResult =
 
 /**
  * Runs one ffmpeg `loudnorm` pass and classifies the outcome. Pass a
- * {@link PlaybackGainWindow} to measure only the quiz clip window. The only
- * `failed` signal is ffmpeg failing to execute (the `catch`); a clean run that
- * yields no `input_i` is `no_audio`, not a failure — that distinction is what
- * lets callers cache an unmeasurable window without caching a transient outage.
+ * {@link PlaybackGainWindow} to measure only the quiz clip window. Only ffmpeg
+ * failing to execute is `failed`; a clean run yielding no `input_i` is
+ * `no_audio`, so callers can cache an unmeasurable window without caching a
+ * transient outage.
  */
 export function runLoudnorm(
   absoluteAudioPath: string,
@@ -331,11 +331,10 @@ export async function analyzeAndStorePlaybackGainForTrack(
 
   if (needClip) {
     // `clipResult` is defined whenever needClip is true (see Promise.all). A
-    // failed pass means ffmpeg could not run — leave the clip gain untouched and
-    // retry next analyze rather than caching a stale full-track fallback. A
-    // `no_audio` pass (window past end-of-file) caches the full-track fallback
-    // so it does not re-run every analyze; this also persists a successful full
-    // pass instead of discarding it when only the clip window is unmeasurable.
+    // failed pass leaves the clip gain untouched to retry next analyze, rather
+    // than caching a stale fallback; a `no_audio` pass (window past
+    // end-of-file) caches the full-track fallback so it does not re-run every
+    // analyze.
     const clip = clipResult ?? { status: "failed" as const };
     const decision = resolveClipGainToStore(clip, effectiveFullGainDb);
     if (!decision.cache) return "ffmpeg_failed";

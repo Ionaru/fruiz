@@ -22,14 +22,10 @@ export interface SiteMetaProps {
  * Every tag a link unfurler reads, with site-wide defaults.
  *
  * Rendered from `_app.tsx` inside `<head>`. Fresh keys head tags by name (and
- * by `property` for `<meta>`, ignoring `content`), so a route that renders the
- * same tag inside `<Head>` replaces the default here in place rather than
- * appending a duplicate. That is what makes these defaults rather than
- * constants: see `specs/13-link-previews-and-share-metadata.md`.
- *
- * Discord reads `og:title`, `og:description`, `og:image`, `og:site_name`,
- * `og:url` and `theme-color`. The `twitter:*` pairs are for X and the handful
- * of unfurlers that prefer them, and cost nothing when unused.
+ * by `property` for `<meta>`, ignoring `content`), so a route rendering the
+ * same tag inside `<Head>` replaces the default in place rather than appending
+ * a duplicate. That is what makes these defaults rather than constants (spec
+ * 13). The `twitter:*` pairs cost nothing where they are unused.
  */
 export function SiteMeta({ url }: Readonly<SiteMetaProps>) {
   const canonicalUrl = buildAbsoluteUrl(url, url.pathname);

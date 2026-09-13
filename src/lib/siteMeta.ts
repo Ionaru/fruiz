@@ -4,11 +4,10 @@ import type { DifficultyMode } from "./types.ts";
 /**
  * Single source of truth for the share metadata every page emits.
  *
- * Link unfurlers (Discord, Slack, WhatsApp, iMessage, X) read the document
- * head and nothing else, so the copy below is the only thing a reader sees
- * before deciding whether to open the link. Defaults render from `_app.tsx`;
- * a route overrides any individual tag by rendering the same `name`/`property`
- * inside Fresh's `<Head>`.
+ * Link unfurlers read the document head and nothing else, so the copy below is
+ * all a reader sees before deciding whether to open the link. Defaults render
+ * from `_app.tsx`; a route overrides any individual tag by rendering the same
+ * `name`/`property` inside Fresh's `<Head>`.
  */
 
 /** Used in titles and as `og:site_name`; matches the lowercase product name. */
@@ -55,12 +54,11 @@ export const PRIVATE_PATH_PREFIXES = ["/account", "/admin", "/collection"];
  * The origin a crawler can actually reach.
  *
  * Pure on purpose, so the rule is testable without touching the environment.
- * In production the app has no published ports and sits behind a reverse proxy
- * (see `compose.yaml`), so the request origin is the proxy's plain-HTTP hop at
- * best and the internal `http://fruiz:8000` at worst. Neither is fetchable, and
- * an `og:image` a crawler cannot fetch produces no card at all. The deployed
- * domain is configured exactly once, as `FRUIZ_RP_ID`, so that is what the
- * canonical origin is built from; the request origin is the dev fallback.
+ * Behind the reverse proxy the request origin is the internal `http://fruiz:8000`
+ * hop, which no crawler can fetch, and an unfetchable `og:image` produces no
+ * card at all. The deployed domain is configured once as `FRUIZ_RP_ID`, so that
+ * is what the canonical origin is built from; the request origin is the dev
+ * fallback.
  */
 export function canonicalOriginFrom(
   rpId: string,

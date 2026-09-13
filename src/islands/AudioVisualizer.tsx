@@ -65,14 +65,10 @@ const easeOutCubic = (progress: number): number =>
   1 - Math.pow(1 - progress, 3);
 
 /**
- * Draws one mirrored channel of bars. Each bar is centered on the vertical
- * midline and grows symmetrically up and down, so rising magnitudes expand in
- * both directions instead of only upward. Magnitudes are normalized (0..1) and
- * floored to {@link RESTING_FRACTION} so the bars always rest on the centerline.
- *
- * Direction "ltr" puts frequency bin 0 at the left edge; "rtl" puts it at the
- * right edge, so the two canvases form a mirrored pair with the strongest (low)
- * bars closest to the center child element.
+ * Draws one mirrored channel of bars: each grows symmetrically about the
+ * vertical midline, floored to {@link RESTING_FRACTION} so they always rest on
+ * the centerline. "ltr" puts bin 0 at the left edge, "rtl" at the right, so the
+ * two canvases mirror with the strongest (low) bars nearest the centre child.
  */
 function drawBars(
   state: CanvasState,
@@ -114,10 +110,9 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
   activeSig.value = props.active;
 
   /**
-   * Last per-bar magnitudes captured during playback. Written every frame and
-   * read with `.peek()` so this effect never subscribes to it — per-frame
-   * writes must not re-trigger the effect. Used to ease bars back to the resting
-   * line when playback stops.
+   * Last per-bar magnitudes captured during playback, used to ease the bars back
+   * to the resting line when it stops. Read with `.peek()` so the per-frame
+   * writes never re-trigger the effect.
    */
   const lastNormalized = useSignal<Float32Array | null>(null);
 
@@ -172,7 +167,6 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
 
     const analyser = analyserSig.value;
 
-    // Playing: live frequency data drives the bars (unchanged behavior).
     if (activeSig.value && analyser) {
       isAnimating = true;
       const frequencyData = new Uint8Array(analyser.frequencyBinCount);
@@ -193,11 +187,10 @@ export function AudioVisualizer(props: Readonly<AudioVisualizerProps>) {
       // needed (a slice() here would allocate ~60 arrays/sec for one reader).
       lastNormalized.value = magnitudes;
 
-      // Flush the analyser's smoothed buffer, which otherwise still holds the
-      // frame from where the previous clip stopped. Without this, smoothing
-      // blends that stale frame into the first frames, so a restart visibly
-      // jumps to the old stop point before settling. A throwaway read with
-      // smoothing disabled overwrites the buffer with the current audio.
+      // Flush the analyser's smoothed buffer, which still holds the frame the
+      // previous clip stopped on: smoothing would blend it into the first
+      // frames and a restart would visibly jump to the old stop point. A
+      // throwaway read with smoothing off overwrites it with the current audio.
       const smoothing = analyser.smoothingTimeConstant;
       analyser.smoothingTimeConstant = 0;
       analyser.getByteFrequencyData(frequencyData);

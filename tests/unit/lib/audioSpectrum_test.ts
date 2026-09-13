@@ -67,7 +67,7 @@ Deno.test("computeTiltWeights handles the single-bar edge case", () => {
 
 Deno.test("fillSpectrumBars maps silence to all-zero bars", () => {
   const bars = new Float32Array(8);
-  const frequencyData = new Uint8Array(64); // all zero
+  const frequencyData = new Uint8Array(64);
   const edges = computeLogBandEdges(8, 1, 32);
   const weights = computeTiltWeights(8, 1.5);
 

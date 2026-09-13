@@ -23,10 +23,9 @@ export function listAdminTracks(database: DB) {
 }
 
 /**
- * Audio files sitting in the music directory that no track points at yet,
- * newest first. Filtering before reading modification times keeps the
- * filesystem work proportional to the (small) unlinked set rather than to the
- * whole library.
+ * Audio files in the music directory that no track points at yet, newest
+ * first. Filtering before reading modification times keeps the filesystem work
+ * proportional to the small unlinked set rather than the whole library.
  */
 export async function listUnlinkedAudioFiles(
   database: DB,

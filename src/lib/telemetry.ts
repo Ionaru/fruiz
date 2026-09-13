@@ -1,12 +1,11 @@
 /**
- * Server-only OpenTelemetry helper: the single application tracer + meter and
- * the custom span/counter/histogram instruments from spec 12's catalog. When no
- * exporter is configured (`OTEL_DENO` unset), `@opentelemetry/api` resolves to
- * no-op implementations, so every call here succeeds and does nothing — call
- * sites need no `if (enabled)` guards.
+ * Server-only OpenTelemetry helper: the single application tracer and meter,
+ * plus spec 12's instrument catalog. With no exporter configured (`OTEL_DENO`
+ * unset) `@opentelemetry/api` resolves to no-ops, so call sites need no
+ * `if (enabled)` guards.
  *
- * MUST stay server-only: never import this from `src/islands/**` or
- * `src/components/**` (it would pull telemetry into the client bundle).
+ * MUST stay server-only: importing it from `src/islands/**` or
+ * `src/components/**` pulls telemetry into the client bundle.
  */
 import { metrics, type Span, SpanStatusCode, trace } from "@opentelemetry/api";
 
@@ -43,7 +42,7 @@ export function withSpan<T>(
   });
 }
 
-// --- Custom instrument catalog (names are the spec contract) ---
+// Custom instrument catalog: the names are the spec contract, do not rename.
 export const quizCreatedCounter = meter.createCounter("fruiz.quiz.created");
 export const quizCacheHitCounter = meter.createCounter("fruiz.quiz.cache_hit");
 export const guessSubmittedCounter = meter.createCounter(

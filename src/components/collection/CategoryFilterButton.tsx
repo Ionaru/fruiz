@@ -14,7 +14,7 @@ export interface CategoryFilterButtonProps {
  *
  * The active state is carried by the `info` plateau tint, a stronger count
  * contrast and `aria-pressed`. Weight is deliberately not part of it: a bolder
- * label is wider, so selecting a pill used to resize it.
+ * label is wider, so it would resize the pill on selection.
  */
 export function CategoryFilterButton(
   props: Readonly<CategoryFilterButtonProps>,

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { DB, db } from "../db/db.ts";
 import { sessions } from "../db/schema.ts";
 
-/** Opaque DB-backed session id stored in the browser cookie (replaces legacy HMAC cookie). */
+/** Opaque DB-backed session id stored in the browser cookie. */
 export const SESSION_COOKIE_NAME = "fruiz_session";
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
