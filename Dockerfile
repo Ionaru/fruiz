@@ -1,4 +1,4 @@
-FROM denoland/deno:debian-2.9.6
+FROM denoland/deno:debian-2.9.7
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
